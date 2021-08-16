@@ -33,13 +33,13 @@ public:
     /// Stop Task
     void Stop();
 
-    /// (inner) Task Running
-    void Run();
-
     /// (override) sub class processing
     virtual void Update() = 0;
 
 public:
+    /// Task Running
+    void Run();
+
     /// Task Listener
     static void Listener(void *const pParam);
 

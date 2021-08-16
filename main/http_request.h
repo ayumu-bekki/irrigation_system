@@ -33,9 +33,9 @@ public:
     
     Status GetStatus() const;
 
+private:
     void Event(esp_http_client_event_t *const pEventData);
 
-private:
     void AddResponseBody(const size_t length, const void* data);
 
 public:
