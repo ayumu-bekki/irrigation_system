@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#include <esp_system.h>
+#include <esp_http_client.h>
+
 namespace IrrigationSystem {
 
 /// HttpGetRequest (synchronous process)
@@ -26,9 +29,18 @@ public:
     /// Begin Request
     void Request(const std::string& url);
 
-    void AddResponseBody(const size_t length, const void* data);
     const std::string GetResponseBody() const;
+    
     Status GetStatus() const;
+
+    void Event(esp_http_client_event_t *const pEventData);
+
+private:
+    void AddResponseBody(const size_t length, const void* data);
+
+public:
+    static esp_err_t EventHandle(esp_http_client_event_t *pEventData);
+
 
 private:
     Status m_Status;

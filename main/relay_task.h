@@ -13,6 +13,7 @@ class RelayTask : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"RelayTask";
+    static constexpr int PRIORITY = 1;
     static constexpr int CORE_ID = 1;
 
 public:

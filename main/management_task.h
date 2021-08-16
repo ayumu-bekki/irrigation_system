@@ -14,6 +14,7 @@ class ManagementTask : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"ManagementTask";
+    static constexpr int PRIORITY = 5;
     static constexpr int CORE_ID = 1;
 
 public:

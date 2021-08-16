@@ -9,18 +9,11 @@
 
 namespace IrrigationSystem {
 
-void task(void *pParam)
-{
-    if (!pParam) {
-        return;
-    }
-    static_cast<Task*>(pParam)->Run();
-}
 
-
-Task::Task(const std::string& taskName, const int coreId)
+Task::Task(const std::string& taskName, const int priority, const int coreId)
     :m_Status(TASK_STATUS_READY)
     ,m_TaskName(taskName)
+    ,m_Priority(priority)
     ,m_CoreId(coreId)
 {}
 
@@ -35,7 +28,7 @@ void Task::Start()
         return;
     }
     m_Status = TASK_STATUS_RUN;
-    xTaskCreatePinnedToCore(task, m_TaskName.c_str(), 8192, this, 1, nullptr, m_CoreId);
+    xTaskCreatePinnedToCore(this->Listener, m_TaskName.c_str(), TASK_STAC_DEPTH, this, m_Priority, nullptr, m_CoreId);
 }
 
 void Task::Stop()
@@ -51,8 +44,17 @@ void Task::Run()
     while(m_Status == TASK_STATUS_RUN) {
         Update();
     }
+}
+
+
+void Task::Listener(void *const pParam)
+{
+    if (pParam) {
+        static_cast<Task*>(pParam)->Run();
+    }
     vTaskDelete(nullptr);
 }
+
 
 } // IrrigationSystem
 

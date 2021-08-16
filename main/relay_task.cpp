@@ -14,7 +14,7 @@
 namespace IrrigationSystem {
 
 RelayTask::RelayTask(IrrigationInterface *const pIrricationInterface)
-    :Task(TASK_NAME, CORE_ID)
+    :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrricationInterface(pIrricationInterface)
     ,m_OpenSecond(0)
 {}
@@ -26,13 +26,16 @@ void RelayTask::Update()
     }
 
     if (0 < m_OpenSecond) {
-        ESP_LOGI(TAG, "GPIO RELAY OPEN %dsec", m_OpenSecond);
-
+        ESP_LOGI(TAG, "Open Relay. %dsec", m_OpenSecond);
         GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
-        Util::SleepMillisecond(m_OpenSecond * 1000);
+
+        const int tempSecond = m_OpenSecond;
+        m_OpenSecond -= tempSecond;
+        Util::SleepMillisecond(tempSecond * 1000);
+
         GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 0);
-        ESP_LOGI(TAG, "GPIO RELAY CLOSE");
-        m_OpenSecond = 0;
+        ESP_LOGI(TAG, "Close Relay.");
+
         return;
     }
 

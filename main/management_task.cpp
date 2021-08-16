@@ -14,7 +14,7 @@
 namespace IrrigationSystem {
 
 ManagementTask::ManagementTask(IrrigationInterface *const pIrricationInterface)
-    :Task(TASK_NAME, CORE_ID)
+    :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrricationInterface(pIrricationInterface)
     ,m_TargetDate(0)
 {

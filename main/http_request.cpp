@@ -9,52 +9,11 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_system.h>
 #include <esp_log.h>
-#include <esp_http_client.h>
 
 #include "define.h"
 
 namespace IrrigationSystem {
-
-esp_err_t _http_event_handle(esp_http_client_event_t *evt)
-{
-    if (!evt->user_data) {
-        ESP_LOGI(TAG, "UserData Is Null");
-        return ESP_OK;
-    }
-
-    HttpRequest *const pHttpRequest = static_cast<HttpRequest*>(evt->user_data);
-
-    switch(evt->event_id) {
-        case HTTP_EVENT_ERROR:
-            ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
-            break;
-        case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
-            break;
-        case HTTP_EVENT_HEADER_SENT:
-            ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
-            break;
-        case HTTP_EVENT_ON_HEADER:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
-            break;
-        case HTTP_EVENT_ON_DATA:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-            if (!esp_http_client_is_chunked_response(evt->client)) {
-                pHttpRequest->AddResponseBody(evt->data_len, evt->data);
-            }
-            break;
-        case HTTP_EVENT_ON_FINISH:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
-            break;
-        case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
-            break;
-    }
-    return ESP_OK;
-}
-
 
 HttpRequest::HttpRequest() 
     :m_Status(STATUS_WAIT)
@@ -68,9 +27,9 @@ void HttpRequest::Request(const std::string& url)
 
     #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     esp_http_client_config_t config = {
-            .url = url.c_str(),
-            .event_handler = _http_event_handle,
-            .user_data = this,
+        .url = url.c_str(),
+        .event_handler = this->EventHandle,
+        .user_data = this,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -106,6 +65,38 @@ const std::string HttpRequest::GetResponseBody() const
 HttpRequest::Status HttpRequest::GetStatus() const
 {
     return m_Status;
+}
+
+void HttpRequest::Event(esp_http_client_event_t *const pEventData)
+{
+    if (pEventData->event_id == HTTP_EVENT_ERROR) {
+        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
+    } else if (pEventData->event_id == HTTP_EVENT_ON_CONNECTED) {
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
+    } else if (pEventData->event_id == HTTP_EVENT_HEADER_SENT) {
+        ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
+    } else if (pEventData->event_id == HTTP_EVENT_ON_HEADER) {
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
+    } else if (pEventData->event_id == HTTP_EVENT_ON_DATA) {
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", pEventData->data_len);
+        if (!esp_http_client_is_chunked_response(pEventData->client)) {
+            AddResponseBody(pEventData->data_len, pEventData->data);
+        }
+    } else if (pEventData->event_id == HTTP_EVENT_ON_FINISH) {
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
+    } else if (pEventData->event_id == HTTP_EVENT_DISCONNECTED) {
+        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+    }
+}
+
+esp_err_t HttpRequest::EventHandle(esp_http_client_event_t *pEventData)
+{
+    if (!pEventData->user_data) {
+        ESP_LOGI(TAG, "UserData Is Null");
+        return ESP_FAIL;
+    }
+    static_cast<HttpRequest*>(pEventData->user_data)->Event(pEventData);
+    return ESP_OK;
 }
 
 
