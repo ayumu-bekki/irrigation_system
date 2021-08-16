@@ -24,8 +24,8 @@ IrrigationController::IrrigationController()
 void IrrigationController::Start()
 {
     // Initialize GPIO
-    GPIO::InitOutput(NORMAL_OPERATION_SIGNAL_GPIO, 1);
-    GPIO::InitOutput(RELAY_SIGNAL_GPIO);
+    GPIO::InitOutput(CONFIG_MONITORING_SIGNAL_GPIO_NO, 1);
+    GPIO::InitOutput(CONFIG_RELAY_SIGNAL_GPIO_NO);
 
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -48,7 +48,7 @@ void IrrigationController::Start()
     Util::SyncSntpObtainTime();
 
     // Normal Operation OK
-    GPIO::SetLevel(NORMAL_OPERATION_SIGNAL_GPIO, 0);
+    GPIO::SetLevel(CONFIG_MONITORING_SIGNAL_GPIO_NO, 0);
 
     // MainTask
     ManagementTask managementTask(this);

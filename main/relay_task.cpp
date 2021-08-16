@@ -28,9 +28,9 @@ void RelayTask::Update()
     if (0 < m_OpenSecond) {
         ESP_LOGI(TAG, "GPIO RELAY OPEN %dsec", m_OpenSecond);
 
-        GPIO::SetLevel(RELAY_SIGNAL_GPIO, 1);
+        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
         Util::SleepMillisecond(m_OpenSecond * 1000);
-        GPIO::SetLevel(RELAY_SIGNAL_GPIO, 0);
+        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 0);
         ESP_LOGI(TAG, "GPIO RELAY CLOSE");
         m_OpenSecond = 0;
         return;

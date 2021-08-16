@@ -33,7 +33,7 @@ void SyncSntpObtainTime()
     //  Initialize SNTP
     ESP_LOGI(TAG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, NTP_SERVER_ADDRESS);
+    sntp_setservername(0, CONFIG_NTP_SERVER_ADDRESS);
     sntp_init();
     
     // wait for time to be set
@@ -78,7 +78,7 @@ void PrintNow()
 
 void InitTimeZone()
 {
-    setenv("TZ", LOCAL_TIME_ZONE, 1);
+    setenv("TZ", CONFIG_LOCAL_TIME_ZONE, 1);
     tzset();
 }
 

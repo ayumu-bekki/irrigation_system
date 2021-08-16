@@ -1,20 +1,45 @@
-menu "Wi-Fi Configuration"
+menu "Irrigation System Configuration"
 
-    config ESP_WIFI_SSID
+    config WIFI_SSID
         string "WiFi SSID"
         default "myssid"
         help
-            SSID (network name) for the example to connect to.
+            SSID (network name) 
 
-    config ESP_WIFI_PASSWORD
+    config WIFI_PASSWORD
         string "WiFi Password"
         default "mypassword"
         help
-            WiFi password (WPA or WPA2) for the example to use.
+            WiFi password (WPA or WPA2) 
 
-    config ESP_MAXIMUM_RETRY
+    config WIFI_MAXIMUM_RETRY
         int "Maximum retry"
         default 5
         help
             Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+
+    config LOCAL_TIME_ZONE
+        string "Local Time Zone"
+        default "JST-9"
+        help
+            Time zone of the region to be used
+
+    config NTP_SERVER_ADDRESS
+        string "NTP Server Address"
+        default "ntp.nict.jp"
+        help
+            NTP server address to use for time alignment
+
+    config MONITORING_SIGNAL_GPIO_NO
+        int "Monitoring Signal GPIO No"
+        default 14
+        help
+            GPIO number for monitoring signals
+
+    config RELAY_SIGNAL_GPIO_NO
+        int "Relay Signal GPIO No"
+        default 12
+        help
+            GPIO number for relay signals
+
 endmenu

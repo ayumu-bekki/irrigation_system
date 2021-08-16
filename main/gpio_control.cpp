@@ -4,23 +4,24 @@
 // Include ----------------------
 #include "gpio_control.h"
 
+#include <driver/gpio.h>
 
 namespace IrrigationSystem {
 namespace GPIO {
 
 /// Init GPIO (Output)
-void InitOutput(const gpio_num_t gpioNumber, const int level)
+void InitOutput(const int gpioNumber, const int level)
 {
-    gpio_pad_select_gpio(gpioNumber);
-    gpio_set_direction(gpioNumber, GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(static_cast<gpio_num_t>(gpioNumber));
+    gpio_set_direction(static_cast<gpio_num_t>(gpioNumber), GPIO_MODE_OUTPUT);
     
     SetLevel(gpioNumber, level);
 }
 
 /// Set GPIO Level (Output)
-void SetLevel(const gpio_num_t gpioNumber, const int level)
+void SetLevel(const int gpioNumber, const int level)
 {
-    gpio_set_level(gpioNumber, level);
+    gpio_set_level(static_cast<gpio_num_t>(gpioNumber), level);
 }
 
 } // GPIO

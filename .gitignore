@@ -1,6 +1,7 @@
 # Irrigation System GitIgnore
 
 /sdkconfig
+/sdkconfig.old
 /build/
 
 .DS_Store

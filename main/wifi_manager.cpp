@@ -51,8 +51,8 @@ void WifiManager::Connect()
                                                         &instance_got_ip));
 
     wifi_config_t wifi_config = {};
-    std::strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), CONFIG_ESP_WIFI_SSID, strlen(CONFIG_ESP_WIFI_SSID) + 1);
-    std::strncpy(reinterpret_cast<char*>(wifi_config.sta.password), CONFIG_ESP_WIFI_PASSWORD, strlen(CONFIG_ESP_WIFI_PASSWORD) + 1);
+    std::strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), CONFIG_WIFI_SSID, strlen(CONFIG_WIFI_SSID) + 1);
+    std::strncpy(reinterpret_cast<char*>(wifi_config.sta.password), CONFIG_WIFI_PASSWORD, strlen(CONFIG_WIFI_PASSWORD) + 1);
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
@@ -70,9 +70,9 @@ void WifiManager::Connect()
             portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_ESP_WIFI_SSID);
+        ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_WIFI_SSID);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s", CONFIG_ESP_WIFI_SSID);
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s", CONFIG_WIFI_SSID);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
@@ -88,7 +88,7 @@ void WifiManager::EventHandler(const esp_event_base_t eventBase, const int32_t e
         if (eventId == WIFI_EVENT_STA_START) {
             esp_wifi_connect();
         } else if (eventId == WIFI_EVENT_STA_DISCONNECTED) {
-            if (m_RetryNum < CONFIG_ESP_MAXIMUM_RETRY) {
+            if (m_RetryNum < CONFIG_WIFI_MAXIMUM_RETRY) {
                 esp_wifi_connect();
                 ++m_RetryNum;
                 ESP_LOGI(TAG, "retry to connect to the AP");
