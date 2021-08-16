@@ -1,0 +1,7 @@
+# Irrigation System GitIgnore
+
+/sdkconfig
+/build/
+
+.DS_Store
+
