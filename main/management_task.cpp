@@ -18,7 +18,7 @@ ManagementTask::ManagementTask(IrrigationInterface *const pIrricationInterface)
     ,m_pIrricationInterface(pIrricationInterface)
     ,m_TargetDate(0)
 {
-    m_TargetDate = time(nullptr) + 20;
+    m_TargetDate = time(nullptr) + 60 * 60;
 
     // 初期タスクの構築
 }
@@ -33,11 +33,6 @@ void ManagementTask::Update()
     
     // タスクが実行できる場合は実行
 
-    Util::PrintNow();
-
-    // Sync NTP
-    // SyncSntpObtainTime();
-
     /*
     // HttpRequest Test
     HttpRequest httpRequest;
@@ -49,14 +44,12 @@ void ManagementTask::Update()
     }
     */
 
-    
     const time_t now = time(nullptr);
     if (m_TargetDate <= now) {
         m_pIrricationInterface->RequestRelayOpen(5);
-        m_TargetDate = now + 60;
+        m_TargetDate = now + 60 * 60;
         ESP_LOGI(TAG, "Task Open Relay Next:%ld Now:%ld", m_TargetDate, now);
     }
-
 
     Util::SleepMillisecond(10 * 1000);
 }

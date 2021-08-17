@@ -41,6 +41,7 @@ void Task::Stop()
 
 void Task::Run()
 {
+    Initialize();
     while(m_Status == TASK_STATUS_RUN) {
         Update();
     }

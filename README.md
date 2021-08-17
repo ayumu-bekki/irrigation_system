@@ -17,6 +17,20 @@ $ make menuconfig
 $ make flash monitor
 ```
 
+### Web console
+
+A web console is available, which can be accessed by entering the IP address in your web browser.
+You can check the system's time and schedule, or run the watering manually.
+
+![Web Console](docs/web_console.png)
+
+
+### Schematic sample
+
+This is a sample circuit diagram using ESP32-DevKitC.
+
+![Schematic](docs/schematic.png)
+
 ## Authors
 
 bekki.jp (http://blog.bekki.jp/)

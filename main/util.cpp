@@ -82,6 +82,21 @@ void InitTimeZone()
     tzset();
 }
 
+std::vector<std::string> SplitString(const std::string &str, const char delim)
+{
+    std::vector<std::string> elements;
+    std::stringstream ss(str);
+    std::string item;
+    while (getline(ss, item, delim)) {
+        if (!item.empty()) {
+            elements.push_back(item);
+        }
+    }
+    return elements;
+}
+
+
+
 
 } // Util
 } // IrrigationSystem

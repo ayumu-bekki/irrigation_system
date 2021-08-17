@@ -11,6 +11,7 @@
 #include "define.h"
 #include "util.h"
 #include "management_task.h"
+#include "httpd_server_task.h"
 #include "gpio_control.h"
 
 
@@ -53,6 +54,8 @@ void IrrigationController::Start()
     // MainTask
     ManagementTask managementTask(this);
     managementTask.Start();
+    HttpdServerTask httpdServerTask(this);
+    httpdServerTask.Start();
     m_RelayTask.Start();
 
     // vTaskStartSchedule() is already called by ESP-IDF before app_main. Infinite loop thereafter.

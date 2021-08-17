@@ -39,7 +39,7 @@ void RelayTask::Update()
         return;
     }
 
-    Util::SleepMillisecond(10 * 1000);
+    Util::SleepMillisecond(1000);
 }
 
 void RelayTask::AddOpenSecond(const int second)

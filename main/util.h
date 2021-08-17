@@ -6,7 +6,7 @@
 
 // Include ----------------------
 #include <string>
-
+#include <vector>
 
 namespace IrrigationSystem {
 namespace Util {
@@ -28,6 +28,9 @@ void PrintNow();
 
 /// Initialie Local Time Zone
 void InitTimeZone();
+
+/// Split Text
+std::vector<std::string> SplitString(const std::string &str, const char delim);
 
 } // Util
 } // IrrigationSystem

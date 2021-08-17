@@ -42,4 +42,10 @@ menu "Irrigation System Configuration"
         help
             GPIO number for relay signals
 
+    config HTTPD_MAX_REQ_HDR_LEN
+        int "Max HTTP Request Header Length"
+        default 1024
+        help
+            This sets the maximum supported size of headers section in HTTP request packet to be processed by the server
+
 endmenu

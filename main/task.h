@@ -20,6 +20,11 @@ public:
 
     static constexpr int TASK_STAC_DEPTH = 8192;
 
+    /// Task Priority
+    static constexpr int PRIORITY_LOW = 0;
+    static constexpr int PRIORITY_NORMAL = 1;
+    static constexpr int PRIORITY_HIGH = 2;
+
 private:
     Task() {}
 
@@ -32,6 +37,9 @@ public:
 
     /// Stop Task
     void Stop();
+
+    /// Initialize (Called when the Start function is executed.)
+    virtual void Initialize() {}
 
     /// (override) sub class processing
     virtual void Update() = 0;

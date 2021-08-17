@@ -4,9 +4,10 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
+#include <soc/soc.h>
+
 #include "task.h"
 #include "irrigation_interface.h"
-
 
 namespace IrrigationSystem {
 
@@ -14,8 +15,8 @@ class ManagementTask : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"ManagementTask";
-    static constexpr int PRIORITY = 5;
-    static constexpr int CORE_ID = 1;
+    static constexpr int PRIORITY = Task::PRIORITY_HIGH;
+    static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
     explicit ManagementTask(IrrigationInterface *const pIrricationInterface);
