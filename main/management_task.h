@@ -25,7 +25,6 @@ public:
 
 private:
     IrrigationInterface* m_pIrricationInterface;
-    time_t m_TargetDate;
 };
 
 } // IrrigationSystem

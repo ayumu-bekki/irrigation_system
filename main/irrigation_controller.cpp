@@ -20,6 +20,7 @@ namespace IrrigationSystem {
 IrrigationController::IrrigationController()
     :m_WifiManager()
     ,m_RelayTask(this)
+    ,m_ScheduleManager()
 {}
 
 void IrrigationController::Start()
@@ -67,6 +68,12 @@ void IrrigationController::Start()
 void IrrigationController::RequestRelayOpen(const int second)
 {
     m_RelayTask.AddOpenSecond(second);   
+}
+
+
+ScheduleManager& IrrigationController::GetScheduleManager() 
+{
+    return m_ScheduleManager;
 }
 
 } // IrrigationSystem

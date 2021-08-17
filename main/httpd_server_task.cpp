@@ -8,8 +8,11 @@
 
 #include <sstream>
 #include <string>
+#include <iomanip>
 #include <algorithm>
 
+#include "schedule_manager.h"
+#include "schedule_base.h"
 #include "define.h"
 #include "util.h"
 
@@ -42,7 +45,7 @@ httpd_handle_t HttpdServerTask::StartWebServer()
         .uri       = "/",
         .method    = HTTP_GET,
         .handler   = this->RootHandler,
-        .user_ctx  = nullptr,
+        .user_ctx  = this,
     };
     httpd_register_uri_handler(httpdServerHandle, &routingRootUriHandler);
 
@@ -79,16 +82,48 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 {
     ESP_LOGI(TAG, "WebServer Request Recv. Get:Root");
 
+    if (!pHttpRequestData->user_ctx) {
+        ESP_LOGI(TAG, "Failed user_ctx is null");
+        return ESP_FAIL;
+    }
+    HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
+    ScheduleManager& scheduleManager = pHttpdServerTask->m_pIrricationInterface->GetScheduleManager();
+    const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
+
     std::stringstream responseBody;
     responseBody 
         << "<!doctype html><head>"
         << "<title>Irrigation System</title><style>" 
-        << "body { background-color:lightskyblue; }"
-        << "hr { height:0;margin:0;padding:0;border:0;overflow:visible;border-top: 3px dotted white; }"
+        << "body {background-color:lightskyblue;}"
+        << "hr {height:0;margin:0;padding:0;border:0;overflow:visible;border-top:3px dotted white;}"
+        << "table {border-collapse: collapse;border-spacing: 0;margin-bottom:1.5em;background-color:aliceblue;}"
+        << "table th {text-align:center;padding: 10px;background: steelblue;color: white;}"
+        << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
+        << ".schedule_disable { background-color: silver;}"
+        << ".schedule_executable { background-color: greenyellow;}"
         << "</style></head>"
-        << "<body><h1>IrrigationSystem</h1>"
+        << "<body><h1>Irrigation System</h1>"
         << "<hr><h2>System Clock</h2><p>" << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
         << "<hr><h2>Schedule</h2>"
+        << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
+        
+    for (const ScheduleBase& scheduleItem : scheduleList) {
+        if (scheduleItem.IsVisible()) {
+            responseBody 
+                << std::setfill('0')
+                << "<tr class=\"" << ScheduleBase::StatusToRecordStyle(scheduleItem.GetStatus()) << "\">"
+                << "<td>" << scheduleItem.GetName() << "</td>"
+                << "<td>" 
+                << std::setw(2) << scheduleItem.GetHour() << ":"
+                << std::setw(2) << scheduleItem.GetMinute()
+                << "</td>"
+                << "<td>" << ScheduleBase::StatusToStr(scheduleItem.GetStatus()) << "</td>"
+                << "</tr>";
+        }
+    }
+
+    responseBody
+        << "</tbody></table>"
         << "<hr><h2>Manual Watering</h2>"
         << "<form action=\"/open_relay\" method=\"post\">"
         << "Watering time:<input type=\"number\" name=\"second\" value=\"10\" min=\"1\" max=\"60\">"
@@ -103,7 +138,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
 {
     ESP_LOGI(TAG, "WebServer Request Recv. Post:OpenRelay");
-    
+
     if (!pHttpRequestData->user_ctx) {
         ESP_LOGI(TAG, "Failed user_ctx is null");
         return ESP_FAIL;
@@ -141,7 +176,7 @@ esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
     }
 
     // Relay Open
-    HttpdServerTask *pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
+    HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
     pHttpdServerTask->m_pIrricationInterface->RequestRelayOpen(relayOpenSecond);
 
     // Redirect

@@ -5,12 +5,16 @@
 
 namespace IrrigationSystem {
 
+class ScheduleManager;
+
 class IrrigationInterface
 {
 public:
     virtual ~IrrigationInterface() {}
     
     virtual void RequestRelayOpen(const int second) = 0;
+
+    virtual ScheduleManager& GetScheduleManager() = 0;
 };
 
 } // IrrigationSystem
