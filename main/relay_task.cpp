@@ -13,19 +13,14 @@
 
 namespace IrrigationSystem {
 
-RelayTask::RelayTask(IrrigationInterface *const pIrricationInterface)
+RelayTask::RelayTask()
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_pIrricationInterface(pIrricationInterface)
     ,m_OpenSecond(0)
 {}
 
 void RelayTask::Update()
 {
-    if (!m_pIrricationInterface) {
-        return;
-    }
-
-    if (0 < m_OpenSecond) {
+   if (0 < m_OpenSecond) {
         ESP_LOGI(TAG, "Open Relay. %dsec", m_OpenSecond);
         GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
 

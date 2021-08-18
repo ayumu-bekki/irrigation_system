@@ -13,7 +13,7 @@
 namespace IrrigationSystem {
 
 /// IrrigationController
-class IrrigationController : public IrrigationInterface
+class IrrigationController final : public IrrigationInterface
 {
 public:
     IrrigationController();

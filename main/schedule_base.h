@@ -4,8 +4,9 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include <time.h>
 #include <string>
+#include <memory>
+#include <chrono>
 
 namespace IrrigationSystem {
 
@@ -20,19 +21,28 @@ public:
         MAX_STATUS,
     };
 
-public:
+    using UniquePtr = std::unique_ptr<ScheduleBase>;
+
+protected:
     ScheduleBase();
     ScheduleBase(const Status status, const std::string& name, const int hour, const int minute, const bool isVisible);
+    
+public:
+    virtual ~ScheduleBase() {}
 
-    virtual void Exec();
+    virtual void Exec() = 0;
 
-    virtual bool CanExecute(const tm& nowTimeInfo);
+    bool CanExecute(const std::tm& nowTimeInfo);
 
     Status GetStatus() const;
+    void SetStatus(const Status status);
+
     const std::string& GetName() const;
     int GetHour() const;
     int GetMinute() const;
     bool IsVisible() const;
+
+    int GetDiffTime() const;
 
 public: 
     static const char* StatusToStr(const ScheduleBase::Status status);

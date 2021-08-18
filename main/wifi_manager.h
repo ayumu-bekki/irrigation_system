@@ -16,7 +16,7 @@
 
 namespace IrrigationSystem {
 
-class WifiManager
+class WifiManager final
 {
 public:
     WifiManager();

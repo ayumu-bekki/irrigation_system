@@ -14,6 +14,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 #include "define.h"
 
@@ -27,37 +28,48 @@ void SleepMillisecond(const unsigned int sleepMillisecond)
     vTaskDelayUntil(&lastWakeTime, sleepMillisecond / portTICK_PERIOD_MS);
 }
 
-/// SyncTime
+/// Init Sntp
+void InitializeSntp()
+{
+    ESP_LOGI(TAG, "Initializing SNTP");
+}
+
+/// Notification Time Synced 
+void TimeSyncedCallback(struct timeval *tv)
+{
+    ESP_LOGI(TAG, "Notification of a time synchronization event. Now:%s", GetNowTimeStr().c_str());
+}
+
+
+/// Start SyncTime
 void SyncSntpObtainTime()
 {
-    //  Initialize SNTP
-    ESP_LOGI(TAG, "Initializing SNTP");
+    ESP_LOGI(TAG, "Start Sync SNTP");
+
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
     sntp_setservername(0, CONFIG_NTP_SERVER_ADDRESS);
+    sntp_set_time_sync_notification_cb(TimeSyncedCallback);
     sntp_init();
-    
+
     // wait for time to be set
     int retry = 0;
     const int retry_count = 10;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        SleepMillisecond(2000);
+        SleepMillisecond(1000);
     }
-
-    ESP_LOGI(TAG, "Finish SNTP");
 }
 
-tm GetLocalTime() 
+std::tm GetLocalTime() 
 {
-    const time_t now = time(nullptr);
-    tm timeinfo = {};
-    localtime_r(&now, &timeinfo);
-    return timeinfo;
+    std::chrono::system_clock::time_point nowTimePoint = std::chrono::system_clock::now();
+    std::time_t epochTime = std::chrono::system_clock::to_time_t(nowTimePoint);
+    return *std::localtime(&epochTime);
 }
 
 std::string GetNowTimeStr()
 {
-    const tm timeinfo = GetLocalTime();
+    const std::tm timeinfo = GetLocalTime();
     std::stringstream ss;
     ss << std::setfill('0')
        << std::setw(4) << (timeinfo.tm_year + 1900) << "/" 
@@ -82,6 +94,19 @@ void InitTimeZone()
     tzset();
 }
 
+/// Gregorian calendar to Modified Julian Date
+int GregToMJD(const std::tm& timeInfo)
+{
+    const double year = timeInfo.tm_year + 1900;
+    const double month = timeInfo.tm_mon + 1;
+    return std::floor(365.25 * year)
+         + std::floor(year / 400)
+         - std::floor(year / 100)
+         + std::floor(30.59 * (month - 2.0))
+         + timeInfo.tm_mday
+         - 678912;
+}
+
 std::vector<std::string> SplitString(const std::string &str, const char delim)
 {
     std::vector<std::string> elements;
@@ -94,8 +119,6 @@ std::vector<std::string> SplitString(const std::string &str, const char delim)
     }
     return elements;
 }
-
-
 
 
 } // Util

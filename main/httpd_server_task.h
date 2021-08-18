@@ -12,7 +12,7 @@
 
 namespace IrrigationSystem {
 
-class HttpdServerTask : public Task
+class HttpdServerTask final : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"HttpdServerTask";

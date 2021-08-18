@@ -19,8 +19,8 @@ namespace IrrigationSystem {
 
 IrrigationController::IrrigationController()
     :m_WifiManager()
-    ,m_RelayTask(this)
-    ,m_ScheduleManager()
+    ,m_RelayTask()
+    ,m_ScheduleManager(this)
 {}
 
 void IrrigationController::Start()
@@ -54,8 +54,9 @@ void IrrigationController::Start()
 
     // MainTask
     ManagementTask managementTask(this);
-    managementTask.Start();
     HttpdServerTask httpdServerTask(this);
+
+    managementTask.Start();
     httpdServerTask.Start();
     m_RelayTask.Start();
 

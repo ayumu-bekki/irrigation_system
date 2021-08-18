@@ -6,29 +6,48 @@
 // Include ----------------------
 #include "schedule_base.h"
 
+#include <chrono>
 #include <vector>
-#include <time.h>
+#include <memory>
+
+#include "irrigation_interface.h"
+
+#include "schedule_base.h"
 
 namespace IrrigationSystem {
 
-class ScheduleManager
+class ScheduleManager final
 {
 public:
-    using ScheduleBaseList = std::vector<ScheduleBase>;
+    using ScheduleBaseList = std::vector<ScheduleBase::UniquePtr>;
 
 public:
-    ScheduleManager();
+    explicit ScheduleManager(IrrigationInterface *const pIrricationInterface);
 
     void Execute();
 
     const ScheduleBaseList& GetScheduleList() const;
 
-private:
-    void Build(const tm& nowTimeInfo);
+    void AdjustSchedule();
+
+    int GetCurrentMonth() const;
+    int GetCurrentDay() const;
 
 private:
-    int m_CurrentMonthDay;
+    void InitializeNewDay(const std::tm& nowTimeInfo);
+
+    void ClearScheduleList();
+    void AddSchedule(ScheduleBase::UniquePtr&& scheduleItem);
+    void SortScheduleTime();
+
+    void DebugOutputSchedules();
+
+
+private:
+    IrrigationInterface* m_pIrricationInterface;
     ScheduleBaseList m_ScheduleList;
+    int m_CurrentMonth;
+    int m_CurrentDay;
 };
 
 } // IrrigationSystem

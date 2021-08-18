@@ -24,10 +24,10 @@ void ManagementTask::Update()
     if (!m_pIrricationInterface) {
         return;
     }
-   
-    ScheduleManager& scheduleManager = m_pIrricationInterface->GetScheduleManager(); 
-    scheduleManager.Execute();
-      
+
+    // Schedule Manager
+    m_pIrricationInterface->GetScheduleManager().Execute(); 
+    
     Util::SleepMillisecond(10 * 1000);
 }
 

@@ -4,6 +4,7 @@
 // Include ----------------------
 #include "schedule_base.h"
 
+#include <chrono>
 #include <esp_log.h>
 
 #include "define.h"
@@ -31,18 +32,17 @@ ScheduleBase::Status ScheduleBase::GetStatus() const
     return m_Status;
 }
 
+void ScheduleBase::SetStatus(const ScheduleBase::Status status)
+{
+    m_Status = status;
+}
+
 const std::string& ScheduleBase::GetName() const
 {
     return m_Name;
 }
 
-void ScheduleBase::Exec()
-{
-    ESP_LOGW(TAG, "Schedule Exec - Default Executer. %02d:%02d", m_Hour, m_Minute);
-    m_Status = STATUS_EXECUTED;
-}
-
-bool ScheduleBase::CanExecute(const tm& nowTimeInfo)
+bool ScheduleBase::CanExecute(const std::tm& nowTimeInfo)
 {
     return m_Status == STATUS_WAIT &&
            m_Hour <= nowTimeInfo.tm_hour && 
@@ -63,6 +63,13 @@ bool ScheduleBase::IsVisible() const
 {
     return m_IsVisible;
 }
+
+int ScheduleBase::GetDiffTime() const 
+{
+    return (std::chrono::hours(m_Hour) + std::chrono::minutes(m_Minute)).count();
+
+}
+
 
 const char* ScheduleBase::StatusToStr(const ScheduleBase::Status status)
 {

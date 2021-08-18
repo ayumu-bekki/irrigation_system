@@ -7,11 +7,10 @@
 #include <soc/soc.h>
 
 #include "task.h"
-#include "irrigation_interface.h"
 
 namespace IrrigationSystem {
 
-class RelayTask : public Task
+class RelayTask final : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"RelayTask";
@@ -19,14 +18,13 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit RelayTask(IrrigationInterface *const pParent);
+    RelayTask();
 
     void Update() override;
     
     void AddOpenSecond(const int second);
 
 private:
-    IrrigationInterface* m_pIrricationInterface;
     int m_OpenSecond;
 };
 

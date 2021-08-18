@@ -105,28 +105,37 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "<body><h1>Irrigation System</h1>"
         << "<hr><h2>System Clock</h2><p>" << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
         << "<hr><h2>Schedule</h2>"
-        << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
-        
-    for (const ScheduleBase& scheduleItem : scheduleList) {
-        if (scheduleItem.IsVisible()) {
-            responseBody 
-                << std::setfill('0')
-                << "<tr class=\"" << ScheduleBase::StatusToRecordStyle(scheduleItem.GetStatus()) << "\">"
-                << "<td>" << scheduleItem.GetName() << "</td>"
-                << "<td>" 
-                << std::setw(2) << scheduleItem.GetHour() << ":"
-                << std::setw(2) << scheduleItem.GetMinute()
-                << "</td>"
-                << "<td>" << ScheduleBase::StatusToStr(scheduleItem.GetStatus()) << "</td>"
-                << "</tr>";
-        }
-    }
+        << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>";
 
+    // Create Schedule Table
+    responseBody << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
+
+    if (std::any_of(scheduleList.begin(), scheduleList.end(), [](const ScheduleBase::UniquePtr& item){ return item->IsVisible(); })) {
+        // Found Visible Schedule Item
+        for (const auto& pScheduleItem : scheduleList) {
+            if (pScheduleItem->IsVisible()) {
+                responseBody 
+                    << std::setfill('0')
+                    << "<tr class=\"" << ScheduleBase::StatusToRecordStyle(pScheduleItem->GetStatus()) << "\">"
+                    << "<td>" << pScheduleItem->GetName() << "</td>"
+                    << "<td>" 
+                    << std::setw(2) << pScheduleItem->GetHour() << ":"
+                    << std::setw(2) << pScheduleItem->GetMinute()
+                    << "</td>"
+                    << "<td>" << ScheduleBase::StatusToStr(pScheduleItem->GetStatus()) << "</td>"
+                    << "</tr>";
+            }
+        }
+    } else {
+        // Not Found Visible Schedule Item
+        responseBody << "<tr><td colspan=\"3\">Empty</td></tr>";
+    }
+   
     responseBody
         << "</tbody></table>"
         << "<hr><h2>Manual Watering</h2>"
         << "<form action=\"/open_relay\" method=\"post\">"
-        << "Watering time:<input type=\"number\" name=\"second\" value=\"10\" min=\"1\" max=\"60\">"
+        << "Watering time (sec) : <input type=\"number\" name=\"second\" value=\"10\" min=\"1\" max=\"60\">"
         << "<input type=\"submit\" value=\"Start\">"
         << "</form>"
         << "</body></html>";

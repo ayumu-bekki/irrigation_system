@@ -7,6 +7,7 @@
 // Include ----------------------
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace IrrigationSystem {
 namespace Util {
@@ -18,7 +19,7 @@ void SleepMillisecond(const unsigned int sleepMillisecond);
 void SyncSntpObtainTime();
 
 /// GetLocalTime
-tm GetLocalTime();
+std::tm GetLocalTime();
 
 /// Get Now Date String (yyyy/dd/mm hh:mm:ss)
 std::string GetNowTimeStr();
@@ -28,6 +29,9 @@ void PrintNow();
 
 /// Initialie Local Time Zone
 void InitTimeZone();
+
+/// Gregorian calendar to Modified Julian Date(修正ユリウス日)
+int GregToMJD(const std::tm& timeInfo);
 
 /// Split Text
 std::vector<std::string> SplitString(const std::string &str, const char delim);

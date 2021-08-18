@@ -6,12 +6,14 @@
 // Include ----------------------
 #include <soc/soc.h>
 
+#include <chrono>
+
 #include "task.h"
 #include "irrigation_interface.h"
 
 namespace IrrigationSystem {
 
-class ManagementTask : public Task
+class ManagementTask final : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"ManagementTask";
