@@ -103,7 +103,9 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << ".schedule_executable { background-color: greenyellow;}"
         << "</style></head>"
         << "<body><h1>Irrigation System</h1>"
-        << "<hr><h2>System Clock</h2><p>" << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
+        << "<hr><h2>Status</h2>"
+        << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
+        << "<p>Version : " << GIT_VERSION << "</p>"
         << "<hr><h2>Schedule</h2>"
         << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>";
 

@@ -25,6 +25,8 @@ IrrigationController::IrrigationController()
 
 void IrrigationController::Start()
 {
+    ESP_LOGI(TAG, "Startup Irrigation System. Version:%s", GIT_VERSION);
+
     // Initialize GPIO
     GPIO::InitOutput(CONFIG_MONITORING_SIGNAL_GPIO_NO, 1);
     GPIO::InitOutput(CONFIG_RELAY_SIGNAL_GPIO_NO);
@@ -37,8 +39,6 @@ void IrrigationController::Start()
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     
     // WiFi
     m_WifiManager.Connect(); 
@@ -59,6 +59,8 @@ void IrrigationController::Start()
     managementTask.Start();
     httpdServerTask.Start();
     m_RelayTask.Start();
+
+    ESP_LOGI(TAG, "Activation Complete Irrigation System.");
 
     // vTaskStartSchedule() is already called by ESP-IDF before app_main. Infinite loop thereafter.
     while(1) {
