@@ -29,7 +29,9 @@ You can check the system's time and schedule, or run the watering manually.
 
 This is a sample circuit diagram using ESP32-DevKitC.
 
-![Schematic](docs/schematic.png)
+![Schematic](docs/schematic.svg)
+
+This The schematic was created using Scheme-it (https://www.digikey.jp/schemeit/).
 
 ## Authors
 
