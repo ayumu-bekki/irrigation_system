@@ -6,9 +6,8 @@
 
 #include <esp_system.h>
 #include <nvs_flash.h>
-#include <esp_log.h>
 
-#include "define.h"
+#include "logger.h"
 #include "util.h"
 #include "management_task.h"
 #include "httpd_server_task.h"
@@ -25,6 +24,9 @@ IrrigationController::IrrigationController()
 
 void IrrigationController::Start()
 {
+    // Initialize Log
+    Logger::InitializeLogLevel();
+
     ESP_LOGI(TAG, "Startup Irrigation System. Version:%s", GIT_VERSION);
 
     // Initialize GPIO
@@ -34,7 +36,7 @@ void IrrigationController::Start()
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_LOGI(TAG, "NVS Flash Error");
+      ESP_LOGE(TAG, "NVS Flash Error");
       ESP_ERROR_CHECK(nvs_flash_erase());
       ret = nvs_flash_init();
     }
@@ -68,11 +70,20 @@ void IrrigationController::Start()
     }
 }
 
-void IrrigationController::RequestRelayOpen(const int second)
+void IrrigationController::RelayAddOpenSecond(const int second)
 {
     m_RelayTask.AddOpenSecond(second);   
 }
 
+void IrrigationController::RelayForceClose()
+{
+    m_RelayTask.ForceClose();   
+}
+
+std::time_t IrrigationController::RelayCloseEpoch() const 
+{
+    return m_RelayTask.GetCloseEpoch();
+}
 
 ScheduleManager& IrrigationController::GetScheduleManager() 
 {

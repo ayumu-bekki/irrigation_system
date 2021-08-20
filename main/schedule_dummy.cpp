@@ -4,10 +4,9 @@
 // Include ----------------------
 #include "schedule_dummy.h"
 
-#include <esp_log.h>
-
-#include "define.h"
+#include "logger.h"
 #include "util.h"
+
 
 namespace IrrigationSystem {
 

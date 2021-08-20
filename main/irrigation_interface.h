@@ -3,6 +3,9 @@
 // ESP32 Irrigation System
 // (C)2021 bekki.jp
 
+// Include ----------------------
+#include <chrono>
+
 namespace IrrigationSystem {
 
 class ScheduleManager;
@@ -12,7 +15,9 @@ class IrrigationInterface
 public:
     virtual ~IrrigationInterface() {}
     
-    virtual void RequestRelayOpen(const int second) = 0;
+    virtual void RelayAddOpenSecond(const int second) = 0;
+    virtual void RelayForceClose() = 0;
+    virtual std::time_t RelayCloseEpoch() const = 0;
 
     virtual ScheduleManager& GetScheduleManager() = 0;
 };

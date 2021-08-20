@@ -4,42 +4,66 @@
 // Include ----------------------
 #include "relay_task.h"
 
-#include <esp_log.h>
-
-#include "define.h"
+#include "logger.h"
 #include "util.h"
 #include "irrigation_controller.h"
 #include "gpio_control.h"
+
 
 namespace IrrigationSystem {
 
 RelayTask::RelayTask()
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_OpenSecond(0)
+    ,m_IsOpen(false)
+    ,m_CloseEpoch(0)
 {}
 
 void RelayTask::Update()
 {
-   if (0 < m_OpenSecond) {
-        ESP_LOGI(TAG, "Open Relay. %dsec", m_OpenSecond);
-        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
-
-        const int tempSecond = m_OpenSecond;
-        m_OpenSecond -= tempSecond;
-        Util::SleepMillisecond(tempSecond * 1000);
-
+    const std::time_t now = Util::GetEpoch();
+    if (m_IsOpen && m_CloseEpoch < now) {
+        m_IsOpen = false;
+        ESP_LOGI(TAG, "Relay: Close");
         GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 0);
-        ESP_LOGI(TAG, "Close Relay.");
-
-        return;
     }
 
-    Util::SleepMillisecond(1000);
+    Util::SleepMillisecond(500);
 }
 
 void RelayTask::AddOpenSecond(const int second)
 {
-    m_OpenSecond += second;
+    static constexpr int MAX_OPEN_SECOND = 180;
+    if (second < 0 || MAX_OPEN_SECOND < second) {
+        ESP_LOGW(TAG, "Invalid parameter. Out of range AddOpenSecond input:%d max:%d", second, MAX_OPEN_SECOND);
+        return;
+    }
+
+    if (!m_IsOpen) {
+        m_CloseEpoch = Util::GetEpoch();
+    }
+    m_CloseEpoch += second;
+    ESP_LOGI(TAG, "Relay: Set Close Date. Close At:%s", Util::TimeToStr(Util::EpochToLocalTime(m_CloseEpoch)).c_str());
+
+    if (!m_IsOpen) {
+        m_IsOpen = true;
+        ESP_LOGI(TAG, "Relay: Open");
+        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
+    }
+}
+
+void RelayTask::ForceClose()
+{
+    m_CloseEpoch = 0;
+}
+
+
+std::time_t RelayTask::GetCloseEpoch() const
+{
+    if (!m_IsOpen) { 
+        // Return 0 if no relay is not open
+        return 0;
+    }
+    return m_CloseEpoch;
 }
 
 } // IrrigationSystem

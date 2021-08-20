@@ -5,9 +5,8 @@
 #include "wifi_manager.h"
 
 #include <cstring>
-#include <esp_log.h>
 
-#include "define.h"
+#include "logger.h"
 
 
 namespace IrrigationSystem {
@@ -27,7 +26,7 @@ WifiManager::WifiManager()
 
 void WifiManager::Connect()
 {
-    ESP_LOGI(TAG, "wifi_init_sta start.");
+    ESP_LOGI(TAG, "Start Wifi Connect.");
     m_EventGroup = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -61,7 +60,7 @@ void WifiManager::Connect()
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
+    ESP_LOGI(TAG, "Finish Wifi Connect.");
 
     EventBits_t bits = xEventGroupWaitBits(m_EventGroup,
             WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
@@ -70,9 +69,9 @@ void WifiManager::Connect()
             portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_WIFI_SSID);
+        ESP_LOGI(TAG, "Connected to ap SSID:%s", CONFIG_WIFI_SSID);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s", CONFIG_WIFI_SSID);
+        ESP_LOGW(TAG, "Failed to connect to SSID:%s", CONFIG_WIFI_SSID);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
@@ -95,7 +94,7 @@ void WifiManager::EventHandler(const esp_event_base_t eventBase, const int32_t e
             } else {
                 xEventGroupSetBits(m_EventGroup, WIFI_FAIL_BIT);
             }
-            ESP_LOGI(TAG,"connect to the AP fail");
+            ESP_LOGW(TAG,"connect to the AP fail");
         }
     } else if (eventBase == IP_EVENT) {
         if (eventId == IP_EVENT_STA_GOT_IP) {

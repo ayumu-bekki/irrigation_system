@@ -7,7 +7,6 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_log.h>
 #include <esp_sntp.h>
 #include <lwip/err.h>
 #include <lwip/sys.h>
@@ -16,7 +15,7 @@
 #include <iomanip>
 #include <cmath>
 
-#include "define.h"
+#include "logger.h"
 
 namespace IrrigationSystem {
 namespace Util {
@@ -60,32 +59,38 @@ void SyncSntpObtainTime()
     }
 }
 
-std::tm GetLocalTime() 
+std::time_t GetEpoch()
 {
     std::chrono::system_clock::time_point nowTimePoint = std::chrono::system_clock::now();
-    std::time_t epochTime = std::chrono::system_clock::to_time_t(nowTimePoint);
-    return *std::localtime(&epochTime);
+    return std::chrono::system_clock::to_time_t(nowTimePoint);
+}
+
+std::tm EpochToLocalTime(const std::time_t epoch)
+{
+    return *std::localtime(&epoch);
+}
+
+std::tm GetLocalTime() 
+{
+    return EpochToLocalTime(GetEpoch());
+}
+
+std::string TimeToStr(const std::tm& timeInfo)
+{
+    std::stringstream ss;
+    ss << std::setfill('0')
+       << std::setw(4) << (timeInfo.tm_year + 1900) << "/" 
+       << std::setw(2) << (timeInfo.tm_mon + 1) << "/" 
+       << std::setw(2) << timeInfo.tm_mday << " "
+       << std::setw(2) << timeInfo.tm_hour << ":" 
+       << std::setw(2) << timeInfo.tm_min << ":" 
+       << std::setw(2) << timeInfo.tm_sec;
+    return ss.str();
 }
 
 std::string GetNowTimeStr()
 {
-    const std::tm timeinfo = GetLocalTime();
-    std::stringstream ss;
-    ss << std::setfill('0')
-       << std::setw(4) << (timeinfo.tm_year + 1900) << "/" 
-       << std::setw(2) << (timeinfo.tm_mon + 1) << "/" 
-       << std::setw(2) << timeinfo.tm_mday << " "
-       << std::setw(2) << timeinfo.tm_hour << ":" 
-       << std::setw(2) << timeinfo.tm_min << ":" 
-       << std::setw(2) << timeinfo.tm_sec;
-       //<< " w:" << timeinfo.tm_wday // week
-    
-    return ss.str();
-}
-
-void PrintNow()
-{
-    ESP_LOGI(TAG, "Now:%s", GetNowTimeStr().c_str());
+    return TimeToStr(GetLocalTime());
 }
 
 void InitTimeZone()
@@ -105,6 +110,12 @@ int GregToMJD(const std::tm& timeInfo)
          + std::floor(30.59 * (month - 2.0))
          + timeInfo.tm_mday
          - 678912;
+}
+
+/// Get ChronoMinutes from hours and minutes.
+std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo)
+{
+    return std::chrono::hours(timeInfo.tm_hour) + std::chrono::minutes(timeInfo.tm_min);
 }
 
 std::vector<std::string> SplitString(const std::string &str, const char delim)

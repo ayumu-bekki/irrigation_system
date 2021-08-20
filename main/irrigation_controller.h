@@ -21,8 +21,17 @@ public:
     /// Start
     void Start();
 
-    void RequestRelayOpen(const int second) override;
+public:
+    /// (IrrigationInterface:override)
+    void RelayAddOpenSecond(const int second) override;
 
+    /// (IrrigationInterface:override)
+    void RelayForceClose() override;
+
+    /// (IrrigationInterface:override)
+    std::time_t RelayCloseEpoch() const override;
+
+    /// (IrrigationInterface:override)
     ScheduleManager& GetScheduleManager() override;
 
 private:

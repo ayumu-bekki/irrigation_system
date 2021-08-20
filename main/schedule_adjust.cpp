@@ -4,11 +4,10 @@
 // Include ----------------------
 #include "schedule_adjust.h"
 
-#include <esp_log.h>
-
-#include "define.h"
+#include "logger.h"
 #include "util.h"
 #include "schedule_manager.h"
+
 
 namespace IrrigationSystem {
 
@@ -28,7 +27,7 @@ void ScheduleAdjust::Exec()
     SetStatus(STATUS_EXECUTED);
 
     if (!m_pIrricationInterface) {
-        ESP_LOGW(TAG, "Failed IrricationInterface is null");
+        ESP_LOGE(TAG, "Failed IrricationInterface is null");
         return;
     }
  

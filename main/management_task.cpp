@@ -4,9 +4,7 @@
 // Include ----------------------
 #include "management_task.h"
 
-#include <esp_log.h>
-
-#include "define.h"
+#include "logger.h"
 #include "util.h"
 #include "irrigation_controller.h"
 #include "http_request.h"
@@ -22,6 +20,7 @@ ManagementTask::ManagementTask(IrrigationInterface *const pIrricationInterface)
 void ManagementTask::Update()
 {
     if (!m_pIrricationInterface) {
+        ESP_LOGE(TAG, "Failed IrricationInterface is null");
         return;
     }
 

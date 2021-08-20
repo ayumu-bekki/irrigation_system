@@ -34,14 +34,21 @@ public:
     int GetCurrentDay() const;
 
 private:
+    /// Date change schedule initialization
     void InitializeNewDay(const std::tm& nowTimeInfo);
 
-    void ClearScheduleList();
+    /// Add a schedule to the list
     void AddSchedule(ScheduleBase::UniquePtr&& scheduleItem);
+
+    /// Disable a schedule whose execution time has already expired.
+    void DisableExpiredSchedule(const std::tm& timeInfo);
+
+    /// Sort the schedule in ascending order
     void SortScheduleTime();
 
+#if CONFIG_DEBUG != 0
     void DebugOutputSchedules();
-
+#endif
 
 private:
     IrrigationInterface* m_pIrricationInterface;

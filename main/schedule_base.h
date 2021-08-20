@@ -32,15 +32,19 @@ public:
 
     virtual void Exec() = 0;
 
-    bool CanExecute(const std::tm& nowTimeInfo);
+    bool CanExecute(const std::tm& timeInfo);
 
     Status GetStatus() const;
     void SetStatus(const Status status);
+
+    /// Disable if the time has expired.
+    void DisableExpired(const std::tm& timeInfo);
 
     const std::string& GetName() const;
     int GetHour() const;
     int GetMinute() const;
     bool IsVisible() const;
+    std::chrono::minutes GetChronoMinutes() const;
 
     int GetDiffTime() const;
 

@@ -9,9 +9,8 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_log.h>
 
-#include "define.h"
+#include "logger.h"
 
 namespace IrrigationSystem {
 
@@ -36,7 +35,7 @@ void HttpRequest::Request(const std::string& url)
     const esp_err_t err = esp_http_client_perform(client);
 
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "Status = %d, content_length = %d",
+        ESP_LOGV(TAG, "Status = %d, content_length = %d",
            esp_http_client_get_status_code(client),
            esp_http_client_get_content_length(client));
         if (HttpStatus_Ok == esp_http_client_get_status_code(client)) {
@@ -45,7 +44,7 @@ void HttpRequest::Request(const std::string& url)
             m_Status = STATUS_NG;
         }
     } else {
-        ESP_LOGI(TAG, "HTTP ESP NG");
+        ESP_LOGW(TAG, "HTTP ESP NG");
         m_Status = STATUS_NG;
     }
 
@@ -70,29 +69,29 @@ HttpRequest::Status HttpRequest::GetStatus() const
 void HttpRequest::Event(esp_http_client_event_t *const pEventData)
 {
     if (pEventData->event_id == HTTP_EVENT_ERROR) {
-        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
+        ESP_LOGW(TAG, "HTTP_EVENT_ERROR");
     } else if (pEventData->event_id == HTTP_EVENT_ON_CONNECTED) {
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
+        ESP_LOGV(TAG, "HTTP_EVENT_ON_CONNECTED");
     } else if (pEventData->event_id == HTTP_EVENT_HEADER_SENT) {
-        ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
+        ESP_LOGV(TAG, "HTTP_EVENT_HEADER_SENT");
     } else if (pEventData->event_id == HTTP_EVENT_ON_HEADER) {
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
+        ESP_LOGV(TAG, "HTTP_EVENT_ON_HEADER");
     } else if (pEventData->event_id == HTTP_EVENT_ON_DATA) {
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", pEventData->data_len);
+        ESP_LOGV(TAG, "HTTP_EVENT_ON_DATA, len=%d", pEventData->data_len);
         if (!esp_http_client_is_chunked_response(pEventData->client)) {
             AddResponseBody(pEventData->data_len, pEventData->data);
         }
     } else if (pEventData->event_id == HTTP_EVENT_ON_FINISH) {
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
+        ESP_LOGV(TAG, "HTTP_EVENT_ON_FINISH");
     } else if (pEventData->event_id == HTTP_EVENT_DISCONNECTED) {
-        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+        ESP_LOGV(TAG, "HTTP_EVENT_DISCONNECTED");
     }
 }
 
 esp_err_t HttpRequest::EventHandle(esp_http_client_event_t *pEventData)
 {
     if (!pEventData->user_data) {
-        ESP_LOGI(TAG, "UserData Is Null");
+        ESP_LOGE(TAG, "UserData Is Null");
         return ESP_FAIL;
     }
     static_cast<HttpRequest*>(pEventData->user_data)->Event(pEventData);

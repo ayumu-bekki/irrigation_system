@@ -33,10 +33,11 @@ private:
 private:
     static esp_err_t RootHandler(httpd_req_t *pHttpRequestData);
     static esp_err_t OpenRelayHandler(httpd_req_t *pHttpRequestData);
+    static esp_err_t EmergencyStopHandler(httpd_req_t *pHttpRequestData);
     static esp_err_t ErrorNotFoundHandler(httpd_req_t *pHttpRequestData, httpd_err_code_t errCode);
 
 private:
-    IrrigationInterface* m_pIrricationInterface;
+    IrrigationInterface* m_pIrrigationInterface;
     httpd_handle_t m_HttpdHandle;
 };
 

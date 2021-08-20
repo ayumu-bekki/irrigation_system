@@ -4,23 +4,24 @@
 // Include ----------------------
 #include "httpd_server_task.h"
 
-#include <esp_log.h>
-
 #include <sstream>
 #include <string>
 #include <iomanip>
 #include <algorithm>
 
+#include "logger.h"
+#include "util.h"
 #include "schedule_manager.h"
 #include "schedule_base.h"
-#include "define.h"
-#include "util.h"
+
 
 namespace IrrigationSystem {
 
+static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 60;
+
 HttpdServerTask::HttpdServerTask(IrrigationInterface *const pIrricationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_pIrricationInterface(pIrricationInterface)
+    ,m_pIrrigationInterface(pIrricationInterface)
     ,m_HttpdHandle(NULL)
 {}
 
@@ -57,6 +58,15 @@ httpd_handle_t HttpdServerTask::StartWebServer()
         .user_ctx  = this,
     };
     httpd_register_uri_handler(httpdServerHandle, &routingOpenRelayUriHandler);
+
+    // Post "/emergency_stop" handle
+    const httpd_uri_t routingEmergencyStopyUriHandler = {
+        .uri       = "/emergency_stop",
+        .method    = HTTP_POST,
+        .handler   = this->EmergencyStopHandler,
+        .user_ctx  = this,
+    };
+    httpd_register_uri_handler(httpdServerHandle, &routingEmergencyStopyUriHandler);
  
     // Not Found Handle
     httpd_register_err_handler(httpdServerHandle, HTTPD_404_NOT_FOUND, this->ErrorNotFoundHandler);
@@ -83,31 +93,62 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     ESP_LOGI(TAG, "WebServer Request Recv. Get:Root");
 
     if (!pHttpRequestData->user_ctx) {
-        ESP_LOGI(TAG, "Failed user_ctx is null");
+        ESP_LOGE(TAG, "Failed user_ctx is null");
         return ESP_FAIL;
     }
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
-    ScheduleManager& scheduleManager = pHttpdServerTask->m_pIrricationInterface->GetScheduleManager();
+
+    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
+    if (!pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed irrigationInterface is null");
+        return ESP_FAIL;
+    }
+    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
+    const std::time_t relayCloseEpoch = pIrrigationInterface->RelayCloseEpoch();
 
     std::stringstream responseBody;
     responseBody 
         << "<!doctype html><head>"
-        << "<title>Irrigation System</title><style>" 
-        << "body {background-color:lightskyblue;}"
-        << "hr {height:0;margin:0;padding:0;border:0;overflow:visible;border-top:3px dotted white;}"
-        << "table {border-collapse: collapse;border-spacing: 0;margin-bottom:1.5em;background-color:aliceblue;}"
+        << "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+        << "<meta http-equiv=\"refresh\" content=\"3600\">"
+        << "<title>Irrigation System";
+#if CONFIG_DEBUG != 0
+    responseBody  << " (DEBUG)";
+#endif
+    responseBody 
+        << "</title><style>" 
+        << "*{box-sizing:border-box;margin:0;padding:0;}"
+        << "html{font-size: 16px}"
+        << "h1, h2 {margin: 14px}"
+        << "hr {margin:0px 6px}"
+        << "p, form {margin: 8px 20px}"
+        << "table {margin: 16px 20px}"
+        << "input {border-style:none; padding: 5px}";
+#if CONFIG_DEBUG != 0
+    responseBody 
+        << "body {background-color:lightgray;}";
+#else
+    responseBody 
+        << "body {background-color:lightskyblue;}";
+#endif
+    responseBody 
+        << "hr {height:0;border:0;overflow:visible;border-top:3px dotted white;}"
+        << "table {border-collapse: collapse;border-spacing: 0;background-color:aliceblue;border:solid 1px steelblue;}"
         << "table th {text-align:center;padding: 10px;background: steelblue;color: white;}"
         << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
         << "</style></head>"
-        << "<body><h1>Irrigation System</h1>"
-        << "<hr><h2>Status</h2>"
-        << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
-        << "<p>Version : " << GIT_VERSION << "</p>"
+        << "<body><h1>Irrigation System";
+#if CONFIG_DEBUG != 0
+    responseBody << " (DEBUG)";
+#endif
+    responseBody
+        << "</h1>"
         << "<hr><h2>Schedule</h2>"
-        << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>";
+        << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>"
+        << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>";
 
     // Create Schedule Table
     responseBody << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
@@ -135,11 +176,26 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
    
     responseBody
         << "</tbody></table>"
-        << "<hr><h2>Manual Watering</h2>"
+        << "<hr><h2>Manual Operation</h2>"
         << "<form action=\"/open_relay\" method=\"post\">"
-        << "Watering time (sec) : <input type=\"number\" name=\"second\" value=\"10\" min=\"1\" max=\"60\">"
+        << "Watering time (sec) : <input type=\"number\" name=\"second\" value=\"10\" min=\"1\" max=\"" << WEB_RELAY_OPEN_MAX_SECOND << "\"> "
         << "<input type=\"submit\" value=\"Start\">"
         << "</form>"
+        << "<form action=\"/emergency_stop\" method=\"post\">"
+        << "Emergency Stop : <input type=\"submit\" value=\"Stop\">"
+        << "</form>"
+
+        << "<hr><h2>Information</h2>"
+        << "<p>Relay Status : ";
+    if (relayCloseEpoch == 0) {
+        responseBody << "Close</p>";
+    } else {
+        responseBody 
+            << "<span style=\"background:coral;\">Open</span> > Close At(" 
+            << Util::TimeToStr(Util::EpochToLocalTime(relayCloseEpoch)) << ")</p>";
+    }
+    responseBody
+        << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
     httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), HTTPD_RESP_USE_STRLEN);
@@ -151,7 +207,7 @@ esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
     ESP_LOGI(TAG, "WebServer Request Recv. Post:OpenRelay");
 
     if (!pHttpRequestData->user_ctx) {
-        ESP_LOGI(TAG, "Failed user_ctx is null");
+        ESP_LOGE(TAG, "Failed user_ctx is null");
         return ESP_FAIL;
     }
 
@@ -175,20 +231,41 @@ esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
         cur_len += received;
     }
     buf[total_len] = '\0';
-    //ESP_LOGI(TAG, " Recv Data Length:%d Data:%s", total_len, buf);
+
+    ESP_LOGV(TAG, " Recv Data Length:%d Data:%s", total_len, buf);
     
     // Parse
     int relayOpenSecond = 0;
     std::vector<std::string> elements = Util::SplitString(buf, '=');   
     if (elements.size() == 2) {
         if (elements.at(0) == "second") {
-            relayOpenSecond = std::max(1, std::min(60, static_cast<int>(std::stol(elements.at(1)))));
+            relayOpenSecond = std::max(1, std::min(WEB_RELAY_OPEN_MAX_SECOND, static_cast<int>(std::stol(elements.at(1)))));
         }
     }
 
     // Relay Open
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
-    pHttpdServerTask->m_pIrricationInterface->RequestRelayOpen(relayOpenSecond);
+    pHttpdServerTask->m_pIrrigationInterface->RelayAddOpenSecond(relayOpenSecond);
+
+    // Redirect
+    httpd_resp_set_status(pHttpRequestData, "303 See Other");
+    httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
+    httpd_resp_send(pHttpRequestData, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData)
+{
+    ESP_LOGI(TAG, "WebServer Request Recv. Post:EmergencyStop");
+
+    if (!pHttpRequestData->user_ctx) {
+        ESP_LOGE(TAG, "Failed user_ctx is null");
+        return ESP_FAIL;
+    }
+
+    // Relay Open
+    HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
+    pHttpdServerTask->m_pIrrigationInterface->RelayForceClose();
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
@@ -203,6 +280,9 @@ esp_err_t HttpdServerTask::ErrorNotFoundHandler(httpd_req_t *pHttpRequestData, h
         return ESP_OK;
     }
     if (strcmp("/open_relay", pHttpRequestData->uri) == 0) {
+        return ESP_OK;
+    }
+    if (strcmp("/emergency_stop", pHttpRequestData->uri) == 0) {
         return ESP_OK;
     }
     httpd_resp_send_err(pHttpRequestData, HTTPD_404_NOT_FOUND, "HTTP Status 404 Not Found");

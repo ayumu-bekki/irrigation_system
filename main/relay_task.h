@@ -6,6 +6,8 @@
 // Include ----------------------
 #include <soc/soc.h>
 
+#include <chrono>
+
 #include "task.h"
 
 namespace IrrigationSystem {
@@ -14,7 +16,7 @@ class RelayTask final : public Task
 {
 public:
     static constexpr char *const TASK_NAME = (char*)"RelayTask";
-    static constexpr int PRIORITY = Task::PRIORITY_LOW;
+    static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
@@ -23,9 +25,13 @@ public:
     void Update() override;
     
     void AddOpenSecond(const int second);
+    void ForceClose();
+
+    std::time_t GetCloseEpoch() const;
 
 private:
-    int m_OpenSecond;
+    bool m_IsOpen;
+    std::time_t m_CloseEpoch;
 };
 
 } // IrrigationSystem

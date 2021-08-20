@@ -18,20 +18,29 @@ void SleepMillisecond(const unsigned int sleepMillisecond);
 /// SyncTime
 void SyncSntpObtainTime();
 
+/// GetEpoch
+std::time_t GetEpoch();
+
+/// Epoch To Local Time
+std::tm EpochToLocalTime(std::time_t epoch);
+
 /// GetLocalTime
 std::tm GetLocalTime();
 
+/// Get Time To String (yyyy/dd/mm hh:mm:ss)
+std::string TimeToStr(const std::tm& timeInfo);
+
 /// Get Now Date String (yyyy/dd/mm hh:mm:ss)
 std::string GetNowTimeStr();
-
-/// Print Now Date (yyyy/dd/mm hh:mm:ss)
-void PrintNow();
 
 /// Initialie Local Time Zone
 void InitTimeZone();
 
 /// Gregorian calendar to Modified Julian Date(修正ユリウス日)
 int GregToMJD(const std::tm& timeInfo);
+
+/// Get ChronoMinutes from hours and minutes.
+std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo);
 
 /// Split Text
 std::vector<std::string> SplitString(const std::string &str, const char delim);

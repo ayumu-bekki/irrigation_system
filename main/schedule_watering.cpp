@@ -4,9 +4,8 @@
 // Include ----------------------
 #include "schedule_watering.h"
 
-#include <esp_log.h>
+#include "logger.h"
 
-#include "define.h"
 
 namespace IrrigationSystem {
 
@@ -28,11 +27,11 @@ void ScheduleWatering::Exec()
     SetStatus(STATUS_EXECUTED);
 
     if (!m_pIrricationInterface) {
-        ESP_LOGW(TAG, "Failed IrricationInterface is null");
+        ESP_LOGE(TAG, "Failed IrricationInterface is null");
         return;
     }
  
-    m_pIrricationInterface->RequestRelayOpen(m_OpenSecond);
+    m_pIrricationInterface->RelayAddOpenSecond(m_OpenSecond);
 }
 
 } // IrrigationSystem

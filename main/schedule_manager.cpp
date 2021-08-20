@@ -4,16 +4,15 @@
 // Include ----------------------
 #include "schedule_manager.h"
 
-#include <esp_log.h>
 #include <algorithm>
 
+#include "logger.h"
 #include "util.h"
-#include "define.h"
-
 #include "schedule_base.h"
 #include "schedule_dummy.h"
 #include "schedule_adjust.h"
 #include "schedule_watering.h"
+
 
 namespace IrrigationSystem {
 
@@ -34,7 +33,7 @@ void ScheduleManager::Execute()
         InitializeNewDay(nowTimeInfo);
     }
 
-    // Run the schedule
+    // Run the schedule 
     for (auto&& pScheduleItem : m_ScheduleList) {
         if (pScheduleItem->CanExecute(nowTimeInfo)) {
             pScheduleItem->Exec();
@@ -78,13 +77,22 @@ void ScheduleManager::AdjustSchedule()
     const tm nowTimeInfo = Util::GetLocalTime();
     const int modifiedJulianDateNo = Util::GregToMJD(nowTimeInfo);
 
+    // Check Irrication
+    if (!m_pIrricationInterface) {
+        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+        return;
+    }
+
     // Register Dummy Schedule (Test)
+#if CONFIG_DEBUG != 0
+    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(12, 0)));
     AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(0, 0)));
+#endif
 
     // month check
     const int month = nowTimeInfo.tm_mon;
     if (month < 0 || 12 <= month) {
-        ESP_LOGW(TAG, "Invalid Month Num > %d", month);
+        ESP_LOGE(TAG, "Invalid Month Num > %d", month);
         return;
     }
     
@@ -97,19 +105,23 @@ void ScheduleManager::AdjustSchedule()
     // Register
     for (int i = 0; i < 2; ++i) {
         const int hour = MONTH_TO_WATERING_HOUR[month][i];
-        if (0 <= hour &&
-           nowTimeInfo.tm_hour < hour) {
+        if (0 <= hour) {
             AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrricationInterface, hour, 0, WATERING_SEC)));
         }
     }
     
+
+    // Disable 
+    DisableExpiredSchedule(nowTimeInfo);
+
     // Sort
     SortScheduleTime();
 
-    ESP_LOGI(TAG, "Finish Schedule Adjust.");
-
-    // Debug
+#if CONFIG_DEBUG != 0
     DebugOutputSchedules();
+#endif
+
+    ESP_LOGI(TAG, "Finish Schedule Adjust.");
 }
 
 int ScheduleManager::GetCurrentMonth() const
@@ -122,8 +134,14 @@ int ScheduleManager::GetCurrentDay() const
     return m_CurrentDay;
 }
 
+/// Date change schedule initialization
 void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
 {
+    if (!m_pIrricationInterface) {
+        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+        return;
+    }
+
     m_CurrentMonth = nowTimeInfo.tm_mon + 1;
     m_CurrentDay = nowTimeInfo.tm_mday;
 
@@ -131,11 +149,22 @@ void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
     AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrricationInterface, 0, 30)));
 }
 
+/// Add a schedule to the list
 void ScheduleManager::AddSchedule(ScheduleBase::UniquePtr&& scheduleItem)
 {
     m_ScheduleList.emplace_back(std::move(scheduleItem));
 }
 
+
+/// Disable a schedule whose execution time has already expired.
+void ScheduleManager::DisableExpiredSchedule(const std::tm& timeInfo)
+{
+    for (auto&& pScheduleItem : m_ScheduleList) {
+        pScheduleItem->DisableExpired(timeInfo);
+    }
+}
+
+/// Sort the schedule in ascending order
 void ScheduleManager::SortScheduleTime()
 {
     std::sort(  
@@ -147,12 +176,14 @@ void ScheduleManager::SortScheduleTime()
     );
 }
 
+#if CONFIG_DEBUG != 0
 void ScheduleManager::DebugOutputSchedules()
 {
     for (const auto& pScheduleItem : m_ScheduleList) {
-        ESP_LOGI(TAG, "Test Schedule Item %02d:%02d %s", pScheduleItem->GetHour(), pScheduleItem->GetMinute(), pScheduleItem->GetName().c_str());
+        ESP_LOGD(TAG, "Test Schedule Item %02d:%02d %s", pScheduleItem->GetHour(), pScheduleItem->GetMinute(), pScheduleItem->GetName().c_str());
     }
 }
+#endif // CONFIG_DEBUG
 
 } // IrrigationSystem
 

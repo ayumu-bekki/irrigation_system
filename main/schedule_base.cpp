@@ -5,9 +5,7 @@
 #include "schedule_base.h"
 
 #include <chrono>
-#include <esp_log.h>
-
-#include "define.h"
+#include "util.h"
 
 namespace IrrigationSystem {
 
@@ -37,16 +35,22 @@ void ScheduleBase::SetStatus(const ScheduleBase::Status status)
     m_Status = status;
 }
 
+void ScheduleBase::DisableExpired(const std::tm& timeInfo)
+{
+    if (CanExecute(timeInfo)) {
+        m_Status = STATUS_DISABLE;
+    }
+}
+
 const std::string& ScheduleBase::GetName() const
 {
     return m_Name;
 }
 
-bool ScheduleBase::CanExecute(const std::tm& nowTimeInfo)
+bool ScheduleBase::CanExecute(const std::tm& timeInfo)
 {
-    return m_Status == STATUS_WAIT &&
-           m_Hour <= nowTimeInfo.tm_hour && 
-           m_Minute <= nowTimeInfo.tm_min;
+    const std::chrono::minutes nowChrono = Util::GetChronoHourMinutes(timeInfo);
+    return m_Status == STATUS_WAIT && GetChronoMinutes() < nowChrono;
 }
 
 int ScheduleBase::GetHour() const
@@ -64,12 +68,15 @@ bool ScheduleBase::IsVisible() const
     return m_IsVisible;
 }
 
-int ScheduleBase::GetDiffTime() const 
+std::chrono::minutes ScheduleBase::GetChronoMinutes() const 
 {
-    return (std::chrono::hours(m_Hour) + std::chrono::minutes(m_Minute)).count();
-
+    return std::chrono::hours(m_Hour) + std::chrono::minutes(m_Minute);
 }
 
+int ScheduleBase::GetDiffTime() const 
+{
+    return GetChronoMinutes().count();
+}
 
 const char* ScheduleBase::StatusToStr(const ScheduleBase::Status status)
 {

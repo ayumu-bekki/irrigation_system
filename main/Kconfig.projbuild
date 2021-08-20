@@ -48,4 +48,11 @@ menu "Irrigation System Configuration"
         help
             This sets the maximum supported size of headers section in HTTP request packet to be processed by the server
 
+    config DEBUG
+        int "Debug Mode"
+        default 0
+        help
+            Set a non-zero number to build as debug mode.
+
+
 endmenu
