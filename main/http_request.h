@@ -29,6 +29,8 @@ public:
     /// Begin Request
     void Request(const std::string& url);
 
+    void EnableTLS(const char *const pCert);
+
     const std::string GetResponseBody() const;
     
     Status GetStatus() const;
@@ -46,6 +48,7 @@ private:
     Status m_Status;
     std::string m_Url;
     std::vector<char> m_ResponseBody;
+    const char* m_pServerRootCert;
 };
 
 } // IrrigationSystem
