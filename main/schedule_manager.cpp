@@ -15,7 +15,6 @@
 #include "schedule_dummy.h"
 #include "schedule_adjust.h"
 #include "schedule_watering.h"
-#include "weather_forecast.h"
 
 
 namespace IrrigationSystem {
@@ -142,7 +141,8 @@ void ScheduleManager::AdjustSchedule()
     
     // Request weather forecast
     WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
-    if (weatherForecast.Request()) {
+    weatherForecast.Request();
+    if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
         const int maxTemperature = weatherForecast.GetCurrentMaxTemperature();
         ESP_LOGI(TAG, "Weather OK. Weather:%s MaxTemperature:%d°C", WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode()), maxTemperature);
         for (int tempIdx = 0; tempIdx < TEMPERATION_TO_WATERING_TYPE_LENGTH; ++tempIdx) {
@@ -221,6 +221,9 @@ void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
 
     m_ScheduleList.clear();
     AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrrigationInterface, 0, 30)));
+
+    WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+    weatherForecast.Reset();
 }
 
 /// Add a schedule to the list

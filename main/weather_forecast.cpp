@@ -19,14 +19,15 @@ extern const uint8_t CERT_DigiCertGlobalRootCA_PEM[] asm("_binary_DigiCertGlobal
 namespace IrrigationSystem {
 
 WeatherForecast::WeatherForecast()
-    :m_IsGetSuccess(false)
+    :m_RequestStatus(NOT_REQUEST)
     ,m_CurrentWeatherCode(0)
     ,m_CurrentMaxTemperature(0)
 {}
 
 /// Obtaining weather forecast information via the JMA API
-bool WeatherForecast::Request()
+void WeatherForecast::Request()
 {
+    // Weather Forecast API by JMA
     std::stringstream requestUrl;
     requestUrl << "https://www.jma.go.jp/bosai/forecast/data/forecast/" 
                << CONFIG_JMA_AREA_PATH_CODE << ".json";
@@ -35,17 +36,24 @@ bool WeatherForecast::Request()
     httpRequest.EnableTLS(reinterpret_cast<const char*>(CERT_DigiCertGlobalRootCA_PEM));
     httpRequest.Request(requestUrl.str());
     if (httpRequest.GetStatus() == HttpRequest::STATUS_OK) {
-        ESP_LOGI(TAG, "Request OK");
-        return Parse(httpRequest.GetResponseBody());
+        Parse(httpRequest.GetResponseBody());
+        return;
     }
     ESP_LOGW(TAG, "Request NG");
-    return false;
 }
 
 
-bool WeatherForecast::IsGetSuccess() const
+void WeatherForecast::Reset()
 {
-    return m_IsGetSuccess;
+    m_RequestStatus = NOT_REQUEST;
+    m_CurrentWeatherCode = 0;
+    m_CurrentMaxTemperature = 0;
+}
+
+
+WeatherForecast::RequestStatus WeatherForecast::GetRequestStatus() const
+{
+    return m_RequestStatus;
 }
 
 int WeatherForecast::GetCurrentWeatherCode() const
@@ -68,11 +76,9 @@ bool WeatherForecast::IsRain() const
             weatherCodeTopCategory == WEATHER_TOP_CATEGORY_SNOW);
 }
 
-bool WeatherForecast::Parse(const std::string& jsonStr)
+void WeatherForecast::Parse(const std::string& jsonStr)
 {
-    // Weather Forecast API by JMA
-
-    m_IsGetSuccess = false;
+    m_RequestStatus = FAILED;
     cJSON* pJsonRoot = nullptr;
 
     try {
@@ -221,8 +227,8 @@ bool WeatherForecast::Parse(const std::string& jsonStr)
             }
         }
 
-        m_IsGetSuccess = true;
-        ESP_LOGI(TAG, "WeatherForecast Parse OK.");
+        m_RequestStatus = ACQUIRED;
+        ESP_LOGD(TAG, "WeatherForecast Parse OK.");
 
     } catch (const std::invalid_argument& e) {
         ESP_LOGW(TAG, "Catch Exception. Invalid Argument String to Number.");
@@ -235,8 +241,6 @@ bool WeatherForecast::Parse(const std::string& jsonStr)
     }
 
     cJSON_Delete(pJsonRoot);
-
-    return m_IsGetSuccess;
 }
 
 

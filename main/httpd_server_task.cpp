@@ -119,7 +119,9 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 
     
     std::stringstream weatherInfo;
-    if (weatherForecast.IsGetSuccess()) {   
+    if (weatherForecast.GetRequestStatus() == WeatherForecast::NOT_REQUEST) {   
+        weatherInfo << " Not yet acquired.";
+    } else if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
         weatherInfo << " Weather(" << WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode())
                     << ") MaxTemp(" << weatherForecast.GetCurrentMaxTemperature() << "°C)";
     } else {

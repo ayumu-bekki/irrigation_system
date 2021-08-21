@@ -12,23 +12,32 @@ namespace IrrigationSystem {
 class WeatherForecast final
 {
 public:
+    enum RequestStatus {
+        NOT_REQUEST,
+        ACQUIRED,
+        FAILED,
+    };
+
+public:
     WeatherForecast();
 
-    bool Request();
+    void Request();
 
-    bool IsGetSuccess() const;
+    void Reset();
+
+    RequestStatus GetRequestStatus() const;
     int GetCurrentWeatherCode() const;
     int GetCurrentMaxTemperature() const;
     bool IsRain() const;
 
 private:
-    bool Parse(const std::string& jsonStr);
+    void Parse(const std::string& jsonStr);
 
 public:
     static const char* WeatherCodeToStr(const int weatherCode);
 
 private:
-    bool m_IsGetSuccess;
+    RequestStatus m_RequestStatus;
     int m_CurrentWeatherCode;
     int m_CurrentMaxTemperature;
 };
