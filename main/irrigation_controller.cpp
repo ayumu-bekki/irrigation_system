@@ -20,6 +20,7 @@ IrrigationController::IrrigationController()
     :m_WifiManager()
     ,m_RelayTask()
     ,m_ScheduleManager(this)
+    ,m_WeatherForecast()
 {}
 
 void IrrigationController::Start()
@@ -89,6 +90,12 @@ ScheduleManager& IrrigationController::GetScheduleManager()
 {
     return m_ScheduleManager;
 }
+
+WeatherForecast& IrrigationController::GetWeatherForecast()
+{
+    return m_WeatherForecast;
+}
+
 
 } // IrrigationSystem
 

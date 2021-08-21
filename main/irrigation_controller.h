@@ -8,7 +8,7 @@
 #include "wifi_manager.h"
 #include "relay_task.h"
 #include "schedule_manager.h"
-
+#include "weather_forecast.h"
 
 namespace IrrigationSystem {
 
@@ -34,10 +34,14 @@ public:
     /// (IrrigationInterface:override)
     ScheduleManager& GetScheduleManager() override;
 
+    /// (IrrigationInterface:override)
+    WeatherForecast& GetWeatherForecast() override;
+
 private:
     WifiManager m_WifiManager;
     RelayTask m_RelayTask;
     ScheduleManager m_ScheduleManager;
+    WeatherForecast m_WeatherForecast;
 };
 
 } // IrrigationSystem

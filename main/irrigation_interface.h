@@ -9,6 +9,7 @@
 namespace IrrigationSystem {
 
 class ScheduleManager;
+class WeatherForecast;
 
 class IrrigationInterface
 {
@@ -20,6 +21,7 @@ public:
     virtual std::time_t RelayCloseEpoch() const = 0;
 
     virtual ScheduleManager& GetScheduleManager() = 0;
+    virtual WeatherForecast& GetWeatherForecast() = 0;
 };
 
 } // IrrigationSystem

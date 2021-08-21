@@ -13,15 +13,16 @@
 #include "util.h"
 #include "schedule_manager.h"
 #include "schedule_base.h"
+#include "weather_forecast.h"
 
 
 namespace IrrigationSystem {
 
 static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 60;
 
-HttpdServerTask::HttpdServerTask(IrrigationInterface *const pIrricationInterface)
+HttpdServerTask::HttpdServerTask(IrrigationInterface *const pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_pIrrigationInterface(pIrricationInterface)
+    ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_HttpdHandle(NULL)
 {}
 
@@ -90,7 +91,7 @@ void HttpdServerTask::Update()
 
 esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 {
-    ESP_LOGI(TAG, "WebServer Request Recv. Get:Root");
+    ESP_LOGV(TAG, "WebServer Request Recv. Get:Root");
 
     if (!pHttpRequestData->user_ctx) {
         ESP_LOGE(TAG, "Failed user_ctx is null");
@@ -103,36 +104,44 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed irrigationInterface is null");
         return ESP_FAIL;
     }
-    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
+    const WeatherForecast &weatherForecast = pIrrigationInterface->GetWeatherForecast();
+    const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
     const std::time_t relayCloseEpoch = pIrrigationInterface->RelayCloseEpoch();
+
+#if CONFIG_DEBUG != 0
+    static const std::string title = "Irrigation System (DEBUG)";
+    static const std::string bodyStyle = "body {background-color:lightgray;}";
+#else
+    static const std::string title = "Irrigation System";
+    static const std::string bodyStyle = "body {background-color:lightskyblue;}";
+#endif
+
+    
+    std::stringstream weatherInfo;
+    if (weatherForecast.IsGetSuccess()) {   
+        weatherInfo << " Weather(" << WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode())
+                    << ") MaxTemp(" << weatherForecast.GetCurrentMaxTemperature() << "°C)";
+    } else {
+        weatherInfo << " <span style=\"background-color: yellow;\">Failed to retrieve data</span>";
+    }
 
     std::stringstream responseBody;
     responseBody 
         << "<!doctype html><head>"
+        << "<meta charset=\"utf-8\"/>"
         << "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         << "<meta http-equiv=\"refresh\" content=\"3600\">"
-        << "<title>Irrigation System";
-#if CONFIG_DEBUG != 0
-    responseBody  << " (DEBUG)";
-#endif
-    responseBody 
-        << "</title><style>" 
+        << "<title>" << title << "</title>"
+        << "<style>" 
         << "*{box-sizing:border-box;margin:0;padding:0;}"
         << "html{font-size: 16px}"
         << "h1, h2 {margin: 14px}"
         << "hr {margin:0px 6px}"
         << "p, form {margin: 8px 20px}"
         << "table {margin: 16px 20px}"
-        << "input {border-style:none; padding: 5px}";
-#if CONFIG_DEBUG != 0
-    responseBody 
-        << "body {background-color:lightgray;}";
-#else
-    responseBody 
-        << "body {background-color:lightskyblue;}";
-#endif
-    responseBody 
+        << "input {border-style:none; padding: 5px}"
+        << bodyStyle
         << "hr {height:0;border:0;overflow:visible;border-top:3px dotted white;}"
         << "table {border-collapse: collapse;border-spacing: 0;background-color:aliceblue;border:solid 1px steelblue;}"
         << "table th {text-align:center;padding: 10px;background: steelblue;color: white;}"
@@ -140,12 +149,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
         << "</style></head>"
-        << "<body><h1>Irrigation System";
-#if CONFIG_DEBUG != 0
-    responseBody << " (DEBUG)";
-#endif
-    responseBody
-        << "</h1>"
+        << "<body><h1>" << title << "</h1>"
         << "<hr><h2>Schedule</h2>"
         << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>"
         << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>";
@@ -184,7 +188,6 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "<form action=\"/emergency_stop\" method=\"post\">"
         << "Emergency Stop : <input type=\"submit\" value=\"Stop\">"
         << "</form>"
-
         << "<hr><h2>Information</h2>"
         << "<p>Relay Status : ";
     if (relayCloseEpoch == 0) {
@@ -195,6 +198,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
             << Util::TimeToStr(Util::EpochToLocalTime(relayCloseEpoch)) << ")</p>";
     }
     responseBody
+        << "<p>Weather Forecast : " << weatherInfo.str() << "<p>"
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
@@ -204,7 +208,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 
 esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
 {
-    ESP_LOGI(TAG, "WebServer Request Recv. Post:OpenRelay");
+    ESP_LOGV(TAG, "WebServer Request Recv. Post:OpenRelay");
 
     if (!pHttpRequestData->user_ctx) {
         ESP_LOGE(TAG, "Failed user_ctx is null");
@@ -256,7 +260,7 @@ esp_err_t HttpdServerTask::OpenRelayHandler(httpd_req_t *pHttpRequestData)
 
 esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData)
 {
-    ESP_LOGI(TAG, "WebServer Request Recv. Post:EmergencyStop");
+    ESP_LOGV(TAG, "WebServer Request Recv. Post:EmergencyStop");
 
     if (!pHttpRequestData->user_ctx) {
         ESP_LOGE(TAG, "Failed user_ctx is null");

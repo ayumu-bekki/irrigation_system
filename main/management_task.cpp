@@ -12,20 +12,20 @@
 
 namespace IrrigationSystem {
 
-ManagementTask::ManagementTask(IrrigationInterface *const pIrricationInterface)
+ManagementTask::ManagementTask(IrrigationInterface *const pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_pIrricationInterface(pIrricationInterface)
+    ,m_pIrrigationInterface(pIrrigationInterface)
 {}
 
 void ManagementTask::Update()
 {
-    if (!m_pIrricationInterface) {
-        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+    if (!m_pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
     // Schedule Manager
-    m_pIrricationInterface->GetScheduleManager().Execute(); 
+    m_pIrrigationInterface->GetScheduleManager().Execute(); 
     
     Util::SleepMillisecond(10 * 1000);
 }

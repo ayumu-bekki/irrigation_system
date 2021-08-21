@@ -40,7 +40,7 @@ void HttpRequest::Request(const std::string& url)
     const esp_err_t err = esp_http_client_perform(client);
 
     if (err == ESP_OK) {
-        ESP_LOGV(TAG, "Status = %d, content_length = %d",
+        ESP_LOGV(TAG, "HTTP Request Status = %d, content_length = %d",
            esp_http_client_get_status_code(client),
            esp_http_client_get_content_length(client));
         if (HttpStatus_Ok == esp_http_client_get_status_code(client)) {
@@ -49,7 +49,7 @@ void HttpRequest::Request(const std::string& url)
             m_Status = STATUS_NG;
         }
     } else {
-        ESP_LOGW(TAG, "HTTP ESP NG");
+        ESP_LOGW(TAG, "Failed HTTP Request");
         m_Status = STATUS_NG;
     }
 
@@ -81,7 +81,6 @@ void HttpRequest::Event(esp_http_client_event_t *const pEventData)
     if (pEventData->event_id == HTTP_EVENT_ERROR) {
         ESP_LOGW(TAG, "HTTP_EVENT_ERROR");
     } else if (pEventData->event_id == HTTP_EVENT_ON_DATA) {
-        ESP_LOGV(TAG, "HTTP_EVENT_ON_DATA, len=%d", pEventData->data_len);
         if (!esp_http_client_is_chunked_response(pEventData->client)) {
             AddResponseBody(pEventData->data_len, pEventData->data);
         }

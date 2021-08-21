@@ -13,12 +13,12 @@ namespace IrrigationSystem {
 
 ScheduleAdjust::ScheduleAdjust()
     :ScheduleBase()
-    ,m_pIrricationInterface(nullptr)
+    ,m_pIrrigationInterface(nullptr)
 {}
 
-ScheduleAdjust::ScheduleAdjust(IrrigationInterface *const pIrricationInterface, const int hour, const int minute)
+ScheduleAdjust::ScheduleAdjust(IrrigationInterface *const pIrrigationInterface, const int hour, const int minute)
     :ScheduleBase(ScheduleBase::STATUS_WAIT, ScheduleAdjust::SCHEDULE_NAME, hour, minute, ScheduleAdjust::IS_VISIBLE_TASK)
-    ,m_pIrricationInterface(pIrricationInterface)
+    ,m_pIrrigationInterface(pIrrigationInterface)
 {}
 
 void ScheduleAdjust::Exec()
@@ -26,12 +26,12 @@ void ScheduleAdjust::Exec()
     ESP_LOGI(TAG, "Schedule Exec - Adjust Executer. %02d:%02d", GetHour(), GetMinute());
     SetStatus(STATUS_EXECUTED);
 
-    if (!m_pIrricationInterface) {
-        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+    if (!m_pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
  
-    ScheduleManager& scheduleManager = m_pIrricationInterface->GetScheduleManager();
+    ScheduleManager& scheduleManager = m_pIrrigationInterface->GetScheduleManager();
     scheduleManager.AdjustSchedule();
 }
 

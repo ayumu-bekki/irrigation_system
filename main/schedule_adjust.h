@@ -19,12 +19,12 @@ private:
     ScheduleAdjust();
 
 public:
-    ScheduleAdjust(IrrigationInterface *const pIrricationInterface, const int hour, const int minute);
+    ScheduleAdjust(IrrigationInterface *const pIrrigationInterface, const int hour, const int minute);
 
     void Exec() override;
 
 private:
-    IrrigationInterface* m_pIrricationInterface;
+    IrrigationInterface* m_pIrrigationInterface;
 };
 
 } // IrrigationSystem

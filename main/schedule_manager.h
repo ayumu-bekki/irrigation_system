@@ -22,7 +22,7 @@ public:
     using ScheduleBaseList = std::vector<ScheduleBase::UniquePtr>;
 
 public:
-    explicit ScheduleManager(IrrigationInterface *const pIrricationInterface);
+    explicit ScheduleManager(IrrigationInterface *const pIrrigationInterface);
 
     void Execute();
 
@@ -51,7 +51,7 @@ private:
 #endif
 
 private:
-    IrrigationInterface* m_pIrricationInterface;
+    IrrigationInterface* m_pIrrigationInterface;
     ScheduleBaseList m_ScheduleList;
     int m_CurrentMonth;
     int m_CurrentDay;

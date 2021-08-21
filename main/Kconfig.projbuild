@@ -30,11 +30,20 @@ menu "Irrigation System Configuration"
         help
             GPIO number for relay signals
 
+    config JMA_AREA_PATH_CODE
+        int "JMA Area Path Code"
+        default 130000
+        help
+            Area path code for weather forecast determination. Tokyo:130010
+            http://www.jma.go.jp/bosai/common/const/area.json
+
     config JMA_AREA_FORECAST_LOCAL_CODE
         int "JMA Area Forecast Local Code"
         default 130010
         help
             Area number for weather forecast determination. Tokyo:130010
+            気象庁 気象警報・注意報等に用いる府県予報区、一次細分区域等のコード
+            https://www.data.go.jp/data/dataset/mlit_20140919_0758/resource/a2081b13-5b3d-4ac1-9e4a-0a69aa7af0ef
 
     config JMA_AMEDAS_OBSERVATION_POINT_NUMBER
         int "JMA AMeDAS Observation Point Number"

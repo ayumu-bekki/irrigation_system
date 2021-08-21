@@ -21,12 +21,12 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit ManagementTask(IrrigationInterface *const pIrricationInterface);
+    explicit ManagementTask(IrrigationInterface *const pIrrigationInterface);
 
     void Update() override;
 
 private:
-    IrrigationInterface* m_pIrricationInterface;
+    IrrigationInterface* m_pIrrigationInterface;
 };
 
 } // IrrigationSystem

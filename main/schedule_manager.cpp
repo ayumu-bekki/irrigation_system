@@ -20,8 +20,8 @@
 
 namespace IrrigationSystem {
 
-ScheduleManager::ScheduleManager(IrrigationInterface *const pIrricationInterface)
-    :m_pIrricationInterface(pIrricationInterface)
+ScheduleManager::ScheduleManager(IrrigationInterface *const pIrrigationInterface)
+    :m_pIrrigationInterface(pIrrigationInterface)
     ,m_ScheduleList()
     ,m_CurrentMonth(0)
     ,m_CurrentDay(0)
@@ -88,8 +88,12 @@ void ScheduleManager::AdjustSchedule()
     };
     
     // Temperature to Watering Type (Scan from the smaller side.) [Celsius]
+    struct TemperatureWatering {
+        int moreThanTemperature;
+        WateringType wateringType;
+    };
     static constexpr size_t TEMPERATION_TO_WATERING_TYPE_LENGTH = 3;
-    static constexpr int TEMPERATURE_TO_WATERING_TYPE[TEMPERATION_TO_WATERING_TYPE_LENGTH][2] = {
+    static constexpr TemperatureWatering TEMPERATURE_TO_WATERING_TYPE[TEMPERATION_TO_WATERING_TYPE_LENGTH] = {
         // WATERING_TYPE_NONE
         { 4, WATERING_TYPE_COLD },  // More than 4 WATERING_TYPE_COLD
         { 16, WATERING_TYPE_WARM }, // More than 16 WATERING_TYPE_WARM
@@ -122,9 +126,9 @@ void ScheduleManager::AdjustSchedule()
         {{7, 16}, {7, NOT_WATERING}},                                   // WATERING_TYPE_HOT
     };
 
-    // Check Irrication
-    if (!m_pIrricationInterface) {
-        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+    // Check Irrigation
+    if (!m_pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
@@ -132,26 +136,25 @@ void ScheduleManager::AdjustSchedule()
     const tm nowTimeInfo = Util::GetLocalTime();
     const int modifiedJulianDateNo = Util::GregToMJD(nowTimeInfo);
 
-    // Request weather forecast
-    WeatherForecast weatherForecast;
-    weatherForecast.Request();
-
     // Select watering type from weather forecast.
     WateringType wateringType = WATERING_TYPE_NONE;
     WateringWeather wateringWeather = WATERING_WEATHER_NORMAL;
     
-    if (weatherForecast.IsGetSuccess()) {
-        ESP_LOGI(TAG, "Weather OK");
+    // Request weather forecast
+    WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+    if (weatherForecast.Request()) {
         const int maxTemperature = weatherForecast.GetCurrentMaxTemperature();
+        ESP_LOGI(TAG, "Weather OK. Weather:%s MaxTemperature:%d°C", WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode()), maxTemperature);
         for (int tempIdx = 0; tempIdx < TEMPERATION_TO_WATERING_TYPE_LENGTH; ++tempIdx) {
-            if (TEMPERATURE_TO_WATERING_TYPE[tempIdx][0] <= maxTemperature) {
-                wateringType = static_cast<WateringType>(TEMPERATURE_TO_WATERING_TYPE[tempIdx][1]);
+            if (TEMPERATURE_TO_WATERING_TYPE[tempIdx].moreThanTemperature <= maxTemperature) {
+                wateringType = TEMPERATURE_TO_WATERING_TYPE[tempIdx].wateringType;
             }
         }
         if (weatherForecast.IsRain()) {
             wateringWeather = WATERING_WEATHER_RAIN;
         }
     } else {
+        ESP_LOGW(TAG, "Failed to get the weather forecast.");
         const int month = nowTimeInfo.tm_mon;
         if (month < 0 || MONTH_MAX <= month) {
             ESP_LOGE(TAG, "Invalid Month Num > %d", month);
@@ -178,7 +181,7 @@ void ScheduleManager::AdjustSchedule()
         const int hour = WATERING_TYPE_TO_WATERING_HOUR[wateringType][wateringWeather][hourIndex];
         const int wateringSec = WATERING_TYPE_TO_WATERING_SEC[wateringType];
         if (hour != NOT_WATERING) {
-            AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrricationInterface, hour, 0, wateringSec)));
+            AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSec)));
         }
     }
 
@@ -208,8 +211,8 @@ int ScheduleManager::GetCurrentDay() const
 /// Date change schedule initialization
 void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
 {
-    if (!m_pIrricationInterface) {
-        ESP_LOGE(TAG, "Failed IrricationInterface is null");
+    if (!m_pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
@@ -217,7 +220,7 @@ void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
     m_CurrentDay = nowTimeInfo.tm_mday;
 
     m_ScheduleList.clear();
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrricationInterface, 0, 30)));
+    AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrrigationInterface, 0, 30)));
 }
 
 /// Add a schedule to the list
