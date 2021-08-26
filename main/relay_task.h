@@ -25,12 +25,17 @@ public:
     void Update() override;
     
     void AddOpenSecond(const int second);
-    void ForceClose();
+    void ResetTimer();
+    void Force(const bool isOpen);
 
     std::time_t GetCloseEpoch() const;
 
 private:
-    bool m_IsOpen;
+    void SetRelay();
+
+private:
+    bool m_IsTimerOpen;
+    bool m_IsForceOpen;
     std::time_t m_CloseEpoch;
 };
 

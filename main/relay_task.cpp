@@ -14,17 +14,17 @@ namespace IrrigationSystem {
 
 RelayTask::RelayTask()
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_IsOpen(false)
+    ,m_IsTimerOpen(false)
+    ,m_IsForceOpen(false)
     ,m_CloseEpoch(0)
 {}
 
 void RelayTask::Update()
 {
     const std::time_t now = Util::GetEpoch();
-    if (m_IsOpen && m_CloseEpoch < now) {
-        m_IsOpen = false;
-        ESP_LOGI(TAG, "Relay: Close");
-        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 0);
+    if (m_IsTimerOpen && m_CloseEpoch < now) {
+        m_IsTimerOpen = false;
+        SetRelay();
     }
 
     Util::SleepMillisecond(500);
@@ -38,32 +38,42 @@ void RelayTask::AddOpenSecond(const int second)
         return;
     }
 
-    if (!m_IsOpen) {
+    if (!m_IsTimerOpen) {
         m_CloseEpoch = Util::GetEpoch();
     }
     m_CloseEpoch += second;
     ESP_LOGI(TAG, "Relay: Set Close Date. Close At:%s", Util::TimeToStr(Util::EpochToLocalTime(m_CloseEpoch)).c_str());
 
-    if (!m_IsOpen) {
-        m_IsOpen = true;
-        ESP_LOGI(TAG, "Relay: Open");
-        GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, 1);
+    if (!m_IsTimerOpen) {
+        m_IsTimerOpen = true;
+        SetRelay();
     }
 }
 
-void RelayTask::ForceClose()
+void RelayTask::ResetTimer()
 {
     m_CloseEpoch = 0;
 }
 
+void RelayTask::Force(const bool isOpen)
+{
+    m_IsForceOpen = isOpen;
+    SetRelay();
+}
 
 std::time_t RelayTask::GetCloseEpoch() const
 {
-    if (!m_IsOpen) { 
+    if (!m_IsTimerOpen) { 
         // Return 0 if no relay is not open
         return 0;
     }
     return m_CloseEpoch;
+}
+
+void RelayTask::SetRelay()
+{
+    ESP_LOGI(TAG, "Relay: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
+    GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, m_IsTimerOpen || m_IsForceOpen);
 }
 
 } // IrrigationSystem

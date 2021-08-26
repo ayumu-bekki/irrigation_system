@@ -17,7 +17,8 @@ public:
     virtual ~IrrigationInterface() {}
     
     virtual void RelayAddOpenSecond(const int second) = 0;
-    virtual void RelayForceClose() = 0;
+    virtual void RelayResetTimer() = 0;
+    virtual void RelayForce(const bool isOpen) = 0;
     virtual std::time_t RelayCloseEpoch() const = 0;
 
     virtual ScheduleManager& GetScheduleManager() = 0;

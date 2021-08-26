@@ -11,6 +11,7 @@
 #include "util.h"
 #include "management_task.h"
 #include "httpd_server_task.h"
+#include "watering_button_task.h"
 #include "gpio_control.h"
 
 
@@ -58,9 +59,11 @@ void IrrigationController::Start()
     // MainTask
     ManagementTask managementTask(this);
     HttpdServerTask httpdServerTask(this);
+    WateringButtonTask wateringButtonTask(this);
 
     managementTask.Start();
     httpdServerTask.Start();
+    wateringButtonTask.Start();
     m_RelayTask.Start();
 
     ESP_LOGI(TAG, "Activation Complete Irrigation System.");
@@ -76,9 +79,14 @@ void IrrigationController::RelayAddOpenSecond(const int second)
     m_RelayTask.AddOpenSecond(second);   
 }
 
-void IrrigationController::RelayForceClose()
+void IrrigationController::RelayResetTimer()
 {
-    m_RelayTask.ForceClose();   
+    m_RelayTask.ResetTimer();   
+}
+
+void IrrigationController::RelayForce(const bool isOpen)
+{
+    m_RelayTask.Force(isOpen);   
 }
 
 std::time_t IrrigationController::RelayCloseEpoch() const 

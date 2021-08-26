@@ -271,7 +271,7 @@ esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData)
 
     // Relay Open
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
-    pHttpdServerTask->m_pIrrigationInterface->RelayForceClose();
+    pHttpdServerTask->m_pIrrigationInterface->RelayResetTimer();
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");

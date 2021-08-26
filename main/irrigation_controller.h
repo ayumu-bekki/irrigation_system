@@ -26,7 +26,10 @@ public:
     void RelayAddOpenSecond(const int second) override;
 
     /// (IrrigationInterface:override)
-    void RelayForceClose() override;
+    void RelayResetTimer() override;
+
+    /// (IrrigationInterface:override)
+    void RelayForce(const bool isOpen) override;
 
     /// (IrrigationInterface:override)
     std::time_t RelayCloseEpoch() const override;
