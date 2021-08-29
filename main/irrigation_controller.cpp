@@ -32,8 +32,8 @@ void IrrigationController::Start()
     ESP_LOGI(TAG, "Startup Irrigation System. Version:%s", GIT_VERSION);
 
     // Initialize GPIO
-    GPIO::InitOutput(CONFIG_MONITORING_SIGNAL_GPIO_NO, 1);
-    GPIO::InitOutput(CONFIG_RELAY_SIGNAL_GPIO_NO);
+    GPIO::InitOutput(CONFIG_MONITORING_OUTPUT_GPIO_NO, 1);
+    GPIO::InitOutput(CONFIG_WATERING_OUTPUT_GPIO_NO);
 
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -54,7 +54,7 @@ void IrrigationController::Start()
     Util::SyncSntpObtainTime();
 
     // Normal Operation OK
-    GPIO::SetLevel(CONFIG_MONITORING_SIGNAL_GPIO_NO, 0);
+    GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
 
     // MainTask
     ManagementTask managementTask(this);

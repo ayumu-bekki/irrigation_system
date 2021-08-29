@@ -73,7 +73,7 @@ std::time_t RelayTask::GetCloseEpoch() const
 void RelayTask::SetRelay()
 {
     ESP_LOGI(TAG, "Relay: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
-    GPIO::SetLevel(CONFIG_RELAY_SIGNAL_GPIO_NO, m_IsTimerOpen || m_IsForceOpen);
+    GPIO::SetLevel(CONFIG_WATERING_OUTPUT_GPIO_NO, m_IsTimerOpen || m_IsForceOpen);
 }
 
 } // IrrigationSystem

@@ -46,9 +46,8 @@ private:
     /// Sort the schedule in ascending order
     void SortScheduleTime();
 
-#if CONFIG_DEBUG != 0
+    /// DebugOnly
     void DebugOutputSchedules();
-#endif
 
 private:
     IrrigationInterface* m_pIrrigationInterface;

@@ -18,14 +18,14 @@ menu "Irrigation System Configuration"
         help
             Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
-    config RELAY_SIGNAL_GPIO_NO
-        int "Relay Signal GPIO No"
-        default 14
+    config WATERING_OUTPUT_GPIO_NO
+        int "Watering Device Output GPIO No"
+        default 13
         help
             GPIO number for relay signals
 
-    config MONITORING_SIGNAL_GPIO_NO
-        int "Monitoring Signal GPIO No"
+    config MONITORING_OUTPUT_GPIO_NO
+        int "Monitoring Output GPIO No"
         default 27
         help
             GPIO number for monitoring signals
