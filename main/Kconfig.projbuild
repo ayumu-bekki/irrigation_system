@@ -26,13 +26,13 @@ menu "Irrigation System Configuration"
 
     config MONITORING_OUTPUT_GPIO_NO
         int "Monitoring Output GPIO No"
-        default 27
+        default 26
         help
             GPIO number for monitoring signals
 
     config WATERING_INPUT_GPIO_NO
         int "Watering Button GPIO No"
-        default 26
+        default 27
         help
             GPIO number for relay signals
 

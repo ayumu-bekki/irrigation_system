@@ -94,7 +94,7 @@ void ScheduleManager::AdjustSchedule()
     static constexpr size_t TEMPERATION_TO_WATERING_TYPE_LENGTH = 3;
     static constexpr TemperatureWatering TEMPERATURE_TO_WATERING_TYPE[TEMPERATION_TO_WATERING_TYPE_LENGTH] = {
         // WATERING_TYPE_NONE
-        { 4, WATERING_TYPE_COLD },  // More than 4 WATERING_TYPE_COLD
+        { 8, WATERING_TYPE_COLD },  // More than 4 WATERING_TYPE_COLD
         { 16, WATERING_TYPE_WARM }, // More than 16 WATERING_TYPE_WARM
         { 24, WATERING_TYPE_HOT},   // More than 24 WATERING_TYPE_HOT
     };
