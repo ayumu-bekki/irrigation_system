@@ -50,7 +50,7 @@ const std::string& ScheduleBase::GetName() const
 bool ScheduleBase::CanExecute(const std::tm& timeInfo)
 {
     const std::chrono::minutes nowChrono = Util::GetChronoHourMinutes(timeInfo);
-    return m_Status == STATUS_WAIT && GetChronoMinutes() < nowChrono;
+    return m_Status == STATUS_WAIT && GetChronoMinutes() <= nowChrono;
 }
 
 int ScheduleBase::GetHour() const
