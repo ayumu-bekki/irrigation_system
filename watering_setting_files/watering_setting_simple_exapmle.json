@@ -1,0 +1,5 @@
+{
+    "watering_mode":"simple",
+    "watering_sec": 60,
+    "watering_hour":[8,17]
+}

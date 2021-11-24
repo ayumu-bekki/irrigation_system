@@ -4,7 +4,6 @@
 // Include ----------------------
 #include "http_request.h"
 
-#include <iterator>
 #include <algorithm>
 
 #include <freertos/FreeRTOS.h>

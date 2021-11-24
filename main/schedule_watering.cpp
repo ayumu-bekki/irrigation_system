@@ -3,6 +3,7 @@
 
 // Include ----------------------
 #include "schedule_watering.h"
+#include "watering_record.h"
 
 #include "logger.h"
 
@@ -32,6 +33,10 @@ void ScheduleWatering::Exec()
     }
  
     m_pIrrigationInterface->RelayAddOpenSecond(m_OpenSecond);
+
+    // Write History
+    WateringRecord wateringRecord;
+    wateringRecord.Save();
 }
 
 } // IrrigationSystem

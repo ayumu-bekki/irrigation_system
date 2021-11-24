@@ -52,7 +52,7 @@ void SyncSntpObtainTime()
 
     // wait for time to be set
     int retry = 0;
-    const int retry_count = 10;
+    static constexpr int retry_count = 10;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         SleepMillisecond(2000);

@@ -22,7 +22,23 @@ WeatherForecast::WeatherForecast()
     :m_RequestStatus(NOT_REQUEST)
     ,m_CurrentWeatherCode(0)
     ,m_CurrentMaxTemperature(0)
+    ,m_JMAAreaPathCode(0)
+    ,m_JMAAreaForecastLocalCode(0)
+    ,m_JMAAMeDASObservationPointNumber(0)
 {}
+
+void WeatherForecast::Initialize()
+{
+    *this = WeatherForecast();
+}
+
+/// Set JMA Parameter
+void WeatherForecast::SetJMAParamter(const std::int32_t areaPathCode, const std::int32_t localCode, const std::int32_t AMeDASPoint) 
+{
+    m_JMAAreaPathCode = areaPathCode;
+    m_JMAAreaForecastLocalCode = localCode;
+    m_JMAAMeDASObservationPointNumber = AMeDASPoint;
+}
 
 /// Obtaining weather forecast information via the JMA API
 void WeatherForecast::Request()
@@ -30,7 +46,7 @@ void WeatherForecast::Request()
     // Weather Forecast API by JMA
     std::stringstream requestUrl;
     requestUrl << "https://www.jma.go.jp/bosai/forecast/data/forecast/" 
-               << CONFIG_JMA_AREA_PATH_CODE << ".json";
+               << m_JMAAreaPathCode << ".json";
 
     HttpRequest httpRequest;
     httpRequest.EnableTLS(reinterpret_cast<const char*>(CERT_DigiCertGlobalRootCA_PEM));
@@ -41,15 +57,6 @@ void WeatherForecast::Request()
     }
     ESP_LOGW(TAG, "Request NG");
 }
-
-
-void WeatherForecast::Reset()
-{
-    m_RequestStatus = NOT_REQUEST;
-    m_CurrentWeatherCode = 0;
-    m_CurrentMaxTemperature = 0;
-}
-
 
 WeatherForecast::RequestStatus WeatherForecast::GetRequestStatus() const
 {
@@ -153,7 +160,7 @@ void WeatherForecast::Parse(const std::string& jsonStr)
                 }
 
                 const int code = std::stoi(pJsonCode->valuestring);
-                if (code == CONFIG_JMA_AREA_FORECAST_LOCAL_CODE) {
+                if (code == m_JMAAreaForecastLocalCode) {
                     const cJSON *const pJsonWeatherCodeList = cJSON_GetObjectItemCaseSensitive(pJsonWeatherAreas, "weatherCodes");
                     if (!cJSON_IsArray(pJsonWeatherCodeList)) {
                         throw std::runtime_error("Illegal object type WeatherCodeList.");
@@ -203,7 +210,7 @@ void WeatherForecast::Parse(const std::string& jsonStr)
                 }
 
                 const int code = std::stoi(pJsonCode->valuestring);
-                if (code == CONFIG_JMA_AMEDAS_OBSERVATION_POINT_NUMBER) {
+                if (code == m_JMAAMeDASObservationPointNumber) {
                     const cJSON *const pJsonTemperatureList = cJSON_GetObjectItemCaseSensitive(pJsonTemperatureAreas, "temps");
                     if (!cJSON_IsArray(pJsonTemperatureList)) {
                         throw std::runtime_error("Illegal object type WeatherCodeList.");

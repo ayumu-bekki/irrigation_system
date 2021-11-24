@@ -10,6 +10,7 @@ namespace IrrigationSystem {
 
 class ScheduleManager;
 class WeatherForecast;
+class WateringSetting;
 
 class IrrigationInterface
 {
@@ -23,6 +24,7 @@ public:
 
     virtual ScheduleManager& GetScheduleManager() = 0;
     virtual WeatherForecast& GetWeatherForecast() = 0;
+    virtual WateringSetting& GetWateringSetting() = 0;
 };
 
 } // IrrigationSystem

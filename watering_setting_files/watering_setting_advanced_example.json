@@ -1,0 +1,58 @@
+{
+    "watering_mode":"advance",
+    "watering_sec": 60,
+    "wether_forecast": {
+        "service":"jma",
+        "area_path_code":130000,
+        "local_code":130010,
+        "amedas_observation_point_number":44132
+    },
+    "watering_type": [
+        {
+            "type":"NONE", 
+            "day_span":1,
+            "watering_hour":[]
+        },
+        {
+            "type":"COLD",
+            "day_span":7, 
+            "watering_hour":[9]
+        },
+        {
+            "type":"WARM",
+            "day_span":1, 
+            "watering_hour":[8]
+        },
+        {
+            "type":"HOT",
+            "day_span":1, 
+            "watering_hour":[7, 16]
+        },
+        {
+            "type":"HOT_RAIN",
+            "day_span":1,
+            "watering_hour":[7]
+        }
+    ],
+    "temperature_watering":[
+        {"temperature": -273, "normal_type":"NONE", "rain_type":"NONE"},
+        {"temperature": 8, "normal_type":"COLD", "rain_type":"NONE"},
+        {"temperature": 16, "normal_type":"WARM", "rain_type":"NONE"},
+        {"temperature": 24, "normal_type":"HOT", "rain_type":"HOT_RAIN"}
+    ],
+    "month_to_type":[
+        {"1":"COLD"},
+        {"2":"COLD"},
+        {"3":"COLD"},
+        {"4":"WARM"},
+        {"5":"WARM"},
+        {"6":"WARM"},
+        {"7":"HOT"},
+        {"8":"HOT"},
+        {"9":"HOT"},
+        {"10":"WARM"},
+        {"11":"WARM"},
+        {"12":"COLD"}
+    ]
+}
+

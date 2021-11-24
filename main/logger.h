@@ -4,9 +4,12 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE // Required before test.h is include
 #include <esp_log.h>
+
+// systen Loglevel Redefine
+#undef LOG_LOCAL_LEVEL
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+
 
 namespace IrrigationSystem {
 
@@ -20,5 +23,5 @@ void InitializeLogLevel();
 } // Logger
 } // IrrigationSystem
 
-#endif // DEFINE_H_
+#endif // LOGGER_H_
 // EOF

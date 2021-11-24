@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <chrono>
+#include <sstream>
 
 #include "logger.h"
 #include "util.h"
@@ -15,6 +16,8 @@
 #include "schedule_dummy.h"
 #include "schedule_adjust.h"
 #include "schedule_watering.h"
+#include "watering_record.h"
+#include "watering_setting.h"
 
 
 namespace IrrigationSystem {
@@ -53,137 +56,107 @@ void ScheduleManager::AdjustSchedule()
 {
     ESP_LOGI(TAG, "Start Schedule Adjust. %s", Util::GetNowTimeStr().c_str());
 
-    /// WateringType
-    enum WateringType : int { 
-        WATERING_TYPE_NONE,
-        WATERING_TYPE_COLD,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_HOT,
-        MAX_WATERING_TYPE,
-    };
-    
-    /// WateringWeather
-    enum WateringWeather : int {
-        WATERING_WEATHER_NORMAL,
-        WATERING_WEATHER_RAIN,
-        MAX_WATERING_WEATHER,
-    };
-
-    // By month, watering type (Use when weather information is not available.)
-    static constexpr int MONTH_MAX = 12;
-    static constexpr WateringType MONTH_TO_WATERING_TYPE[MONTH_MAX] = {
-        WATERING_TYPE_COLD,
-        WATERING_TYPE_COLD,
-        WATERING_TYPE_COLD,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_HOT,
-        WATERING_TYPE_HOT,
-        WATERING_TYPE_HOT,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_WARM,
-        WATERING_TYPE_COLD,
-    };
-    
-    // Temperature to Watering Type (Scan from the smaller side.) [Celsius]
-    struct TemperatureWatering {
-        int moreThanTemperature;
-        WateringType wateringType;
-    };
-    static constexpr size_t TEMPERATION_TO_WATERING_TYPE_LENGTH = 3;
-    static constexpr TemperatureWatering TEMPERATURE_TO_WATERING_TYPE[TEMPERATION_TO_WATERING_TYPE_LENGTH] = {
-        // WATERING_TYPE_NONE
-        { 8, WATERING_TYPE_COLD },  // More than 4 WATERING_TYPE_COLD
-        { 16, WATERING_TYPE_WARM }, // More than 16 WATERING_TYPE_WARM
-        { 24, WATERING_TYPE_HOT},   // More than 24 WATERING_TYPE_HOT
-    };
-
-    // How many days apart to water.
-    static constexpr int WATERING_TYPE_TO_SPAN_MOD_DAY[MAX_WATERING_TYPE] = {
-        1, // WATERING_TYPE_NONE
-        7, // WATERING_TYPE_COLD
-        2, // WATERING_TYPE_WARM
-        1, // WATERING_TYPE_HOT
-    };
-
-    // How many days apart to water.
-    static constexpr int WATERING_TYPE_TO_WATERING_SEC[MAX_WATERING_TYPE] = {
-        0,  // WATERING_TYPE_NONE
-        50, // WATERING_TYPE_COLD
-        50, // WATERING_TYPE_WARM
-        70, // WATERING_TYPE_HOT
-    };
- 
-    // Time of day for watering
-    static constexpr int WATERING_HOUR_MAX = 2;
-    static constexpr int NOT_WATERING = -1;
-    static constexpr int WATERING_TYPE_TO_WATERING_HOUR[MAX_WATERING_TYPE][MAX_WATERING_WEATHER][WATERING_HOUR_MAX] = {
-        {{NOT_WATERING, NOT_WATERING}, {NOT_WATERING, NOT_WATERING}},   // WATERING_TYPE_NONE
-        {{9, NOT_WATERING}, {NOT_WATERING, NOT_WATERING}},              // WATERING_TYPE_COLD
-        {{7, NOT_WATERING}, {NOT_WATERING, NOT_WATERING}},              // WATERING_TYPE_WARM
-        {{7, 16}, {7, NOT_WATERING}},                                   // WATERING_TYPE_HOT
-    };
-
     // Check Irrigation
     if (!m_pIrrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
-    // Get Modified Julian Date. For Day Span
-    const tm nowTimeInfo = Util::GetLocalTime();
-    const int modifiedJulianDateNo = Util::GregToMJD(nowTimeInfo);
-
-    // Select watering type from weather forecast.
-    WateringType wateringType = WATERING_TYPE_NONE;
-    WateringWeather wateringWeather = WATERING_WEATHER_NORMAL;
-    
-    // Request weather forecast
-    WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
-    weatherForecast.Request();
-    if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
-        const int maxTemperature = weatherForecast.GetCurrentMaxTemperature();
-        ESP_LOGI(TAG, "Weather OK. Weather:%s MaxTemperature:%d°C", WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode()), maxTemperature);
-        for (int tempIdx = 0; tempIdx < TEMPERATION_TO_WATERING_TYPE_LENGTH; ++tempIdx) {
-            if (TEMPERATURE_TO_WATERING_TYPE[tempIdx].moreThanTemperature <= maxTemperature) {
-                wateringType = TEMPERATURE_TO_WATERING_TYPE[tempIdx].wateringType;
-            }
-        }
-        if (weatherForecast.IsRain()) {
-            wateringWeather = WATERING_WEATHER_RAIN;
-        }
-    } else {
-        ESP_LOGW(TAG, "Failed to get the weather forecast.");
-        const int month = nowTimeInfo.tm_mon;
-        if (month < 0 || MONTH_MAX <= month) {
-            ESP_LOGE(TAG, "Invalid Month Num > %d", month);
-            return;
-        }
-        wateringType = MONTH_TO_WATERING_TYPE[month];
-    }
-    ESP_LOGI(TAG, "Watering Type:%d wateringWeather:%d", wateringType, wateringWeather);
-
-    // Register Dummy Schedule (Test)
-#if CONFIG_DEBUG != 0
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(12, 0)));
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(0, 0)));
-#endif
-
-    // Check Span
-    if ((modifiedJulianDateNo % WATERING_TYPE_TO_SPAN_MOD_DAY[wateringType]) != 0) {
-        ESP_LOGI(TAG, "Finish Schedule Adjust. Skipp watering today.");
+    // GetWateringSetting
+    const WateringSetting& wateringSetting = m_pIrrigationInterface->GetWateringSetting();
+    if (!wateringSetting.IsActive()) {
+        ESP_LOGI(TAG, "Watering Setting is not activated.");
         return;
     }
 
-    // Register
-    for (int hourIndex = 0; hourIndex < WATERING_HOUR_MAX; ++hourIndex) {
-        const int hour = WATERING_TYPE_TO_WATERING_HOUR[wateringType][wateringWeather][hourIndex];
-        const int wateringSec = WATERING_TYPE_TO_WATERING_SEC[wateringType];
-        if (hour != NOT_WATERING) {
-            AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSec)));
+ 
+    // Get TimeInfo
+    const tm nowTimeInfo = Util::GetLocalTime();
+    
+    // CreateSchedule
+    if (wateringSetting.GetWateringMode() == WateringSetting::WATERING_MODE_SIMPLE) {
+        const WateringSetting::WateringHourList& hourList = wateringSetting.GetWateringHourList();
+        for (const std::int32_t& hour : hourList) {
+            AddSchedule(ScheduleBase::UniquePtr(
+                new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSetting.GetWateringSec())
+            ));
         }
-    }
+    } else if (wateringSetting.GetWateringMode() == WateringSetting::WATERING_MODE_ADVANCE) {
+        // Read History 
+        WateringRecord wateringRecord;
+        wateringRecord.Load();
+        std::tm wateringTm = Util::EpochToLocalTime(wateringRecord.GetLastWateringEpoch());
+
+        /// WateringWeather
+        enum WateringWeather : int {
+            WATERING_WEATHER_NONE,
+            WATERING_WEATHER_NORMAL,
+            WATERING_WEATHER_RAIN,
+            MAX_WATERING_WEATHER,
+        };
+
+        // Request weather forecast
+        WateringWeather wateringWeather = WATERING_WEATHER_NONE;
+        std::int32_t maxTemperature = 0;
+
+        WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+        weatherForecast.Request();
+        if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
+            wateringWeather = (weatherForecast.IsRain()) ? WATERING_WEATHER_RAIN : WATERING_WEATHER_NORMAL;
+            maxTemperature = weatherForecast.GetCurrentMaxTemperature();
+            ESP_LOGI(TAG, "Weather OK. Weather:%s MaxTemperature:%d°C", WeatherForecast::WeatherCodeToStr(weatherForecast.GetCurrentWeatherCode()), maxTemperature);
+        } else {
+            ESP_LOGW(TAG, "Failed to get the weather forecast.");
+        }
+ 
+        // Match WateringType   
+        std::string wateringTypeStr;
+        if (wateringWeather == WATERING_WEATHER_NONE) {
+            // could not Get Weather
+            const int month = nowTimeInfo.tm_mon + 1;
+
+            const WateringSetting::MonthToTypeDict& monthToTypeDict = wateringSetting.GetMonthToTypeDict();
+            WateringSetting::MonthToTypeDict::const_iterator iter = monthToTypeDict.find(std::to_string(month));
+            if (iter != monthToTypeDict.end()) {
+                wateringTypeStr = iter->second;
+            }
+        } else {
+            const WateringSetting::TemperatureWateringList& temperatureWateringList = wateringSetting.GetTemperatureWateringList();
+            for (const WateringSetting::TemperatureWatering& temperatureWatering : temperatureWateringList) {
+                if (temperatureWatering.Temperature <= maxTemperature) {
+                    wateringTypeStr = (wateringWeather == WATERING_WEATHER_RAIN) ?
+                       temperatureWatering.RainType : temperatureWatering.NormalType;
+                }
+            }
+        }
+
+        ESP_LOGI(TAG, "Watering Type:%s wateringWeather:%d", wateringTypeStr.c_str(), wateringWeather);
+   
+        // WateringType To Schedule
+        const WateringSetting::WateringTypeDict& wateringTypeDict = wateringSetting.GetWateringTypeDict();
+        WateringSetting::WateringTypeDict::const_iterator iter = wateringTypeDict.find(wateringTypeStr);
+        if (iter != wateringTypeDict.end()) {
+            const WateringSetting::WateringType& wateringType = iter->second;
+
+            const std::int32_t lastWateringDuration = Util::GregToMJD(nowTimeInfo) - Util::GregToMJD(wateringTm);
+            ESP_LOGI(TAG, "Watering DaysDuration:%d", lastWateringDuration);
+
+            if (wateringType.DaySpan <= lastWateringDuration) {
+                for (const std::int32_t& hour : wateringType.WateringHours) {
+                    AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSetting.GetWateringSec())));
+                }
+            } else { 
+                ESP_LOGI(TAG, "Skip DaysDuration");
+            }
+        }
+
+    } 
+
+#if CONFIG_DEBUG != 0
+    // Register Dummy Schedule (Test)
+    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(12, 0)));
+    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(0, 0)));
+#endif
 
     // Disable 
     DisableExpiredSchedule(nowTimeInfo);
@@ -196,6 +169,8 @@ void ScheduleManager::AdjustSchedule()
 #endif
 
     ESP_LOGI(TAG, "Finish Schedule Adjust.");
+    
+    return;
 }
 
 int ScheduleManager::GetCurrentMonth() const
@@ -223,7 +198,7 @@ void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
     AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrrigationInterface, 0, 30)));
 
     WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
-    weatherForecast.Reset();
+    weatherForecast.Initialize();
 }
 
 /// Add a schedule to the list

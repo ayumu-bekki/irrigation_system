@@ -54,6 +54,7 @@ private:
     ScheduleBaseList m_ScheduleList;
     int m_CurrentMonth;
     int m_CurrentDay;
+    
 };
 
 } // IrrigationSystem
