@@ -17,10 +17,10 @@ class IrrigationInterface
 public:
     virtual ~IrrigationInterface() {}
     
-    virtual void RelayAddOpenSecond(const int second) = 0;
-    virtual void RelayResetTimer() = 0;
-    virtual void RelayForce(const bool isOpen) = 0;
-    virtual std::time_t RelayCloseEpoch() const = 0;
+    virtual void ValveAddOpenSecond(const int second) = 0;
+    virtual void ValveResetTimer() = 0;
+    virtual void ValveForce(const bool isOpen) = 0;
+    virtual std::time_t ValveCloseEpoch() const = 0;
 
     virtual ScheduleManager& GetScheduleManager() = 0;
     virtual WeatherForecast& GetWeatherForecast() = 0;

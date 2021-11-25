@@ -50,7 +50,7 @@ void WateringButtonTask::Receive()
     }
 
     const bool isButtonPush = (gpio_get_level(static_cast<gpio_num_t>(CONFIG_WATERING_INPUT_GPIO_NO)) == 0);
-    m_pIrrigationInterface->RelayForce(isButtonPush);
+    m_pIrrigationInterface->ValveForce(isButtonPush);
 }
 
 void IRAM_ATTR WateringButtonTask::GpioIsrHandler(void *pData)

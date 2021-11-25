@@ -143,7 +143,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const WateringSetting& weatherSetting = pIrrigationInterface->GetWateringSetting();
     const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
-    const std::time_t relayCloseEpoch = pIrrigationInterface->RelayCloseEpoch();
+    const std::time_t valveCloseEpoch = pIrrigationInterface->ValveCloseEpoch();
 
 #if CONFIG_DEBUG != 0
     static const std::string title = "Irrigation System (DEBUG)";
@@ -185,7 +185,15 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
-        << "</style></head>"
+        << "</style>"
+        << "<script>var checkSubmit = function(msg) { return confirm(msg); };</script>"
+        << "</head>";
+
+    httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
+    responseBody.str("");
+    responseBody.clear(std::stringstream::goodbit);
+
+    responseBody
         << "<body><h1>" << title << "</h1>"
         << "<hr><h2>Schedule</h2>";
 
@@ -223,6 +231,10 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         responseBody << "<p><span style=\"background-color:yellow;\">No settings have been made.<span></p>";
     }
 
+    httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
+    responseBody.str("");
+    responseBody.clear(std::stringstream::goodbit);
+
     responseBody
         << "<hr><h2>Operation</h2>"
         << "<form action=\"/manual_watering\" method=\"post\">"
@@ -239,26 +251,35 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     if (weatherSetting.IsActive()) {
         responseBody
             << ":<form action=\"/download_setting\" method=\"get\" style=\"display:inline;\"><input type=\"submit\" value=\"Download\"></form>"
-            << ":<form action=\"/delete_setting\" method=\"post\" style=\"display:inline;\"><input type=\"submit\" value=\"Delete\"></form>"
+            << ":<form action=\"/delete_setting\" method=\"post\" style=\"display:inline;\" onsubmit=\"return checkSubmit('Are you sure you want to delete setting?');\">"
+            << "<input type=\"submit\" value=\"Delete\"></form>"
             << "</p>";
     }
 
+    httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
+    responseBody.str("");
+    responseBody.clear(std::stringstream::goodbit);
+
     responseBody
         << "<hr><h2>Information</h2>"
-        << "<p>Relay Status : ";
-    if (relayCloseEpoch == 0) {
+        << "<p>Valve Status : ";
+    if (valveCloseEpoch == 0) {
         responseBody << "Close</p>";
     } else {
         responseBody 
-            << "<span style=\"background:coral;\">Open</span> > Close At(" 
-            << Util::TimeToStr(Util::EpochToLocalTime(relayCloseEpoch)) << ")</p>";
+            << "<span style=\"background:coral;\">Open</span> &gt; Close At(" 
+            << Util::TimeToStr(Util::EpochToLocalTime(valveCloseEpoch)) << ")</p>";
     }
     responseBody
-        << "<p>Weather Forecast : " << weatherInfo.str() << "<p>"
+        << "<p>Weather Forecast : " << weatherInfo.str() << "</p>"
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
-    httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), HTTPD_RESP_USE_STRLEN);
+    httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
+    responseBody.str("");
+    responseBody.clear(std::stringstream::goodbit);
+
+    httpd_resp_sendstr_chunk(pHttpRequestData, nullptr);
     return ESP_OK;
 }
 
@@ -295,21 +316,21 @@ esp_err_t HttpdServerTask::ManualWateringHandler(httpd_req_t *pHttpRequestData)
     ESP_LOGV(TAG, " Recv Data Length:%d Data:%s", total_len, buf);
     
     // Parse
-    int relayOpenSecond = 0;
+    int valveOpenSecond = 0;
     std::vector<std::string> elements = Util::SplitString(buf, '=');   
     if (elements.size() == 2) {
         if (elements.at(0) == "second") {
-            relayOpenSecond = std::max(1, std::min(WEB_RELAY_OPEN_MAX_SECOND, static_cast<int>(std::stol(elements.at(1)))));
+            valveOpenSecond = std::max(1, std::min(WEB_RELAY_OPEN_MAX_SECOND, static_cast<int>(std::stol(elements.at(1)))));
         }
     }
 
-    // Relay Open
+    // Valve Open
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
     if (!pHttpdServerTask) {
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-    pHttpdServerTask->m_pIrrigationInterface->RelayAddOpenSecond(relayOpenSecond);
+    pHttpdServerTask->m_pIrrigationInterface->ValveAddOpenSecond(valveOpenSecond);
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
@@ -327,13 +348,13 @@ esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData)
         return ESP_FAIL;
     }
 
-    // Relay Open
+    // Valve Open
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
     if (!pHttpdServerTask) {
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-    pHttpdServerTask->m_pIrrigationInterface->RelayResetTimer();
+    pHttpdServerTask->m_pIrrigationInterface->ValveResetTimer();
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");

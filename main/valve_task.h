@@ -1,5 +1,5 @@
-#ifndef RELAY_TASK_H_
-#define RELAY_TASK_H_
+#ifndef VALVE_TASK_H_
+#define VALVE_TASK_H_
 // ESP32 Irrigation System
 // (C)2021 bekki.jp
 
@@ -12,15 +12,15 @@
 
 namespace IrrigationSystem {
 
-class RelayTask final : public Task
+class ValveTask final : public Task
 {
 public:
-    static constexpr char *const TASK_NAME = (char*)"RelayTask";
+    static constexpr char *const TASK_NAME = (char*)"ValveTask";
     static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    RelayTask();
+    ValveTask();
 
     void Update() override;
     
@@ -31,7 +31,7 @@ public:
     std::time_t GetCloseEpoch() const;
 
 private:
-    void SetRelay();
+    void SetValve();
 
 private:
     bool m_IsTimerOpen;
@@ -41,5 +41,5 @@ private:
 
 } // IrrigationSystem
 
-#endif // RELAY_TASK_H_
+#endif // VALVE_TASK_H_
 // EOF

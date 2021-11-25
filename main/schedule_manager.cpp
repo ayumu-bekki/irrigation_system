@@ -100,6 +100,7 @@ void ScheduleManager::AdjustSchedule()
         std::int32_t maxTemperature = 0;
 
         WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+        weatherForecast.SetJMAParamter(wateringSetting.GetJMAAreaPathCode(), wateringSetting.GetJMALocalCode(), wateringSetting.GetJMAAMeDAS());
         weatherForecast.Request();
         if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
             wateringWeather = (weatherForecast.IsRain()) ? WATERING_WEATHER_RAIN : WATERING_WEATHER_NORMAL;

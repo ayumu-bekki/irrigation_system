@@ -6,7 +6,7 @@
 // Include ----------------------
 #include "irrigation_interface.h"
 #include "wifi_manager.h"
-#include "relay_task.h"
+#include "valve_task.h"
 #include "schedule_manager.h"
 #include "weather_forecast.h"
 #include "watering_setting.h"
@@ -24,16 +24,16 @@ public:
 
 public:
     /// (IrrigationInterface:override)
-    void RelayAddOpenSecond(const int second) override;
+    void ValveAddOpenSecond(const int second) override;
 
     /// (IrrigationInterface:override)
-    void RelayResetTimer() override;
+    void ValveResetTimer() override;
 
     /// (IrrigationInterface:override)
-    void RelayForce(const bool isOpen) override;
+    void ValveForce(const bool isOpen) override;
 
     /// (IrrigationInterface:override)
-    std::time_t RelayCloseEpoch() const override;
+    std::time_t ValveCloseEpoch() const override;
 
     /// (IrrigationInterface:override)
     ScheduleManager& GetScheduleManager() override;
@@ -46,7 +46,7 @@ public:
 
 private:
     WifiManager m_WifiManager;
-    RelayTask m_RelayTask;
+    ValveTask m_ValveTask;
     ScheduleManager m_ScheduleManager;
     WeatherForecast m_WeatherForecast;
     WateringSetting m_WateringSetting;

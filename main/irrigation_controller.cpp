@@ -20,7 +20,7 @@ namespace IrrigationSystem {
 
 IrrigationController::IrrigationController()
     :m_WifiManager()
-    ,m_RelayTask()
+    ,m_ValveTask()
     ,m_ScheduleManager(this)
     ,m_WeatherForecast()
     ,m_WateringSetting()
@@ -79,7 +79,7 @@ void IrrigationController::Start()
     managementTask.Start();
     httpdServerTask.Start();
     wateringButtonTask.Start();
-    m_RelayTask.Start();
+    m_ValveTask.Start();
 
     ESP_LOGI(TAG, "Activation Complete Irrigation System.");
 
@@ -89,24 +89,24 @@ void IrrigationController::Start()
     }
 }
 
-void IrrigationController::RelayAddOpenSecond(const int second)
+void IrrigationController::ValveAddOpenSecond(const int second)
 {
-    m_RelayTask.AddOpenSecond(second);   
+    m_ValveTask.AddOpenSecond(second);   
 }
 
-void IrrigationController::RelayResetTimer()
+void IrrigationController::ValveResetTimer()
 {
-    m_RelayTask.ResetTimer();   
+    m_ValveTask.ResetTimer();   
 }
 
-void IrrigationController::RelayForce(const bool isOpen)
+void IrrigationController::ValveForce(const bool isOpen)
 {
-    m_RelayTask.Force(isOpen);   
+    m_ValveTask.Force(isOpen);   
 }
 
-std::time_t IrrigationController::RelayCloseEpoch() const 
+std::time_t IrrigationController::ValveCloseEpoch() const 
 {
-    return m_RelayTask.GetCloseEpoch();
+    return m_ValveTask.GetCloseEpoch();
 }
 
 ScheduleManager& IrrigationController::GetScheduleManager() 

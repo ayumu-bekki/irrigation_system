@@ -32,7 +32,7 @@ void ScheduleWatering::Exec()
         return;
     }
  
-    m_pIrrigationInterface->RelayAddOpenSecond(m_OpenSecond);
+    m_pIrrigationInterface->ValveAddOpenSecond(m_OpenSecond);
 
     // Write History
     WateringRecord wateringRecord;

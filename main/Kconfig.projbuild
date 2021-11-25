@@ -22,7 +22,7 @@ menu "Irrigation System Configuration"
         int "Watering Device Output GPIO No"
         default 13
         help
-            GPIO number for relay signals
+            GPIO number for valve signals
 
     config MONITORING_OUTPUT_GPIO_NO
         int "Monitoring Output GPIO No"
@@ -34,7 +34,7 @@ menu "Irrigation System Configuration"
         int "Watering Button GPIO No"
         default 27
         help
-            GPIO number for relay signals
+            GPIO number for valve signals
 
     config LOCAL_TIME_ZONE
         string "Local Time Zone"
