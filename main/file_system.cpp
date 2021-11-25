@@ -47,7 +47,7 @@ void Unmount()
 bool Write(const std::string& filePath, const std::string& body)
 {
     std::fstream fileOpenStream;
-    fileOpenStream.open("/spiflash/" + filePath, std::ios::out);
+    fileOpenStream.open(base_path + std::string("/") + filePath, std::ios::out);
     if (!fileOpenStream.is_open()) {
         ESP_LOGE(TAG, "Failed to open file for writing");
         return false;
@@ -60,7 +60,7 @@ bool Write(const std::string& filePath, const std::string& body)
 bool Read(const std::string& filePath, std::string& body)
 {
     std::fstream fileReadStream;
-    fileReadStream.open("/spiflash/" + filePath, std::ios::in);
+    fileReadStream.open(base_path + std::string("/") + filePath, std::ios::in);
     if (!fileReadStream.is_open()) {
         ESP_LOGE(TAG, "Failed to open file for writing");
         return false;
@@ -72,7 +72,7 @@ bool Read(const std::string& filePath, std::string& body)
 /// Delete
 bool Delete(const std::string& filePath)
 {
-    return std::remove(filePath.c_str());
+    return std::remove((base_path + std::string("/") + filePath).c_str()) == 0;
 }
 
 } // FileSystem

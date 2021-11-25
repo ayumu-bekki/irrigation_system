@@ -91,6 +91,18 @@ bool WateringRecord::Load() noexcept
     return true;
 }
 
+#if CONFIG_DEBUG != 0
+bool WateringRecord::Delete()
+{
+    if (!FileSystem::Delete(WateringRecord::RECORD_FILE_NAME)) {
+        ESP_LOGE(TAG, "Failed Delete File.");
+        return false;
+    }
+    ESP_LOGE(TAG, "Deleted File.");
+    return true;
+}
+#endif // CONFIG_DEBUG != 0
+
 time_t WateringRecord::GetLastWateringEpoch() const
 {
     return m_LastWateringEpoch;

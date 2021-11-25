@@ -494,7 +494,7 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
 
     // Delete
     if (!WateringSetting::Delete()) {
-        httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed save");
+        httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed delete");
         return ESP_FAIL;
     }
 

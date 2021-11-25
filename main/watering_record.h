@@ -19,9 +19,12 @@ public:
 
     bool Save() const;
     bool Load() noexcept;
-
+#if CONFIG_DEBUG != 0
+    bool Delete();
+#endif
     time_t GetLastWateringEpoch() const;
     
+
 private:
     time_t m_LastWateringEpoch;
     
