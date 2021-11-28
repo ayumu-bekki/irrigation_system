@@ -128,6 +128,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed user_ctx is null");
         return ESP_FAIL;
     }
+
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
     if (!pHttpdServerTask) {
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
@@ -379,6 +380,12 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData)
         return ESP_FAIL;
     }
 
+    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
+    if (!pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed irrigationInterface is null");
+        return ESP_FAIL;
+    }
+
     // Receive Header (get Multipart boundary)
     static constexpr char *const HTTP_HEADER_CONTENT_TYPE = (char*)"Content-Type";
     const size_t contentTypeHeaderLen = httpd_req_get_hdr_value_len(pHttpRequestData, HTTP_HEADER_CONTENT_TYPE);
@@ -477,6 +484,11 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData)
         return ESP_FAIL;
     }
 
+    // Init Schedule
+    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
+    const std::tm nowTimeInfo = Util::GetLocalTime();
+    scheduleManager.InitializeNewDay(nowTimeInfo);
+
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
     httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
@@ -507,9 +519,15 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed user_ctx is null");
         return ESP_FAIL;
     }
+
     HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
     if (!pHttpdServerTask) {
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
+        return ESP_FAIL;
+    }
+    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
+    if (!pIrrigationInterface) {
+        ESP_LOGE(TAG, "Failed irrigationInterface is null");
         return ESP_FAIL;
     }
 
@@ -522,6 +540,11 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
     // WateringSetting init
     WateringSetting& wateringSetting = pHttpdServerTask->m_pIrrigationInterface->GetWateringSetting();
     wateringSetting = WateringSetting();
+
+    // Init Schedule
+    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
+    const std::tm nowTimeInfo = Util::GetLocalTime();
+    scheduleManager.InitializeNewDay(nowTimeInfo);
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");

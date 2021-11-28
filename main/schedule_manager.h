@@ -26,6 +26,9 @@ public:
 
     void Execute();
 
+    /// Date change schedule initialization
+    void InitializeNewDay(const std::tm& nowTimeInfo);
+
     const ScheduleBaseList& GetScheduleList() const;
 
     void AdjustSchedule();
@@ -34,8 +37,6 @@ public:
     int GetCurrentDay() const;
 
 private:
-    /// Date change schedule initialization
-    void InitializeNewDay(const std::tm& nowTimeInfo);
 
     /// Add a schedule to the list
     void AddSchedule(ScheduleBase::UniquePtr&& scheduleItem);
