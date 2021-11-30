@@ -109,12 +109,12 @@
         <path d="M 222 122 L 238 122" fill="none" stroke="#000000"
               stroke-width="2" stroke-linecap="round" stroke-miterlimit="10"
               transform="rotate(270,230,130)" pointer-events="none"/>
-        <rect x="200" y="100" width="60" height="20" fill-opacity="0"
+        <rect x="207" y="97" width="50" height="20" fill-opacity="0"
               fill="#dae2f2" stroke="none" pointer-events="none"/>
         <g fill="#000000" font-family="Arial,Helvetica" font-weight="bold"
            text-anchor="middle" font-size="12px">
-            <text x="230" y="115">
-                1000V 1A
+            <text x="232" y="112">
+                400V 5A
             </text>
         </g>
         <rect x="189" y="189" width="2" height="2" fill="#000000" stroke="none"

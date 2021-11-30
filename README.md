@@ -11,6 +11,7 @@ Automatic Irrigation System for ESP32-WROOM-32E
 ### Executing program
 
 * Open Irrigation System Configuration from make menuconfig and configure it.
+* Configure the Wi-Fi settings (SSID Password).
 * If necessary, change the serial port settings as well.
 
 ```
@@ -34,6 +35,17 @@ You can check the system's time and schedule, or run the watering manually.
 
 ![Web Console](docs/web_console.png)
 
+### Watering Setting File
+If no configuration file has been registered, the message "No settings have been made."
+You need to register the settings file in order for the irrigation schedule to work.
+
+### Sample
+This is a sample description of the irrigation setup.
+
+* watering_setting_files/watering_setting_simple_exapmle.json
+** This is a simple irrigation setup. Set the time to water and the length of time. 
+* watering_setting_files/watering_setting_advanced_example.json 
+** This is a advanced irrigation setup. It gets the weather forecast and schedules the best watering based on the maximum temperature rainy weather conditions. (For Tokyo)
 
 ### Schematic sample
 
