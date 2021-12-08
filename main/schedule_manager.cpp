@@ -109,18 +109,20 @@ void ScheduleManager::AdjustSchedule()
         } else {
             ESP_LOGW(TAG, "Failed to get the weather forecast.");
         }
- 
+
         // Match WateringType   
         std::string wateringTypeStr;
         if (wateringWeather == WATERING_WEATHER_NONE) {
             // could not Get Weather
             const int month = nowTimeInfo.tm_mon + 1;
-
+    
+            // Reference from the monthly table and treat it as normal weather
             const WateringSetting::MonthToTypeDict& monthToTypeDict = wateringSetting.GetMonthToTypeDict();
             WateringSetting::MonthToTypeDict::const_iterator iter = monthToTypeDict.find(std::to_string(month));
             if (iter != monthToTypeDict.end()) {
                 wateringTypeStr = iter->second;
             }
+            wateringWeather = WATERING_WEATHER_NORMAL;
         } else {
             const WateringSetting::TemperatureWateringList& temperatureWateringList = wateringSetting.GetTemperatureWateringList();
             for (const WateringSetting::TemperatureWatering& temperatureWatering : temperatureWateringList) {

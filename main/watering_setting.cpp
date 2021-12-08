@@ -306,9 +306,9 @@ bool WateringSetting::ParseAdvance(cJSON* pJsonRoot) noexcept(false)
             temperatureWatering.NormalType = pJsonNormalType->valuestring;
 
             // RainType
-            const cJSON *const pJsonRainType = cJSON_GetObjectItemCaseSensitive(pJsonTemparatureWatering, "normal_type");
+            const cJSON *const pJsonRainType = cJSON_GetObjectItemCaseSensitive(pJsonTemparatureWatering, "rain_type");
             if (!cJSON_IsString(pJsonRainType)) {
-                throw std::runtime_error("Illegal object type normal_type.");
+                throw std::runtime_error("Illegal object type rain_type.");
             }
             temperatureWatering.RainType = pJsonRainType->valuestring;
 
