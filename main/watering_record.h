@@ -6,7 +6,6 @@
 // Include ----------------------
 #include <ctime>
 
-
 namespace IrrigationSystem {
 
 class WateringRecord final
@@ -22,11 +21,12 @@ public:
 #if CONFIG_DEBUG != 0
     bool Delete();
 #endif
-    time_t GetLastWateringEpoch() const;
-    
+
+    void SetLastWateringEpoch(const std::time_t wateringEpoch);
+    std::time_t GetLastWateringEpoch() const;
 
 private:
-    time_t m_LastWateringEpoch;
+    std::time_t m_LastWateringEpoch;
     
 };
 

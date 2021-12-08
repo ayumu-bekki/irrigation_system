@@ -24,6 +24,7 @@ IrrigationController::IrrigationController()
     ,m_ScheduleManager(this)
     ,m_WeatherForecast()
     ,m_WateringSetting()
+    ,m_WateringRecord()
 {}
 
 void IrrigationController::Start()
@@ -70,6 +71,9 @@ void IrrigationController::Start()
     } else {
         ESP_LOGI(TAG, "Failed Load Setting File");
     }
+
+    // Read Last Watering Date
+    m_WateringRecord.Load();
 
     // MainTask
     ManagementTask managementTask(this);
@@ -123,6 +127,18 @@ WateringSetting& IrrigationController::GetWateringSetting()
 {
     return m_WateringSetting;
 }
+
+void IrrigationController::SaveLastWateringEpoch(const std::time_t wateringEpoch)
+{
+    m_WateringRecord.SetLastWateringEpoch(wateringEpoch);
+    m_WateringRecord.Save();
+}
+
+std::time_t IrrigationController::GetLastWateringEpoch() const
+{
+    return m_WateringRecord.GetLastWateringEpoch();
+}
+
 
 } // IrrigationSystem
 

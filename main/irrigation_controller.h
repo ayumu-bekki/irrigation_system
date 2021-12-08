@@ -10,6 +10,7 @@
 #include "schedule_manager.h"
 #include "weather_forecast.h"
 #include "watering_setting.h"
+#include "watering_record.h"
 
 namespace IrrigationSystem {
 
@@ -44,12 +45,19 @@ public:
     /// (IrrigationInterface:override)
     WateringSetting& GetWateringSetting() override;
 
+    /// (IrrigationInterface:override)
+    void SaveLastWateringEpoch(const std::time_t wateringEpoch);
+
+    /// (IrrigationInterface:override)
+    std::time_t GetLastWateringEpoch() const;
+
 private:
     WifiManager m_WifiManager;
     ValveTask m_ValveTask;
     ScheduleManager m_ScheduleManager;
     WeatherForecast m_WeatherForecast;
     WateringSetting m_WateringSetting;
+    WateringRecord m_WateringRecord;
 };
 
 } // IrrigationSystem

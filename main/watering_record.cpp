@@ -24,7 +24,7 @@ bool WateringRecord::Save() const
     // Write History
     std::stringstream historyBody;
     historyBody << "{\"last_watering_date\":\""
-                << Util::GetNowTimeStr()
+                << Util::TimeToStr(Util::EpochToLocalTime(m_LastWateringEpoch))
                 << "\"}";
     return FileSystem::Write(WateringRecord::RECORD_FILE_NAME, historyBody.str());
 }
@@ -102,6 +102,12 @@ bool WateringRecord::Delete()
     return true;
 }
 #endif // CONFIG_DEBUG != 0
+
+void WateringRecord::SetLastWateringEpoch(const std::time_t wateringEpoch)
+{
+    m_LastWateringEpoch = wateringEpoch;
+}
+
 
 time_t WateringRecord::GetLastWateringEpoch() const
 {

@@ -83,9 +83,7 @@ void ScheduleManager::AdjustSchedule()
         }
     } else if (wateringSetting.GetWateringMode() == WateringSetting::WATERING_MODE_ADVANCE) {
         // Read History 
-        WateringRecord wateringRecord;
-        wateringRecord.Load();
-        std::tm wateringTm = Util::EpochToLocalTime(wateringRecord.GetLastWateringEpoch());
+        const std::tm wateringTm = Util::EpochToLocalTime(m_pIrrigationInterface->GetLastWateringEpoch());
 
         /// WateringWeather
         enum WateringWeather : int {

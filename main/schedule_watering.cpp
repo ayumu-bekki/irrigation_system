@@ -6,7 +6,7 @@
 #include "watering_record.h"
 
 #include "logger.h"
-
+#include "util.h"
 
 namespace IrrigationSystem {
 
@@ -35,8 +35,7 @@ void ScheduleWatering::Exec()
     m_pIrrigationInterface->ValveAddOpenSecond(m_OpenSecond);
 
     // Write History
-    WateringRecord wateringRecord;
-    wateringRecord.Save();
+    m_pIrrigationInterface->SaveLastWateringEpoch(Util::GetEpoch());
 }
 
 } // IrrigationSystem

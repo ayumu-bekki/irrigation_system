@@ -199,9 +199,15 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "<hr><h2>Schedule</h2>";
 
     if (weatherSetting.IsActive()) {
+        const std::tm wateringTm = Util::EpochToLocalTime(pHttpdServerTask->m_pIrrigationInterface->GetLastWateringEpoch());
+
         responseBody
-            << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay() << "</p>"
-            << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>";
+            << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
+            << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay()
+            << "&nbsp;&nbsp; Last Watering Date : "
+            << std::setw(2) << (wateringTm.tm_mon + 1) << "/" 
+            << std::setw(2) << wateringTm.tm_mday
+            << "</p>";
 
         // Create Schedule Table
         responseBody << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
