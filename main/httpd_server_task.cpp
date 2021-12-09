@@ -203,7 +203,10 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 
         responseBody
             << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
-            << "<p>Current Date : " << scheduleManager.GetCurrentMonth() << "/" << scheduleManager.GetCurrentDay()
+            << std::setfill('0')
+            << "<p>Current Date : " 
+            << std::setw(2) << scheduleManager.GetCurrentMonth() << "/" 
+            << std::setw(2) << scheduleManager.GetCurrentDay()
             << "&nbsp;&nbsp; Last Watering Date : "
             << std::setw(2) << (wateringTm.tm_mon + 1) << "/" 
             << std::setw(2) << wateringTm.tm_mday
