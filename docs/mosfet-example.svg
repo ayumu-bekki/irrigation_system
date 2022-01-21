@@ -1,6 +1,6 @@
 
 <svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="358"
+     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="329"
      height="439">
     <defs/>
     <g transform=" scale(1) translate(-36,-35.5)">
@@ -45,14 +45,11 @@
         <path d="M 282.39 356 L 276.39 360 L 282.39 364 Z" fill="#000000"
               stroke="#000000" stroke-linejoin="round" stroke-linecap="round"
               stroke-miterlimit="10" pointer-events="none"/>
-        <rect x="300" y="350" width="90" height="30" fill-opacity="0"
+        <rect x="300" y="350" width="57" height="16" fill-opacity="0"
               fill="#dae2f2" stroke="none" pointer-events="none"/>
         <g fill="#000000" font-family="Arial,Helvetica" font-weight="bold"
            text-anchor="middle" font-size="12px">
-            <text x="345" y="363">
-                N-CH MOSFET
-            </text>
-            <text x="345" y="377">
+            <text x="328.5" y="363">
                 EKI04036
             </text>
         </g>

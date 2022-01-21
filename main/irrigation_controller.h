@@ -11,6 +11,7 @@
 #include "weather_forecast.h"
 #include "watering_setting.h"
 #include "watering_record.h"
+#include "voltage_check_task.h"
 
 namespace IrrigationSystem {
 
@@ -51,6 +52,9 @@ public:
     /// (IrrigationInterface:override)
     std::time_t GetLastWateringEpoch() const;
 
+    /// (IrrigationInterface:override)
+    float GetBatteryVoltage() const;
+
 private:
     WifiManager m_WifiManager;
     ValveTask m_ValveTask;
@@ -58,6 +62,7 @@ private:
     WeatherForecast m_WeatherForecast;
     WateringSetting m_WateringSetting;
     WateringRecord m_WateringRecord;
+    VoltageCheckTask m_VoltageCheckTask;
 };
 
 } // IrrigationSystem

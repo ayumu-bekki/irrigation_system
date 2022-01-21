@@ -37,13 +37,16 @@ std::string GetNowTimeStr();
 void InitTimeZone();
 
 /// Gregorian calendar to Modified Julian Date(修正ユリウス日)
-int GregToMJD(const std::tm& timeInfo);
+int32_t GregToMJD(const std::tm& timeInfo);
 
 /// Get ChronoMinutes from hours and minutes.
 std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo);
 
 /// Split Text
 std::vector<std::string> SplitString(const std::string &str, const char delim);
+
+/// Get Original Voltage Divider Resistor
+float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage, const float topResistanceValue, const float bottomRegistanceValue);
 
 } // Util
 } // IrrigationSystem

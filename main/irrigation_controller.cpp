@@ -84,6 +84,7 @@ void IrrigationController::Start()
     httpdServerTask.Start();
     wateringButtonTask.Start();
     m_ValveTask.Start();
+    m_VoltageCheckTask.Start();
 
     ESP_LOGI(TAG, "Activation Complete Irrigation System.");
 
@@ -137,6 +138,11 @@ void IrrigationController::SaveLastWateringEpoch(const std::time_t wateringEpoch
 std::time_t IrrigationController::GetLastWateringEpoch() const
 {
     return m_WateringRecord.GetLastWateringEpoch();
+}
+
+float IrrigationController::GetBatteryVoltage() const
+{
+    return m_VoltageCheckTask.GetVoltage();
 }
 
 

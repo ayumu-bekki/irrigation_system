@@ -100,7 +100,7 @@ void InitTimeZone()
 }
 
 /// Gregorian calendar to Modified Julian Date
-int GregToMJD(const std::tm& timeInfo)
+int32_t GregToMJD(const std::tm& timeInfo)
 {
     const double year = timeInfo.tm_year + 1900;
     const double month = timeInfo.tm_mon + 1;
@@ -129,6 +129,16 @@ std::vector<std::string> SplitString(const std::string &str, const char delim)
         }
     }
     return elements;
+}
+
+
+/// Get Original Voltage Divider Resistor
+// input outputVoltage[mv] topResistanceValue[kΩ], bottomRegistanceValue[kΩ]
+// return voltage[V] 
+float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage, const float topResistanceValue, const float bottomRegistanceValue)
+{
+    const float voltageDivRate = bottomRegistanceValue / (topResistanceValue + bottomRegistanceValue);
+    return outputVoltage / voltageDivRate / 1000.0f;
 }
 
 

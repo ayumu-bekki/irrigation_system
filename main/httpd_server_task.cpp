@@ -20,6 +20,23 @@
 #include "watering_setting.h"
 
 
+namespace {
+    std::string voltageToColorName(const float voltage) 
+    {
+        if (12.5f <= voltage) {
+            return "chartreuse";
+        } else if (12.0f <= voltage) {
+            return "";
+        } else if (11.8f <= voltage) {
+            return "yellow";
+        } else if (11.5f <= voltage) {
+            return "coral";
+        }
+        return "darkgray";
+    }
+}
+
+
 namespace IrrigationSystem {
 
 static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 60;
@@ -145,6 +162,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
     const std::time_t valveCloseEpoch = pIrrigationInterface->ValveCloseEpoch();
+    const float batteryVoltage = pIrrigationInterface->GetBatteryVoltage();
 
 #if CONFIG_DEBUG != 0
     static const std::string title = "Irrigation System (DEBUG)";
@@ -282,6 +300,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     }
     responseBody
         << "<p>Weather Forecast : " << weatherInfo.str() << "</p>"
+        << "<p>Battery Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << std::setprecision(2) << batteryVoltage << "[V]</span></p>"
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
