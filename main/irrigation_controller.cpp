@@ -14,6 +14,7 @@
 #include "watering_button_task.h"
 #include "gpio_control.h"
 #include "file_system.h"
+#include "version.h"
 
 
 namespace IrrigationSystem {

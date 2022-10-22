@@ -3,6 +3,7 @@
 /sdkconfig
 /sdkconfig.old
 /build/
+/main/version.h
 
 .DS_Store
 

@@ -18,7 +18,7 @@
 #include "schedule_base.h"
 #include "weather_forecast.h"
 #include "watering_setting.h"
-
+#include "version.h"
 
 namespace {
     std::string voltageToColorName(const float voltage) 

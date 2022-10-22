@@ -23,8 +23,6 @@ idf_component_register(SRCS "main.cpp"
                             "weather_forecast.cpp"
                     INCLUDE_DIRS "")
 
-set(GIT_VERSION 0)
-add_compile_definitions(GIT_VERSION=${GIT_VERSION})
 
 component_compile_options(-Wno-error=format= -Wno-format)
 
