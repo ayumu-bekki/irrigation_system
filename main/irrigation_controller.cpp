@@ -38,6 +38,9 @@ void IrrigationController::Start()
     GPIO::InitOutput(CONFIG_MONITORING_OUTPUT_GPIO_NO, 1);
     GPIO::InitOutput(CONFIG_WATERING_OUTPUT_GPIO_NO);
 
+    // Initialize ADC
+    GPIO::InitAdc(CONFIG_VAOLTAGE_CHECK_INPUT_ADC_CHANNEL_NO);
+
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -140,7 +143,7 @@ std::time_t IrrigationController::GetLastWateringEpoch() const
     return m_WateringRecord.GetLastWateringEpoch();
 }
 
-float IrrigationController::GetBatteryVoltage() const
+float IrrigationController::GetMainVoltage() const
 {
     return m_VoltageCheckTask.GetVoltage();
 }

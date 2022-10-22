@@ -53,7 +53,7 @@ public:
     std::time_t GetLastWateringEpoch() const;
 
     /// (IrrigationInterface:override)
-    float GetBatteryVoltage() const;
+    float GetMainVoltage() const;
 
 private:
     WifiManager m_WifiManager;

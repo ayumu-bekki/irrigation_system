@@ -16,6 +16,7 @@
 #include <cmath>
 
 #include "logger.h"
+#include "gpio_control.h"
 
 namespace IrrigationSystem {
 namespace Util {
@@ -131,6 +132,31 @@ std::vector<std::string> SplitString(const std::string &str, const char delim)
     return elements;
 }
 
+
+/// Get Original Voltage Divider Resistor
+// input outputVoltage[mv] topResistanceValue[kΩ], bottomRegistanceValue[kΩ]
+// return voltage[V] 
+float GetVoltage()
+{
+    GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 1);
+
+    static const int32_t VOLTAGE_ADC_CHECK_DELAY_MILLISECOND = 1000;
+    Util::SleepMillisecond(VOLTAGE_ADC_CHECK_DELAY_MILLISECOND);
+
+    static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;
+    const uint32_t adcVoltage = GPIO::GetAdcVoltage(CONFIG_VAOLTAGE_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
+
+    GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 0);
+
+    // Voltage divider rate
+    static const float OHM_TO_KOHM = 1000.0f;
+    static const float TOP_REGISTER = CONFIG_VOLTAGE_CHECK_TOP_REGISTER / OHM_TO_KOHM; // kΩ
+    static const float BOTTOM_REGISTER = CONFIG_VOLTAGE_CHECK_BOTTOM_REGISTER / OHM_TO_KOHM; // kΩ
+    float voltage = Util::GetOriginalVoltageFromDividerRegister(adcVoltage, TOP_REGISTER, BOTTOM_REGISTER);
+
+    ESP_LOGI(TAG, "Voltage:%.2f[V] ADC Voltage:%d[mV]", voltage, adcVoltage);
+    return voltage;
+}
 
 /// Get Original Voltage Divider Resistor
 // input outputVoltage[mv] topResistanceValue[kΩ], bottomRegistanceValue[kΩ]

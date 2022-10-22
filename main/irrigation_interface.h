@@ -27,7 +27,7 @@ public:
     virtual WateringSetting& GetWateringSetting() = 0;
     virtual void SaveLastWateringEpoch(const std::time_t wateringEpoch) = 0;
     virtual std::time_t GetLastWateringEpoch() const = 0;
-    virtual float GetBatteryVoltage() const = 0;
+    virtual float GetMainVoltage() const = 0;
 };
 
 } // IrrigationSystem

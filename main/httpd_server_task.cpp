@@ -117,6 +117,16 @@ httpd_handle_t HttpdServerTask::StartWebServer()
     };
     httpd_register_uri_handler(httpdServerHandle, &routingDeleteSettingUriHandler);
 
+    // Post "/voltage" handle
+    const httpd_uri_t routingGetVoltageUriHandler = {
+        .uri       = "/voltage",
+        .method    = HTTP_GET,
+        .handler   = this->GetVoltageHandler,
+        .user_ctx  = this,
+    };
+    httpd_register_uri_handler(httpdServerHandle, &routingGetVoltageUriHandler);
+
+
     // Not Found Handle
     httpd_register_err_handler(httpdServerHandle, HTTPD_404_NOT_FOUND, this->ErrorNotFoundHandler);
     
@@ -162,7 +172,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
     const std::time_t valveCloseEpoch = pIrrigationInterface->ValveCloseEpoch();
-    const float batteryVoltage = pIrrigationInterface->GetBatteryVoltage();
+    const float batteryVoltage = pIrrigationInterface->GetMainVoltage();
 
 #if CONFIG_DEBUG != 0
     static const std::string title = "Irrigation System (DEBUG)";
@@ -300,7 +310,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     }
     responseBody
         << "<p>Weather Forecast : " << weatherInfo.str() << "</p>"
-        << "<p>Battery Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << std::setprecision(2) << batteryVoltage << "[V]</span></p>"
+        << "<p>Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << batteryVoltage << "[V]</span></p>"
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
@@ -578,6 +588,28 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
     httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
     httpd_resp_send(pHttpRequestData, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *pHttpRequestData)
+{
+    ESP_LOGV(TAG, "WebServer Request Recv. Get:GetVoltage");
+
+    const float voltage = Util::GetVoltage();
+
+    // Generate Response 
+    std::stringstream responseBody;
+    responseBody 
+        << "{\"voltage\":"
+        << std::setfill('0') 
+        << std::fixed 
+        << std::setprecision(2) 
+        << voltage 
+        << "}";
+ 
+
+    httpd_resp_set_type(pHttpRequestData, "application/json");
+    httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), responseBody.str().length());
     return ESP_OK;
 }
 

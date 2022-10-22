@@ -48,6 +48,18 @@ menu "Irrigation System Configuration"
         help
             GPIO number for voltage check adc input signals
 
+    config VOLTAGE_CHECK_TOP_REGISTER
+        int "Voltage Check Top Register (Ω)"
+        default 12200
+        help
+            voltage check top register 
+
+    config VOLTAGE_CHECK_BOTTOM_REGISTER
+        int "Voltage Check Bottomp Register (Ω)"
+        default 2200
+        help
+            voltage check bottom register 
+
     config LOCAL_TIME_ZONE
         string "Local Time Zone"
         default "JST-9"

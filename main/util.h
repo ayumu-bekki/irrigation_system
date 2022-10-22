@@ -45,6 +45,9 @@ std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo);
 /// Split Text
 std::vector<std::string> SplitString(const std::string &str, const char delim);
 
+/// GetVoltage
+float GetVoltage();
+
 /// Get Original Voltage Divider Resistor
 float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage, const float topResistanceValue, const float bottomRegistanceValue);
 
