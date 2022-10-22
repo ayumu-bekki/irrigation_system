@@ -31,8 +31,8 @@ void SetLevel(const int32_t gpioNumber, const int32_t level)
 /// Init ADC (Input)
 void InitAdc(const int32_t adcChannelNo)
 {
-    adc_power_acquire();
-    adc_gpio_init(ADC_UNIT_1, static_cast<adc_channel_t>(adcChannelNo));
+    //adc_power_acquire();
+    //adc_gpio_init(ADC_UNIT_1, static_cast<adc_channel_t>(adcChannelNo));
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(static_cast<adc1_channel_t>(adcChannelNo), ADC_ATTEN_DB_11);
 }

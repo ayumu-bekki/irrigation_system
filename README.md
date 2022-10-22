@@ -10,13 +10,13 @@ Automatic Irrigation System for ESP32-WROOM-32E
 
 ### Executing program
 
-* Open Irrigation System Configuration from make menuconfig and configure it.
+* Open Irrigation System Configuration from menuconfig and configure it.
 * Configure the Wi-Fi settings (SSID Password).
 * If necessary, change the serial port settings as well.
 
 ```
-$ make menuconfig 
-$ make flash monitor
+$ idf.py menuconfig 
+$ idf.py flash monitor
 ```
 
 #### Notification
@@ -24,7 +24,7 @@ $ make flash monitor
 If a 32kHz crystal does not exist, or if you have an ESP32-WROOM-32D or lower, you need to set the RTC clock source to Internal 150kHz RC oscillator.
 
 ```
-make menuconfig
+$ idf.py menuconfig
 Component config -> ESP32-specific -> RTC clock source -> Internal 150kHz RC oscillator
 ```
 
