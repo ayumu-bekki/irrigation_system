@@ -24,7 +24,7 @@ namespace Util {
 /// Sleep 
 void SleepMillisecond(const unsigned int sleepMillisecond)
 {
-    portTickType lastWakeTime = xTaskGetTickCount();
+    TickType_t lastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil(&lastWakeTime, sleepMillisecond / portTICK_PERIOD_MS);
 }
 

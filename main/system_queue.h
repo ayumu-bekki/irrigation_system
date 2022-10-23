@@ -26,7 +26,7 @@ protected:
     void SendQueueFromISR();
 
 protected:
-    xQueueHandle m_QueueHandle;
+    QueueHandle_t m_QueueHandle;
 };
 
 

@@ -6,7 +6,7 @@ Automatic Irrigation System for ESP32-WROOM-32E
 
 ### Dependencies
 
-* ESP-IDF v4.3 (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
+* ESP-IDF v5.0 (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
 
 ### Executing program
 
