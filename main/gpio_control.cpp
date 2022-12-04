@@ -68,6 +68,10 @@ uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round)
         sumVoltage += adcVoltage;
     }
 
+    // Shutdown
+    adc_oneshot_del_unit(adcHandle);
+    adc_cali_delete_scheme_line_fitting(adcCaliHandle);
+
     return sumVoltage / round;
 }
 
