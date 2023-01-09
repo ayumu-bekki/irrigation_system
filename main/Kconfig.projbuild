@@ -26,31 +26,31 @@ menu "Irrigation System Configuration"
 
     config MONITORING_OUTPUT_GPIO_NO
         int "Monitoring Output GPIO No"
-        default 26
+        default 25
         help
             GPIO number for monitoring signals
 
     config WATERING_INPUT_GPIO_NO
         int "Watering Button GPIO No"
-        default 27
+        default 34
         help
             GPIO number for valve signals
 
     config VAOLTAGE_CHECK_OUTPUT_GPIO_NO
         int "Voltage Check Output GPIO No"
-        default 14
+        default 26
         help
             GPIO number for voltage check signals
 
     config VAOLTAGE_CHECK_INPUT_ADC_CHANNEL_NO
         int "Voltage Check Input ADC Channel No"
-        default 6
+        default 7
         help
             GPIO number for voltage check adc input signals
 
     config VOLTAGE_CHECK_TOP_REGISTER
         int "Voltage Check Top Register (Ω)"
-        default 12200
+        default 10000
         help
             voltage check top register 
 

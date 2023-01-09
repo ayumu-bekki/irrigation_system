@@ -16,7 +16,7 @@ Automatic Irrigation System for ESP32-WROOM-32E
 
 ```
 $ idf.py menuconfig 
-$ idf.py flash monitor
+$ idf.py build flash monitor
 ```
 
 #### Notification
