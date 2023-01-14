@@ -138,6 +138,7 @@ std::vector<std::string> SplitString(const std::string &str, const char delim)
 // return voltage[V] 
 float GetVoltage()
 {
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 1);
 
     static constexpr int32_t VOLTAGE_ADC_CHECK_DELAY_MILLISECOND = 100;
@@ -156,6 +157,9 @@ float GetVoltage()
 
     ESP_LOGI(TAG, "Voltage:%.2f[V] ADC Voltage:%d[mV]", voltage, adcVoltage);
     return voltage;
+#else
+    return 0.0f;
+#endif
 }
 
 /// Get Original Voltage Divider Resistor

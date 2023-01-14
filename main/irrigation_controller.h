@@ -62,7 +62,10 @@ private:
     WeatherForecast m_WeatherForecast;
     WateringSetting m_WateringSetting;
     WateringRecord m_WateringRecord;
+
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     VoltageCheckTask m_VoltageCheckTask;
+#endif
 };
 
 } // IrrigationSystem

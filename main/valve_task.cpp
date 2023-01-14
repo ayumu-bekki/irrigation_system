@@ -77,6 +77,7 @@ std::time_t ValveTask::GetCloseEpoch() const
 
 void ValveTask::SetValve()
 {
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     const float voltage = Util::GetVoltage();
 
     float rate = 0.0f;
@@ -88,7 +89,9 @@ void ValveTask::SetValve()
         }
     }
     ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d Voltage:%fV Rate:%d", m_IsTimerOpen, m_IsForceOpen, voltage, static_cast<int>(rate * 100));
-
+#else
+    const float rate = (m_IsTimerOpen || m_IsForceOpen) ? 1.0f : 0.0f;
+#endif
     m_pwm.SetRate(rate);
 }
 

@@ -21,6 +21,7 @@
 #include "version.h"
 
 namespace {
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     std::string voltageToColorName(const float voltage) 
     {
         if (12.5f <= voltage) {
@@ -34,6 +35,7 @@ namespace {
         }
         return "darkgray";
     }
+#endif
 }
 
 
@@ -172,7 +174,9 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
     const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
     const std::time_t valveCloseEpoch = pIrrigationInterface->ValveCloseEpoch();
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     const float batteryVoltage = pIrrigationInterface->GetMainVoltage();
+#endif
 
 #if CONFIG_DEBUG != 0
     static const std::string title = "Irrigation System (DEBUG)";
@@ -309,8 +313,12 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
             << Util::TimeToStr(Util::EpochToLocalTime(valveCloseEpoch)) << ")</p>";
     }
     responseBody
-        << "<p>Weather Forecast : " << weatherInfo.str() << "</p>"
-        << "<p>Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << batteryVoltage << "[V]</span></p>"
+        << "<p>Weather Forecast : " << weatherInfo.str() << "</p>";
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
+    responseBody
+        << "<p>Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << batteryVoltage << "[V]</span></p>";
+#endif
+    responseBody
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
@@ -595,6 +603,7 @@ esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *pHttpRequestData)
 {
     ESP_LOGV(TAG, "WebServer Request Recv. Get:GetVoltage");
 
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     const float voltage = Util::GetVoltage();
 
     // Generate Response 
@@ -606,8 +615,12 @@ esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *pHttpRequestData)
         << std::setprecision(2) 
         << voltage 
         << "}";
- 
+#else
+    std::stringstream responseBody;
+    responseBody
+        << "{\"voltage\": 0}";
 
+#endif
     httpd_resp_set_type(pHttpRequestData, "application/json");
     httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), responseBody.str().length());
     return ESP_OK;

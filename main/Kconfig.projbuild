@@ -36,6 +36,12 @@ menu "Irrigation System Configuration"
         help
             GPIO number for valve signals
 
+    config IS_ENABLE_VOLTAGE_CHECK
+        bool "Is Enable Voltage Check Option"
+        default y
+        help
+            If you do not use the voltage check process, disable it
+
     config VAOLTAGE_CHECK_OUTPUT_GPIO_NO
         int "Voltage Check Output GPIO No"
         default 26

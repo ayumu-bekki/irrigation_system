@@ -37,8 +37,11 @@ void IrrigationController::Start()
 
     // Monitoring LED Init And ON
     GPIO::InitOutput(CONFIG_MONITORING_OUTPUT_GPIO_NO, 1);
+
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     // VoltageCheck GPIO Init
     GPIO::InitOutput(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 0);
+#endif
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -84,7 +87,9 @@ void IrrigationController::Start()
     httpdServerTask.Start();
     wateringButtonTask.Start();
     m_ValveTask.Start();
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     m_VoltageCheckTask.Start();
+#endif
 
     // Monitoring LED Off
     GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
@@ -145,7 +150,11 @@ std::time_t IrrigationController::GetLastWateringEpoch() const
 
 float IrrigationController::GetMainVoltage() const
 {
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     return m_VoltageCheckTask.GetVoltage();
+#else
+    return 0.0f;
+#endif
 }
 
 
