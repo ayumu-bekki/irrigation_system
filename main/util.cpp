@@ -140,7 +140,7 @@ float GetVoltage()
 {
     GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 1);
 
-    static const int32_t VOLTAGE_ADC_CHECK_DELAY_MILLISECOND = 1000;
+    static constexpr int32_t VOLTAGE_ADC_CHECK_DELAY_MILLISECOND = 100;
     Util::SleepMillisecond(VOLTAGE_ADC_CHECK_DELAY_MILLISECOND);
 
     static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;

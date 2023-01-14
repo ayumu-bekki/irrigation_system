@@ -9,6 +9,7 @@
 #include <chrono>
 
 #include "task.h"
+#include "pwm.h"
 
 namespace IrrigationSystem {
 
@@ -21,6 +22,8 @@ public:
 
 public:
     ValveTask();
+
+    void Initialize();
 
     void Update() override;
     
@@ -37,6 +40,7 @@ private:
     bool m_IsTimerOpen;
     bool m_IsForceOpen;
     std::time_t m_CloseEpoch;
+    Pwm m_pwm;
 };
 
 } // IrrigationSystem

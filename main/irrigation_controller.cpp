@@ -35,9 +35,10 @@ void IrrigationController::Start()
 
     ESP_LOGI(TAG, "Startup Irrigation System. Version:%s", GIT_VERSION);
 
-    // Initialize GPIO
+    // Monitoring LED Init And ON
     GPIO::InitOutput(CONFIG_MONITORING_OUTPUT_GPIO_NO, 1);
-    GPIO::InitOutput(CONFIG_WATERING_OUTPUT_GPIO_NO);
+    // VoltageCheck GPIO Init
+    GPIO::InitOutput(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 0);
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -56,9 +57,6 @@ void IrrigationController::Start()
 
     // Sync NTP
     Util::SyncSntpObtainTime();
-
-    // Normal Operation OK
-    GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
 
     // Mount File System
     FileSystem::Mount();
@@ -80,6 +78,7 @@ void IrrigationController::Start()
     ManagementTask managementTask(this);
     HttpdServerTask httpdServerTask(this);
     WateringButtonTask wateringButtonTask(this);
+    m_ValveTask.Initialize();
 
     managementTask.Start();
     httpdServerTask.Start();
@@ -87,10 +86,13 @@ void IrrigationController::Start()
     m_ValveTask.Start();
     m_VoltageCheckTask.Start();
 
+    // Monitoring LED Off
+    GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
+
     ESP_LOGI(TAG, "Activation Complete Irrigation System.");
 
     // vTaskStartSchedule() is already called by ESP-IDF before app_main. Infinite loop thereafter.
-    while(1) {
+    while (true) {
         Util::SleepMillisecond(1000);
     }
 }

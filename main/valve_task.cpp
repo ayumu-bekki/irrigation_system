@@ -8,7 +8,7 @@
 #include "util.h"
 #include "irrigation_controller.h"
 #include "gpio_control.h"
-
+#include <cmath>
 
 namespace IrrigationSystem {
 
@@ -18,6 +18,11 @@ ValveTask::ValveTask()
     ,m_IsForceOpen(false)
     ,m_CloseEpoch(0)
 {}
+
+void ValveTask::Initialize()
+{
+    m_pwm.Initialize(static_cast<ledc_channel_t>(LEDC_CHANNEL_0), static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO));
+}
 
 void ValveTask::Update()
 {
@@ -72,8 +77,19 @@ std::time_t ValveTask::GetCloseEpoch() const
 
 void ValveTask::SetValve()
 {
-    ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
-    GPIO::SetLevel(CONFIG_WATERING_OUTPUT_GPIO_NO, m_IsTimerOpen || m_IsForceOpen);
+    const float voltage = Util::GetVoltage();
+
+    float rate = 0.0f;
+    if (m_IsTimerOpen || m_IsForceOpen) {
+        if (voltage <= 1.0f) {
+            rate = 1.0f;
+        } else {
+           rate = std::max(0.0f, std::min(1.0f, 0.5f - ((voltage - 12.0f) * 0.05f)));
+        }
+    }
+    ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d Voltage:%fV Rate:%d", m_IsTimerOpen, m_IsForceOpen, voltage, static_cast<int>(rate * 100));
+
+    m_pwm.SetRate(rate);
 }
 
 } // IrrigationSystem

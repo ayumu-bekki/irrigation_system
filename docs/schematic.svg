@@ -313,19 +313,7 @@
                 TestSwitch
             </text>
         </g>
-        <rect x="79" y="239" width="2" height="2" fill="#000000" stroke="none" transform="rotate(90,80,270)" pointer-events="none"/>
-        <rect x="79" y="299" width="2" height="2" fill="#000000" stroke="none" transform="rotate(90,80,270)" pointer-events="none"/>
-        <path d="M 79.86 262.54 C 79.86 262.54 79.86 262.54 72 277.26 C 87.72 277.26 87.72 277.26 87.72 277.26 Z" fill="#000000" stroke="#000000" stroke-width="1.49" stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="10" transform="rotate(90,80,270)" pointer-events="none"/>
-        <path d="M 80 241 L 80 299" fill="#000000" stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" transform="rotate(90,80,270)" pointer-events="none"/>
-        <path d="M 72 262 L 88 262" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" transform="rotate(90,80,270)" pointer-events="none"/>
-        <rect x="56" y="244" width="60" height="20" fill-opacity="0" fill="#dae2f2" stroke="none" pointer-events="none"/>
-        <g fill="#000000" font-family="Arial,Helvetica" font-weight="bold" text-anchor="middle" font-size="12px">
-            <text x="86" y="259">
-                1000V1A
-            </text>
-        </g>
         <path d="M 440 610 L 630 610" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
-        <path d="M 110 270 L 180 270" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <path d="M 260 320 L 280 320 L 280 272" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <ellipse cx="280" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <rect x="629" y="679" width="2" height="2" fill="#000000" stroke="none" pointer-events="none"/>
@@ -551,8 +539,6 @@
         <path d="M 280 802 L 280 848" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <ellipse cx="280" cy="800" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <ellipse cx="280" cy="850" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <path d="M 120 320 L 120 272" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
-        <ellipse cx="120" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <rect x="629" y="959" width="2" height="2" fill="#000000" stroke="none" pointer-events="none"/>
         <ellipse cx="630" cy="950" rx="4.135" ry="4.135" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <path d="M 630 955 L 630 959" fill="#ffffff" stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-miterlimit="10" pointer-events="none"/>
@@ -739,11 +725,6 @@
         <ellipse cx="400" cy="1050" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <path d="M 490 1060 L 490 1050 L 402 1050" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <ellipse cx="400" cy="1050" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <path d="M 50 230 L 50 268" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
-        <ellipse cx="50" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <path d="M 490 1048 L 490 900 L 50 900 L 50 272" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
-        <ellipse cx="490" cy="1050" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <ellipse cx="50" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <rect x="140" y="930" width="410" height="230" rx="34.5" ry="34.5" fill="url(#mx-gradient-transparent-1-transparent-1-s-0)" stroke="#000000" pointer-events="none"/>
         <rect x="290" y="910" width="70" height="20" fill-opacity="0" fill="#dae2f2" stroke="none" pointer-events="none"/>
         <g fill="#000000" font-family="Arial,Helvetica" font-weight="bold" text-anchor="middle" font-size="12px">
@@ -808,10 +789,16 @@
         <ellipse cx="120" cy="1130" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <path d="M 240 1000 L 122 1000" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <ellipse cx="120" cy="1000" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <path d="M 490 898 L 490 802" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
-        <ellipse cx="490" cy="900" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
-        <ellipse cx="490" cy="800" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
         <path d="M 250 740 L 172 740" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
         <ellipse cx="170" cy="740" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
+        <path d="M 50 230 L 50 910 L 490 910 L 490 1048" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
+        <ellipse cx="490" cy="1050" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
+        <path d="M 490 802 L 490 908" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
+        <ellipse cx="490" cy="800" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
+        <ellipse cx="490" cy="910" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
+        <path d="M 180 270 L 110 270 L 110 320 L 120 320" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 108 270 L 52 270" fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" pointer-events="none"/>
+        <ellipse cx="110" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
+        <ellipse cx="50" cy="270" rx="2" ry="2" fill="#000000" stroke="#000000" stroke-width="2" pointer-events="none"/>
     </g>
 </svg>
