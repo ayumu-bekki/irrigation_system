@@ -20,7 +20,7 @@ namespace {
         // 14bit  4.8828kHz
         constexpr double ESP32_CLOCK = 12.5e-9; // 80MHz = 12.5μs
 
-        ledc_timer_bit_t ledcDutyBit = LEDC_TIMER_14_BIT;
+        ledc_timer_bit_t ledcDutyBit = LEDC_TIMER_BIT_MAX;
         for (int32_t bit = (ledcDutyBit - 1); bit >= LEDC_TIMER_1_BIT; --bit) {
             if ((1.0 / (ESP32_CLOCK * std::pow(2, bit))) < frequency) {
                 break;
