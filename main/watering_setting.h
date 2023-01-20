@@ -103,6 +103,12 @@ private:
     TemperatureWateringList m_TemperatureWateringList;
     /// Month To Type Dict
     MonthToTypeDict m_MonthToTypeDict;
+    /// ValvePowerBaseRate
+    float m_BaseRate;
+    /// ValvePowerBaseVoltage
+    float m_BaseVoltage;
+    /// ValvePowerVoltageRate
+    float m_VoltageRate;
 };
 
 } // IrrigationSystem

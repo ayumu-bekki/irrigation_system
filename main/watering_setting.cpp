@@ -34,6 +34,9 @@ WateringSetting::WateringSetting()
     ,m_WateringTypeDict()
     ,m_TemperatureWateringList()
     ,m_MonthToTypeDict()
+    ,m_BaseRate(0.0f)
+    ,m_BaseVoltage(0.0f)
+    ,m_VoltageRate(0.0f)
 {}
 
 bool WateringSetting::SetSettingData(const std::string& body)
@@ -339,6 +342,34 @@ bool WateringSetting::ParseAdvance(cJSON* pJsonRoot) noexcept(false)
             }
             m_MonthToTypeDict.insert(std::make_pair(pJsonMonthToType->string, pJsonMonthToType->valuestring));
         }
+    }
+    {
+        // Valve Power Control
+        const cJSON *const pJsonValvePowerControl = cJSON_GetObjectItemCaseSensitive(pJsonRoot, "valve_power_control");
+        if (!cJSON_IsObject(pJsonValvePowerControl)) {
+            throw std::runtime_error("Illegal object type valve_power_control.");
+        }
+
+        // Base Voltage
+        const cJSON *const pJsonBaseVoltage = cJSON_GetObjectItemCaseSensitive(pJsonValvePowerControl, "base_voltage");
+        if (!cJSON_IsNumber(pJsonBaseVoltage)) {
+            throw std::runtime_error("Illegal object type base_voltage.");
+        }
+        m_BaseVoltage = pJsonBaseVoltage->valuedouble;
+
+        // BaseRate
+        const cJSON *const pJsonBaseRate = cJSON_GetObjectItemCaseSensitive(pJsonValvePowerControl, "base_rate");
+        if (!cJSON_IsNumber(pJsonBaseRate)) {
+            throw std::runtime_error("Illegal object type base_rate.");
+        }
+        m_BaseRate = pJsonBaseRate->valuedouble;
+
+        // Voltage Rate
+        const cJSON *const pJsonVoltageRate = cJSON_GetObjectItemCaseSensitive(pJsonValvePowerControl, "voltage_rate");
+        if (!cJSON_IsNumber(pJsonVoltageRate)) {
+            throw std::runtime_error("Illegal object type voltage_rate.");
+        }
+        m_VoltageRate = pJsonVoltageRate->valuedouble;
     }
 
     m_IsActive = true;
