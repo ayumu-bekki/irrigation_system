@@ -22,7 +22,13 @@ ValveTask::ValveTask(IrrigationInterface *const pIrrigationInterface)
 
 void ValveTask::Initialize()
 {
-    m_pwm.Initialize(static_cast<ledc_channel_t>(LEDC_CHANNEL_0), static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO));
+    //constexpr uint32_t VALVE_FREQUENCY = 60000; // 60kHz
+    constexpr uint32_t VALVE_FREQUENCY = 2000; // 2kHz
+    constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
+    m_pwm.Initialize(static_cast<ledc_channel_t>(LEDC_CHANNEL_0),
+                     VALVE_LEDC_TIMER,
+                     static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO),
+                     VALVE_FREQUENCY);
 }
 
 void ValveTask::Update()

@@ -14,13 +14,14 @@ class Pwm final
 public:
     Pwm();
 
-    void Initialize(const ledc_channel_t channelNo, const gpio_num_t gpioNo);
+    void Initialize(const ledc_channel_t channelNo, const ledc_timer_t ledcTimer, const gpio_num_t gpioNo, const uint32_t frequency);
 
     void SetRate(const float rate);
 
 private:
     ledc_channel_t m_channelNo;
     ledc_mode_t m_ledcMode;
+    ledc_timer_bit_t m_ledcDutyBit;
 };
 
 } // IrrigationSystem
