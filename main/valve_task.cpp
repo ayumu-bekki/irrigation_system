@@ -4,23 +4,22 @@
 // Include ----------------------
 #include "valve_task.h"
 
+#include <cmath>
+
 #include "logger.h"
 #include "util.h"
-#include "irrigation_controller.h"
+#include "watering_setting.h"
 #include "gpio_control.h"
-#include <cmath>
+#include "irrigation_interface.h"
 
 namespace IrrigationSystem {
 
-ValveTask::ValveTask(IrrigationInterface *const pIrrigationInterface)
+ValveTask::ValveTask(const IrrigationInterfaceConstWeakPtr pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_IsTimerOpen(false)
     ,m_IsForceOpen(false)
     ,m_CloseEpoch(0)
-{}
-
-void ValveTask::Initialize()
 {
     //constexpr uint32_t VALVE_FREQUENCY = 60000; // 60kHz
     constexpr uint32_t VALVE_FREQUENCY = 2000; // 2kHz
@@ -86,8 +85,13 @@ void ValveTask::SetValve()
 {
     ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-    const float voltage = m_pIrrigationInterface->GetMainVoltage();
-    const WateringSetting &wateringSetting = m_pIrrigationInterface->GetWateringSetting();
+    const IrrigationInterfaceConstSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        return;
+    }
+
+    const float voltage = irrigationInterface->GetMainVoltage();
+    const WateringSetting &wateringSetting = irrigationInterface->GetWateringSetting();
 
     float rate = 0.0f;
     if (m_IsTimerOpen || m_IsForceOpen) {

@@ -24,7 +24,7 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit WateringButtonTask(IrrigationInterface *const pIrrigationInterface);
+    explicit WateringButtonTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
     ~WateringButtonTask();
 
 private:
@@ -36,7 +36,7 @@ private:
     static void IRAM_ATTR GpioIsrHandler(void*);
 
 private:
-    IrrigationInterface* m_pIrrigationInterface;
+    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
 };
 
 } // IrrigationSystem

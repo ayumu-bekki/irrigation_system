@@ -4,22 +4,27 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
+#include <memory>
+
 #include "irrigation_interface.h"
 #include "wifi_manager.h"
-#include "valve_task.h"
 #include "schedule_manager.h"
 #include "weather_forecast.h"
 #include "watering_setting.h"
 #include "watering_record.h"
 #include "voltage_check_task.h"
+#include "valve_task.h"
 
 namespace IrrigationSystem {
 
 /// IrrigationController
-class IrrigationController final : public IrrigationInterface
+class IrrigationController final 
+    : public IrrigationInterface
+    , public std::enable_shared_from_this<IrrigationController> 
 {
 public:
     IrrigationController();
+    ~IrrigationController();
 
     /// Start
     void Start();
@@ -38,13 +43,16 @@ public:
     std::time_t ValveCloseEpoch() const override;
 
     /// (IrrigationInterface:override)
-    ScheduleManager& GetScheduleManager() override;
+    const ScheduleManagerWeakPtr GetScheduleManager() override;
 
     /// (IrrigationInterface:override)
     WeatherForecast& GetWeatherForecast() override;
 
     /// (IrrigationInterface:override)
     WateringSetting& GetWateringSetting() override;
+
+    /// (IrrigationInterface:override)
+    const WateringSetting& GetWateringSetting() const override;
 
     /// (IrrigationInterface:override)
     void SaveLastWateringEpoch(const std::time_t wateringEpoch) override;
@@ -57,8 +65,8 @@ public:
 
 private:
     WifiManager m_WifiManager;
-    ValveTask m_ValveTask;
-    ScheduleManager m_ScheduleManager;
+    ValveTaskUniquePtr m_ValveTask;
+    ScheduleManagerSharedPtr m_ScheduleManager;
     WeatherForecast m_WeatherForecast;
     WateringSetting m_WateringSetting;
     WateringRecord m_WateringRecord;

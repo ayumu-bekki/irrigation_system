@@ -21,8 +21,6 @@ public:
         MAX_STATUS,
     };
 
-    using UniquePtr = std::unique_ptr<ScheduleBase>;
-
 protected:
     ScheduleBase();
     ScheduleBase(const Status status, const std::string& name, const int hour, const int minute, const bool isVisible);
@@ -59,6 +57,9 @@ private:
     unsigned int m_Minute;
     bool m_IsVisible;
 };
+
+using ScheduleBaseUniquePtr = std::unique_ptr<ScheduleBase>;
+
 
 } // IrrigationSystem
 

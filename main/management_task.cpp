@@ -12,21 +12,27 @@
 
 namespace IrrigationSystem {
 
-ManagementTask::ManagementTask(IrrigationInterface *const pIrrigationInterface)
+ManagementTask::ManagementTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrrigationInterface(pIrrigationInterface)
 {}
 
 void ManagementTask::Update()
 {
-    if (!m_pIrrigationInterface) {
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
     // Schedule Manager
-    m_pIrrigationInterface->GetScheduleManager().Execute(); 
-    
+    const ScheduleManagerSharedPtr scheduleManager = irrigationInterface->GetScheduleManager().lock();
+    if (!scheduleManager) {
+        ESP_LOGE(TAG, "Failed ScheduleManager is null");
+        return;
+    }
+
+    scheduleManager->Execute(); 
     Util::SleepMillisecond(10 * 1000);
 }
 

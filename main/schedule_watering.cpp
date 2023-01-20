@@ -12,11 +12,11 @@ namespace IrrigationSystem {
 
 ScheduleWatering::ScheduleWatering()
     :ScheduleBase()
-    ,m_pIrrigationInterface(nullptr)
+    ,m_pIrrigationInterface()
     ,m_OpenSecond(0)
 {}
 
-ScheduleWatering::ScheduleWatering(IrrigationInterface *const pIrrigationInterface, const int hour, const int minute, const int openSecond)
+ScheduleWatering::ScheduleWatering(const IrrigationInterfaceWeakPtr pIrrigationInterface, const int hour, const int minute, const int openSecond)
     :ScheduleBase(ScheduleBase::STATUS_WAIT, ScheduleWatering::SCHEDULE_NAME, hour, minute, ScheduleWatering::IS_VISIBLE_TASK)
     ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_OpenSecond(openSecond)
@@ -27,15 +27,16 @@ void ScheduleWatering::Exec()
     ESP_LOGI(TAG, "Schedule Exec - Watering Executer. %02d:%02d WS:%d", GetHour(), GetMinute(), m_OpenSecond);
     SetStatus(STATUS_EXECUTED);
 
-    if (!m_pIrrigationInterface) {
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
  
-    m_pIrrigationInterface->ValveAddOpenSecond(m_OpenSecond);
+    irrigationInterface->ValveAddOpenSecond(m_OpenSecond);
 
     // Write History
-    m_pIrrigationInterface->SaveLastWateringEpoch(Util::GetEpoch());
+    irrigationInterface->SaveLastWateringEpoch(Util::GetEpoch());
 }
 
 } // IrrigationSystem

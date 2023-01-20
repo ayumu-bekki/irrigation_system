@@ -43,7 +43,7 @@ namespace IrrigationSystem {
 
 static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 60;
 
-HttpdServerTask::HttpdServerTask(IrrigationInterface *const pIrrigationInterface)
+HttpdServerTask::HttpdServerTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_HttpdHandle(NULL)
@@ -163,19 +163,22 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-
-    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
-    if (!pIrrigationInterface) {
-        ESP_LOGE(TAG, "Failed irrigationInterface is null");
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return ESP_FAIL;
     }
-    const WeatherForecast& weatherForecast = pIrrigationInterface->GetWeatherForecast();
-    const WateringSetting& weatherSetting = pIrrigationInterface->GetWateringSetting();
-    const ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
-    const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager.GetScheduleList();
-    const std::time_t valveCloseEpoch = pIrrigationInterface->ValveCloseEpoch();
+    const WeatherForecast& weatherForecast = irrigationInterface->GetWeatherForecast();
+    const WateringSetting& weatherSetting = irrigationInterface->GetWateringSetting();
+    const ScheduleManagerSharedPtr scheduleManager = irrigationInterface->GetScheduleManager().lock();
+    if (!scheduleManager) {
+        ESP_LOGE(TAG, "Failed Schedule Manager is null");
+        return ESP_FAIL;
+    }
+    const ScheduleManager::ScheduleBaseList& scheduleList = scheduleManager->GetScheduleList();
+    const std::time_t valveCloseEpoch = irrigationInterface->ValveCloseEpoch();
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-    const float batteryVoltage = pIrrigationInterface->GetMainVoltage();
+    const float batteryVoltage = irrigationInterface->GetMainVoltage();
 #endif
 
 #if CONFIG_DEBUG != 0
@@ -231,14 +234,14 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "<hr><h2>Schedule</h2>";
 
     if (weatherSetting.IsActive()) {
-        const std::tm wateringTm = Util::EpochToLocalTime(pHttpdServerTask->m_pIrrigationInterface->GetLastWateringEpoch());
+        const std::tm wateringTm = Util::EpochToLocalTime(irrigationInterface->GetLastWateringEpoch());
 
         responseBody
             << "<p>System Time : " << Util::GetNowTimeStr() << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
             << std::setfill('0')
             << "<p>Current Date : " 
-            << std::setw(2) << scheduleManager.GetCurrentMonth() << "/" 
-            << std::setw(2) << scheduleManager.GetCurrentDay()
+            << std::setw(2) << scheduleManager->GetCurrentMonth() << "/" 
+            << std::setw(2) << scheduleManager->GetCurrentDay()
             << "&nbsp;&nbsp; Last Watering Date : "
             << std::setw(2) << (wateringTm.tm_mon + 1) << "/" 
             << std::setw(2) << wateringTm.tm_mday
@@ -247,7 +250,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         // Create Schedule Table
         responseBody << "<table><thead><tr><th>ScheduleName</th><th>Time</th><th>Status</th></tr></thead><tbody>";
 
-        if (std::any_of(scheduleList.begin(), scheduleList.end(), [](const ScheduleBase::UniquePtr& item){ return item->IsVisible(); })) {
+        if (std::any_of(scheduleList.begin(), scheduleList.end(), [](const ScheduleBaseUniquePtr& item){ return item->IsVisible(); })) {
             // Found Visible Schedule Item
             for (const auto& pScheduleItem : scheduleList) {
                 if (pScheduleItem->IsVisible()) {
@@ -377,8 +380,13 @@ esp_err_t HttpdServerTask::ManualWateringHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-    pHttpdServerTask->m_pIrrigationInterface->ValveAddOpenSecond(valveOpenSecond);
-
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
+        return ESP_FAIL;
+    }
+    irrigationInterface->ValveAddOpenSecond(valveOpenSecond);
+ 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
     httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
@@ -401,7 +409,12 @@ esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-    pHttpdServerTask->m_pIrrigationInterface->ValveResetTimer();
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
+        return ESP_FAIL;
+    }
+    irrigationInterface->ValveResetTimer();
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
@@ -425,10 +438,9 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-
-    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
-    if (!pIrrigationInterface) {
-        ESP_LOGE(TAG, "Failed irrigationInterface is null");
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return ESP_FAIL;
     }
 
@@ -518,7 +530,7 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData)
     }
     
     // Parse
-    WateringSetting& weatherSetting = pHttpdServerTask->m_pIrrigationInterface->GetWateringSetting();
+    WateringSetting& weatherSetting = irrigationInterface->GetWateringSetting();
     if (!weatherSetting.SetSettingData(payloadJsonData)) {
         httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR, "Invalid Data");
         return ESP_FAIL;
@@ -531,9 +543,13 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData)
     }
 
     // Init Schedule
-    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
+    const ScheduleManagerSharedPtr scheduleManager = irrigationInterface->GetScheduleManager().lock();
+    if (!scheduleManager) {
+        ESP_LOGE(TAG, "Failed Schedule Manager is null");
+        return ESP_FAIL;
+    }
     const std::tm nowTimeInfo = Util::GetLocalTime();
-    scheduleManager.InitializeNewDay(nowTimeInfo);
+    scheduleManager->InitializeNewDay(nowTimeInfo);
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");
@@ -571,9 +587,9 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
         ESP_LOGE(TAG, "Failed HttpdServerTask is null");
         return ESP_FAIL;
     }
-    IrrigationInterface *const pIrrigationInterface = pHttpdServerTask->m_pIrrigationInterface;
-    if (!pIrrigationInterface) {
-        ESP_LOGE(TAG, "Failed irrigationInterface is null");
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return ESP_FAIL;
     }
 
@@ -584,13 +600,17 @@ esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData)
     }
 
     // WateringSetting init
-    WateringSetting& wateringSetting = pHttpdServerTask->m_pIrrigationInterface->GetWateringSetting();
+    WateringSetting& wateringSetting = irrigationInterface->GetWateringSetting();
     wateringSetting = WateringSetting();
 
     // Init Schedule
-    ScheduleManager& scheduleManager = pIrrigationInterface->GetScheduleManager();
+    const ScheduleManagerSharedPtr scheduleManager = irrigationInterface->GetScheduleManager().lock();
+    if (!scheduleManager) {
+        ESP_LOGE(TAG, "Failed Schedule Manager is null");
+        return ESP_FAIL;
+    }
     const std::tm nowTimeInfo = Util::GetLocalTime();
-    scheduleManager.InitializeNewDay(nowTimeInfo);
+    scheduleManager->InitializeNewDay(nowTimeInfo);
 
     // Redirect
     httpd_resp_set_status(pHttpRequestData, "303 See Other");

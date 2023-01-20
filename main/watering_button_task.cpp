@@ -12,7 +12,7 @@
 
 namespace IrrigationSystem {
 
-WateringButtonTask::WateringButtonTask(IrrigationInterface *const pIrrigationInterface)
+WateringButtonTask::WateringButtonTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,SystemQueue()
     ,m_pIrrigationInterface(pIrrigationInterface)
@@ -45,13 +45,14 @@ void WateringButtonTask::Update()
 
 void WateringButtonTask::Receive()
 {
-    if (!m_pIrrigationInterface) {
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
     const bool isButtonPush = (gpio_get_level(static_cast<gpio_num_t>(CONFIG_WATERING_INPUT_GPIO_NO)) == 0);
-    m_pIrrigationInterface->ValveForce(isButtonPush);
+    irrigationInterface->ValveForce(isButtonPush);
     
     ESP_LOGI(TAG, "Watering Button Status:%s", isButtonPush ? "ON" : "OFF");
 }

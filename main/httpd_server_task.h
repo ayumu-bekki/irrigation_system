@@ -20,7 +20,7 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit HttpdServerTask(IrrigationInterface *const pParent);
+    explicit HttpdServerTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
    
     void Initialize() override;
 
@@ -41,7 +41,7 @@ private:
     static esp_err_t ErrorNotFoundHandler(httpd_req_t *pHttpRequestData, httpd_err_code_t errCode);
 
 private:
-    IrrigationInterface* m_pIrrigationInterface;
+    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
     httpd_handle_t m_HttpdHandle;
 };
 

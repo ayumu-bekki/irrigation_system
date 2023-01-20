@@ -19,10 +19,10 @@ namespace IrrigationSystem {
 class ScheduleManager final
 {
 public:
-    using ScheduleBaseList = std::vector<ScheduleBase::UniquePtr>;
+    using ScheduleBaseList = std::vector<ScheduleBaseUniquePtr>;
 
 public:
-    explicit ScheduleManager(IrrigationInterface *const pIrrigationInterface);
+    explicit ScheduleManager(const IrrigationInterfaceWeakPtr pIrrigationInterface);
 
     void Execute();
 
@@ -39,7 +39,7 @@ public:
 private:
 
     /// Add a schedule to the list
-    void AddSchedule(ScheduleBase::UniquePtr&& scheduleItem);
+    void AddSchedule(ScheduleBaseUniquePtr&& scheduleItem);
 
     /// Disable a schedule whose execution time has already expired.
     void DisableExpiredSchedule(const std::tm& timeInfo);
@@ -51,12 +51,15 @@ private:
     void DebugOutputSchedules();
 
 private:
-    IrrigationInterface* m_pIrrigationInterface;
+    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
     ScheduleBaseList m_ScheduleList;
     int m_CurrentMonth;
     int m_CurrentDay;
     
 };
+
+using ScheduleManagerSharedPtr = std::shared_ptr<ScheduleManager>;
+using ScheduleManagerWeakPtr = std::weak_ptr<ScheduleManager>;
 
 } // IrrigationSystem
 

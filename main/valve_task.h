@@ -7,6 +7,7 @@
 #include <soc/soc.h>
 
 #include <chrono>
+#include <memory>
 
 #include "task.h"
 #include "pwm.h"
@@ -14,6 +15,9 @@
 #include "irrigation_interface.h"
 
 namespace IrrigationSystem {
+
+//class IrrigationInterface;
+//using IrrigationInterfaceConstWeakPtr = std::weak_ptr<const IrrigationInterface>;
 
 class ValveTask final : public Task
 {
@@ -23,9 +27,7 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit ValveTask(IrrigationInterface *const pIrrigationInterface);
-
-    void Initialize();
+    explicit ValveTask(const IrrigationInterfaceConstWeakPtr pIrrigationInterface);
 
     void Update() override;
     
@@ -39,12 +41,14 @@ private:
     void SetValve();
 
 private:
-    IrrigationInterface* m_pIrrigationInterface;
+    const IrrigationInterfaceConstWeakPtr m_pIrrigationInterface;
     bool m_IsTimerOpen;
     bool m_IsForceOpen;
     std::time_t m_CloseEpoch;
     Pwm m_pwm;
 };
+
+using ValveTaskUniquePtr = std::unique_ptr<ValveTask>;
 
 } // IrrigationSystem
 

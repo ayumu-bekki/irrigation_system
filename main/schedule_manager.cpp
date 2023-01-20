@@ -22,7 +22,7 @@
 
 namespace IrrigationSystem {
 
-ScheduleManager::ScheduleManager(IrrigationInterface *const pIrrigationInterface)
+ScheduleManager::ScheduleManager(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     :m_pIrrigationInterface(pIrrigationInterface)
     ,m_ScheduleList()
     ,m_CurrentMonth(0)
@@ -56,14 +56,14 @@ void ScheduleManager::AdjustSchedule()
 {
     ESP_LOGI(TAG, "Start Schedule Adjust. %s", Util::GetNowTimeStr().c_str());
 
-    // Check Irrigation
-    if (!m_pIrrigationInterface) {
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
 
     // GetWateringSetting
-    const WateringSetting& wateringSetting = m_pIrrigationInterface->GetWateringSetting();
+    const WateringSetting& wateringSetting = irrigationInterface->GetWateringSetting();
     if (!wateringSetting.IsActive()) {
         ESP_LOGI(TAG, "Watering Setting is not activated.");
         return;
@@ -77,13 +77,13 @@ void ScheduleManager::AdjustSchedule()
     if (wateringSetting.GetWateringMode() == WateringSetting::WATERING_MODE_SIMPLE) {
         const WateringSetting::WateringHourList& hourList = wateringSetting.GetWateringHourList();
         for (const std::int32_t& hour : hourList) {
-            AddSchedule(ScheduleBase::UniquePtr(
-                new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSetting.GetWateringSec())
-            ));
+            AddSchedule(
+                std::make_unique<ScheduleWatering>(irrigationInterface, hour, 0, wateringSetting.GetWateringSec())
+            );
         }
     } else if (wateringSetting.GetWateringMode() == WateringSetting::WATERING_MODE_ADVANCE) {
         // Read History 
-        const std::tm wateringTm = Util::EpochToLocalTime(m_pIrrigationInterface->GetLastWateringEpoch());
+        const std::tm wateringTm = Util::EpochToLocalTime(irrigationInterface->GetLastWateringEpoch());
 
         /// WateringWeather
         enum WateringWeather : int {
@@ -97,7 +97,7 @@ void ScheduleManager::AdjustSchedule()
         WateringWeather wateringWeather = WATERING_WEATHER_NONE;
         std::int32_t maxTemperature = 0;
 
-        WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+        WeatherForecast &weatherForecast = irrigationInterface->GetWeatherForecast();
         weatherForecast.SetJMAParamter(wateringSetting.GetJMAAreaPathCode(), wateringSetting.GetJMALocalCode(), wateringSetting.GetJMAAMeDAS());
         weatherForecast.Request();
         if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {   
@@ -144,7 +144,9 @@ void ScheduleManager::AdjustSchedule()
 
             if (wateringType.DaySpan <= lastWateringDuration) {
                 for (const std::int32_t& hour : wateringType.WateringHours) {
-                    AddSchedule(ScheduleBase::UniquePtr(new ScheduleWatering(m_pIrrigationInterface, hour, 0, wateringSetting.GetWateringSec())));
+                    AddSchedule(
+                        std::make_unique<ScheduleWatering>(irrigationInterface, hour, 0, wateringSetting.GetWateringSec())
+                    );
                 }
             } else { 
                 ESP_LOGI(TAG, "Skip DaysDuration");
@@ -155,8 +157,8 @@ void ScheduleManager::AdjustSchedule()
 
 #if CONFIG_DEBUG != 0
     // Register Dummy Schedule (Test)
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(12, 0)));
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleDummy(0, 0)));
+    AddSchedule(std::make_unique<ScheduleDummy>(12, 0));
+    AddSchedule(std::make_unique<ScheduleDummy>(0, 0));
 #endif
 
     // Disable 
@@ -187,7 +189,8 @@ int ScheduleManager::GetCurrentDay() const
 /// Date change schedule initialization
 void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
 {
-    if (!m_pIrrigationInterface) {
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
         ESP_LOGE(TAG, "Failed IrrigationInterface is null");
         return;
     }
@@ -196,14 +199,14 @@ void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo)
     m_CurrentDay = nowTimeInfo.tm_mday;
 
     m_ScheduleList.clear();
-    AddSchedule(ScheduleBase::UniquePtr(new ScheduleAdjust(m_pIrrigationInterface, 0, 30)));
+    AddSchedule(std::make_unique<ScheduleAdjust>(irrigationInterface, 0, 30));
 
-    WeatherForecast &weatherForecast = m_pIrrigationInterface->GetWeatherForecast();
+    WeatherForecast &weatherForecast = irrigationInterface->GetWeatherForecast();
     weatherForecast.Initialize();
 }
 
 /// Add a schedule to the list
-void ScheduleManager::AddSchedule(ScheduleBase::UniquePtr&& scheduleItem)
+void ScheduleManager::AddSchedule(ScheduleBaseUniquePtr&& scheduleItem)
 {
     m_ScheduleList.emplace_back(std::move(scheduleItem));
 }
@@ -223,7 +226,7 @@ void ScheduleManager::SortScheduleTime()
     std::sort(  
         m_ScheduleList.begin(), 
         m_ScheduleList.end(),
-        [](const ScheduleBase::UniquePtr& left, const ScheduleBase::UniquePtr& right){
+        [](const ScheduleBaseUniquePtr& left, const ScheduleBaseUniquePtr& right){
             return left->GetDiffTime() < right->GetDiffTime();
         }
     );
