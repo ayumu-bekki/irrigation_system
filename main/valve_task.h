@@ -11,6 +11,8 @@
 #include "task.h"
 #include "pwm.h"
 
+#include "irrigation_interface.h"
+
 namespace IrrigationSystem {
 
 class ValveTask final : public Task
@@ -21,7 +23,7 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    ValveTask();
+    explicit ValveTask(IrrigationInterface *const pIrrigationInterface);
 
     void Initialize();
 
@@ -37,6 +39,7 @@ private:
     void SetValve();
 
 private:
+    IrrigationInterface* m_pIrrigationInterface;
     bool m_IsTimerOpen;
     bool m_IsForceOpen;
     std::time_t m_CloseEpoch;

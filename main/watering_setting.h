@@ -64,6 +64,9 @@ public:
     const WateringTypeDict& GetWateringTypeDict() const;
     const TemperatureWateringList& GetTemperatureWateringList() const;
     const MonthToTypeDict& GetMonthToTypeDict() const;
+    float GetValvePowerBaseRate() const;
+    float GetValvePowerBaseVoltage() const;
+    float GetValvePowerVoltageRate() const;
 
 private:
     bool Parse(const std::string& body) noexcept;

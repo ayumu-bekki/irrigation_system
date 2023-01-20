@@ -94,6 +94,22 @@ const WateringSetting::MonthToTypeDict& WateringSetting::GetMonthToTypeDict() co
     return m_MonthToTypeDict;
 }
 
+
+float WateringSetting::GetValvePowerBaseRate() const
+{
+    return m_BaseRate;
+}
+
+float WateringSetting::GetValvePowerBaseVoltage() const
+{
+    return m_BaseVoltage;
+}
+
+float WateringSetting::GetValvePowerVoltageRate() const
+{
+    return m_VoltageRate;
+}
+
 bool WateringSetting::Parse(const std::string& body) noexcept
 {
     // Initialize

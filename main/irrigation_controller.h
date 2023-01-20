@@ -47,13 +47,13 @@ public:
     WateringSetting& GetWateringSetting() override;
 
     /// (IrrigationInterface:override)
-    void SaveLastWateringEpoch(const std::time_t wateringEpoch);
+    void SaveLastWateringEpoch(const std::time_t wateringEpoch) override;
 
     /// (IrrigationInterface:override)
-    std::time_t GetLastWateringEpoch() const;
+    std::time_t GetLastWateringEpoch() const override;
 
     /// (IrrigationInterface:override)
-    float GetMainVoltage() const;
+    float GetMainVoltage() const override;
 
 private:
     WifiManager m_WifiManager;

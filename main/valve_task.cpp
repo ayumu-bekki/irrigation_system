@@ -12,8 +12,9 @@
 
 namespace IrrigationSystem {
 
-ValveTask::ValveTask()
+ValveTask::ValveTask(IrrigationInterface *const pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
+    ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_IsTimerOpen(false)
     ,m_IsForceOpen(false)
     ,m_CloseEpoch(0)
@@ -77,18 +78,18 @@ std::time_t ValveTask::GetCloseEpoch() const
 
 void ValveTask::SetValve()
 {
+    ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-    const float voltage = Util::GetVoltage();
+    const float voltage = m_pIrrigationInterface->GetMainVoltage();
+    const WateringSetting &wateringSetting = m_pIrrigationInterface->GetWateringSetting();
 
     float rate = 0.0f;
     if (m_IsTimerOpen || m_IsForceOpen) {
-        if (voltage <= 1.0f) {
-            rate = 1.0f;
-        } else {
-           rate = std::max(0.0f, std::min(1.0f, 0.5f - ((voltage - 12.0f) * 0.05f)));
-        }
+        rate = std::max(0.0f, 
+               std::min(1.0f, 
+               wateringSetting.GetValvePowerBaseRate() - ((voltage - wateringSetting.GetValvePowerBaseVoltage()) * wateringSetting.GetValvePowerVoltageRate())));
     }
-    ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d Voltage:%fV Rate:%d", m_IsTimerOpen, m_IsForceOpen, voltage, static_cast<int>(rate * 100));
+    ESP_LOGI(TAG, "Valve voltage rate Voltage:%fV Rate:%d", voltage, static_cast<int>(rate * 100));
 #else
     const float rate = (m_IsTimerOpen || m_IsForceOpen) ? 1.0f : 0.0f;
 #endif

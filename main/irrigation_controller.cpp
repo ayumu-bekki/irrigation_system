@@ -21,7 +21,7 @@ namespace IrrigationSystem {
 
 IrrigationController::IrrigationController()
     :m_WifiManager()
-    ,m_ValveTask()
+    ,m_ValveTask(this)
     ,m_ScheduleManager(this)
     ,m_WeatherForecast()
     ,m_WateringSetting()
