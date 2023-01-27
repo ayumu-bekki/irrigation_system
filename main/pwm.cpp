@@ -22,10 +22,11 @@ namespace {
 
         ledc_timer_bit_t ledcDutyBit = LEDC_TIMER_BIT_MAX;
         for (int32_t bit = (ledcDutyBit - 1); bit >= LEDC_TIMER_1_BIT; --bit) {
-            if ((1.0 / (ESP32_CLOCK * std::pow(2, bit))) < frequency) {
+            const int32_t targetFreq = (1.0 / (ESP32_CLOCK * std::pow(2, bit)));
+            ledcDutyBit = static_cast<ledc_timer_bit_t>(bit);
+            if (frequency < targetFreq) {
                 break;
             }
-            ledcDutyBit = static_cast<ledc_timer_bit_t>(bit);
         }
         return ledcDutyBit;
     }

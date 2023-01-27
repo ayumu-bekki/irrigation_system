@@ -7,8 +7,8 @@
 /// Entry Point
 extern "C" void app_main()
 {
-    IrrigationSystem::IrrigationController irrigationController;
-    irrigationController.Start();
+    const auto irrigationController = std::make_shared<IrrigationSystem::IrrigationController>();
+    irrigationController->Start();
 }
 
 // EOF

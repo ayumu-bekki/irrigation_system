@@ -55,8 +55,8 @@
         {"12":"COLD"}
     ],
     "valve_power_control": {
-        base_voltage: 12.0,
-        base_rate: 0.5,
-        voltage_rate: 0.05
+        "base_voltage": 12.0,
+        "base_rate": 0.5,
+        "voltage_rate": 0.05
     }
 }

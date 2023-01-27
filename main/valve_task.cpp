@@ -21,8 +21,7 @@ ValveTask::ValveTask(const IrrigationInterfaceConstWeakPtr pIrrigationInterface)
     ,m_IsForceOpen(false)
     ,m_CloseEpoch(0)
 {
-    //constexpr uint32_t VALVE_FREQUENCY = 60000; // 60kHz
-    constexpr uint32_t VALVE_FREQUENCY = 2000; // 2kHz
+    constexpr uint32_t VALVE_FREQUENCY = 10000; // 10kHz
     constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
     m_pwm.Initialize(static_cast<ledc_channel_t>(LEDC_CHANNEL_0),
                      VALVE_LEDC_TIMER,
