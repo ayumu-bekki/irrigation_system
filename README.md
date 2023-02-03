@@ -64,8 +64,7 @@ This The schematic was created using Scheme-it (https://www.digikey.jp/schemeit/
 * Takagi Easy Watering System (https://hi.takagi.co.jp/products/list.php?category_id=63)
 
 ![UseCase](docs/use_case.jpg)
-![Electrical Equipment](docs/electrical_equipment_000.jpg)
-![Electrical Equipment](docs/electrical_equipment_001.jpg)
+![Electrical Equipment](docs/electrical_equipment.jpg)
 
 
 ## Authors
