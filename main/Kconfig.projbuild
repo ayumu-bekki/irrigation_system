@@ -14,7 +14,7 @@ menu "Irrigation System Configuration"
 
     config WIFI_MAXIMUM_RETRY
         int "Maximum retry"
-        default 5
+        default 100
         help
             Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
@@ -79,8 +79,8 @@ menu "Irrigation System Configuration"
             NTP server address to use for time alignment
 
     config DEBUG
-        int "Debug Mode"
-        default 0
+        bool "Debug Mode"
+        default n
         help
             Set a non-zero number to build as debug mode.
 

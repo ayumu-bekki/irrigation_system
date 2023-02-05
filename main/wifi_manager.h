@@ -9,24 +9,21 @@
 #include <esp_event.h>
 #include <esp_wifi.h>
 
-// Wifi Define
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT      BIT1
-
-
 namespace IrrigationSystem {
 
 class WifiManager final
 {
 public:
     WifiManager();
+    ~WifiManager();
 
     void Connect();
+
+    void Disconnect();
 
     void EventHandler(const esp_event_base_t eventBase, const int32_t eventId, void *const eventData);
 
 private:
-    EventGroupHandle_t m_EventGroup;
     int m_RetryNum;
 };
 

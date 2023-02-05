@@ -37,6 +37,7 @@ bool WateringRecord::Load() noexcept
     const bool isReadOk = FileSystem::Read(WateringRecord::RECORD_FILE_NAME, recordBody);
     if (!isReadOk) {
         ESP_LOGE(TAG, "Failed Read File.");
+        return false;
     }
     ESP_LOGV(TAG, "Log Body:%s", recordBody.c_str());
  
@@ -55,7 +56,7 @@ bool WateringRecord::Load() noexcept
 
         const cJSON *const pJsonLastWateringDate = cJSON_GetObjectItemCaseSensitive(pJsonRoot, "last_watering_date");
         if (!cJSON_IsString(pJsonLastWateringDate)) {
-            throw std::runtime_error("Illegal object type weaarherAreaCode.");
+            throw std::runtime_error("Illegal object type weatherAreaCode.");
         }
         const std::string lastWateringDateStr = pJsonLastWateringDate->valuestring;
 

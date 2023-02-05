@@ -37,7 +37,7 @@ void InitializeSntp()
 /// Notification Time Synced 
 void TimeSyncedCallback(struct timeval *tv)
 {
-    ESP_LOGI(TAG, "Notification of a time synchronization event. Now:%s", GetNowTimeStr().c_str());
+    ESP_LOGI(TAG, "Time synchronization event. Now:%s", GetNowTimeStr().c_str());
 }
 
 
@@ -53,7 +53,7 @@ void SyncSntpObtainTime()
 
     // wait for time to be set
     int retry = 0;
-    static constexpr int retry_count = 10;
+    static constexpr int retry_count = 100;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         SleepMillisecond(2000);

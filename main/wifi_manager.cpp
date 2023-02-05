@@ -4,10 +4,10 @@
 // Include ----------------------
 #include "wifi_manager.h"
 
-#include <cstring>
-
 #include "logger.h"
+#include "util.h"
 
+#include <cstring>
 
 namespace IrrigationSystem {
 
@@ -20,15 +20,16 @@ static void eventHandler(void* callbackObject, esp_event_base_t eventBase, int32
 }
 
 WifiManager::WifiManager()
-    :m_EventGroup()
-    ,m_RetryNum(0)
+    :m_RetryNum(0)
 {}
+
+WifiManager::~WifiManager()
+{
+    Disconnect();
+}
 
 void WifiManager::Connect()
 {
-    ESP_LOGI(TAG, "Start Wifi Connect.");
-    m_EventGroup = xEventGroupCreate();
-
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
@@ -58,27 +59,17 @@ void WifiManager::Connect()
     
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+
+    ESP_LOGI(TAG, "Start Wifi Connect.");
+
     ESP_ERROR_CHECK(esp_wifi_start());
+}
 
-    ESP_LOGI(TAG, "Finish Wifi Connect.");
-
-    EventBits_t bits = xEventGroupWaitBits(m_EventGroup,
-            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-            pdFALSE,
-            pdFALSE,
-            portMAX_DELAY);
-
-    if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "Connected to ap SSID:%s", CONFIG_WIFI_SSID);
-    } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGW(TAG, "Failed to connect to SSID:%s", CONFIG_WIFI_SSID);
-    } else {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
-    vEventGroupDelete(m_EventGroup);
+void WifiManager::Disconnect()
+{
+    ESP_LOGI(TAG, "Disconnect WiFi.");
+    ESP_ERROR_CHECK(esp_wifi_disconnect());
+    ESP_ERROR_CHECK(esp_wifi_stop());
 }
 
 void WifiManager::EventHandler(const esp_event_base_t eventBase, const int32_t eventId, void *const eventData)
@@ -87,21 +78,19 @@ void WifiManager::EventHandler(const esp_event_base_t eventBase, const int32_t e
         if (eventId == WIFI_EVENT_STA_START) {
             esp_wifi_connect();
         } else if (eventId == WIFI_EVENT_STA_DISCONNECTED) {
-            if (m_RetryNum < CONFIG_WIFI_MAXIMUM_RETRY) {
-                esp_wifi_connect();
+            if (CONFIG_WIFI_MAXIMUM_RETRY <= m_RetryNum ) {
+                ESP_LOGE(TAG, "Failed Wi-Fi Connect");
+            } else { 
                 ++m_RetryNum;
-                ESP_LOGI(TAG, "retry to connect to the AP");
-            } else {
-                xEventGroupSetBits(m_EventGroup, WIFI_FAIL_BIT);
+                ESP_LOGW(TAG, "Disconnect Wi-Fi. retry to connect. try:%d", m_RetryNum);
+                esp_wifi_connect();
             }
-            ESP_LOGW(TAG,"connect to the AP fail");
         }
     } else if (eventBase == IP_EVENT) {
         if (eventId == IP_EVENT_STA_GOT_IP) {
             ip_event_got_ip_t* event = static_cast<ip_event_got_ip_t*>(eventData);
-            ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+            ESP_LOGI(TAG, "Connected Wi-Fi. ip:" IPSTR, IP2STR(&event->ip_info.ip));
             m_RetryNum = 0;
-            xEventGroupSetBits(m_EventGroup, WIFI_CONNECTED_BIT);
         }
     }
 }
