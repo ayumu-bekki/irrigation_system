@@ -79,7 +79,8 @@ void WifiManager::EventHandler(const esp_event_base_t eventBase, const int32_t e
             esp_wifi_connect();
         } else if (eventId == WIFI_EVENT_STA_DISCONNECTED) {
             if (CONFIG_WIFI_MAXIMUM_RETRY <= m_RetryNum ) {
-                ESP_LOGE(TAG, "Failed Wi-Fi Connect");
+                ESP_LOGE(TAG, "Failed Wi-Fi Connect. System Restart...");
+                esp_restart();
             } else { 
                 ++m_RetryNum;
                 ESP_LOGW(TAG, "Disconnect Wi-Fi. retry to connect. try:%d", m_RetryNum);
