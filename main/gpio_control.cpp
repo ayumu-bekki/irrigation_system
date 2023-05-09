@@ -35,6 +35,7 @@ uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round)
     adc_oneshot_unit_handle_t adcHandle;
     adc_oneshot_unit_init_cfg_t adcInitConfig = {
         .unit_id = ADC_UNIT_1,
+        .clk_src = static_cast<adc_oneshot_clk_src_t>(ADC_DIGI_CLK_SRC_DEFAULT),
         .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
     adc_oneshot_new_unit(&adcInitConfig, &adcHandle);

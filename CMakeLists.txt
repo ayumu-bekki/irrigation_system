@@ -9,8 +9,8 @@ project(irrigation_system)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ImportDigiCert
-target_add_binary_data(irrigation_system.elf "main/DigiCertGlobalRootCA.crt.pem" TEXT)
+# ImportRootCA
+target_add_binary_data(irrigation_system.elf "main/SCRoot2caPem.cer" TEXT)
 
 # Git Version
 execute_process(COMMAND git describe --dirty --always --tags

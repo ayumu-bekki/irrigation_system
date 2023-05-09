@@ -46,10 +46,10 @@ void SyncSntpObtainTime()
 {
     ESP_LOGI(TAG, "Start Sync SNTP");
 
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, CONFIG_NTP_SERVER_ADDRESS);
-    sntp_set_time_sync_notification_cb(TimeSyncedCallback);
-    sntp_init();
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, CONFIG_NTP_SERVER_ADDRESS);
+    esp_sntp_set_time_sync_notification_cb(TimeSyncedCallback);
+    esp_sntp_init();
 
     // wait for time to be set
     int retry = 0;
