@@ -107,7 +107,7 @@ void IrrigationController::Start()
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-    m_WaterLevelChecker.Initialize();
+    m_WaterLevelChecker.Start();
 #endif
 
     // Monitoring LED Off

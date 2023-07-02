@@ -192,6 +192,10 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const float batteryVoltage = irrigationInterface->GetMainVoltage();
 #endif
 
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    const int32_t waterLevel = irrigationInterface->GetWaterLevel() * 100.0f;
+#endif
+
 #if CONFIG_DEBUG != 0
     static const std::string title = "Irrigation System (DEBUG)";
     static const std::string bodyStyle = "body {background-color:lightgray;}";
@@ -232,8 +236,9 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
-        << ".water_level { border:solid 1px steelblue; background-color:lightgray; width: 300px; margin 10px 0; }"
-        << ".water_level > div{ height: 10px; background: steelblue; }"
+        << ".water_level { position: relative; border:solid 1px steelblue; background-color:lightgray; width: 300px; margin: 16px 20px; }"
+        << "div#inner { height: 20px; background: steelblue; }"
+        << "div#num { position: absolute; top: 0px; left: 0px; line-height: 20px; text-align: center; width: 300px;}"
         << "</style>"
         << "<script>var checkSubmit = function(msg) { return confirm(msg); };</script>"
         << "</head>";
@@ -321,7 +326,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
     responseBody
         << "<hr><h2>Warter Level</h2>"
-        << "<div class=\"water_level\"><div style=\"width:85%\"></div></div>";
+        << "<div class=\"water_level\"><div id=\"inner\" style=\"width:" << waterLevel << "%\"></div><div id=\"num\">" << waterLevel << "%</div></div>";
 #endif
 
     responseBody
@@ -681,7 +686,6 @@ esp_err_t HttpdServerTask::GetWaterLevelHandler(httpd_req_t *pHttpRequestData)
         return ESP_FAIL;
     }
     
-    irrigationInterface->CheckWaterLevel();
     const float waterLevel = irrigationInterface->GetWaterLevel();
 
     // Generate Response 

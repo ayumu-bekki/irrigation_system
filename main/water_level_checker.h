@@ -7,20 +7,29 @@
 #include <soc/soc.h>
 
 #include "pwm.h"
+#include "task.h"
 
 namespace IrrigationSystem {
 
-class WaterLevelChecker final
+class WaterLevelChecker final : public Task
 {
+public:
+    static constexpr char *const TASK_NAME = (char*)"WaterLevelCheckTask";
+    static constexpr int PRIORITY = Task::PRIORITY_LOW;
+    static constexpr int CORE_ID = APP_CPU_NUM;
+
 public:
     WaterLevelChecker();
 
-    void Initialize();
+    void Initialize() override;
+    void Update() override;
+
     void Check();
 
     float GetWaterLevel() const;
 
 private:
+    bool m_Check;
     float m_WaterLevel;
     Pwm m_pwm;
 };

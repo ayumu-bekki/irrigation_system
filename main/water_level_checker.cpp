@@ -13,7 +13,10 @@
 namespace IrrigationSystem {
 
 WaterLevelChecker::WaterLevelChecker()
-    :m_WaterLevel(0.0f)
+    :Task(TASK_NAME, PRIORITY, CORE_ID)
+    ,m_Check(true)
+    ,m_WaterLevel(0.0f)
+    ,m_pwm()
 {}
 
 void WaterLevelChecker::Initialize()
@@ -27,24 +30,35 @@ void WaterLevelChecker::Initialize()
 
 }
 
+void WaterLevelChecker::Update()
+{
+    if (m_Check) {
+      m_pwm.SetRate(0.5f);
+      Util::SleepMillisecond(500);
+
+      static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;
+      const uint32_t adcVoltage = GPIO::GetAdcVoltage(CONFIG_WATER_LEVEL_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
+
+      m_pwm.SetRate(0.0f);
+
+      const int32_t minVoltage = 420;
+      const int32_t maxVoltage = 1900;
+
+      m_WaterLevel = std::max(0.0f, 
+                     std::min(1.0f,
+                     ((static_cast<float>(adcVoltage) - minVoltage) / (float)(maxVoltage - minVoltage))));
+      ESP_LOGI(TAG, "WaterLevelCheck adcVolt:%dmV min:%dmv max:%dmv rate:%0.2f", adcVoltage, minVoltage, maxVoltage, m_WaterLevel);
+
+      m_Check = false;
+    }
+
+    static const int32_t NEXT_CHECK_MILLISECOND = 1000;
+    Util::SleepMillisecond(NEXT_CHECK_MILLISECOND);
+}
+
 void WaterLevelChecker::Check()
 {
-    m_pwm.SetRate(0.5f);
-    Util::SleepMillisecond(500);
-
-    static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;
-    const uint32_t adcVoltage = GPIO::GetAdcVoltage(CONFIG_WATER_LEVEL_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
-
-    m_pwm.SetRate(0.0f);
-
-    const int32_t minVoltage = 420;
-    const int32_t maxVoltage = 1900;
-
-    m_WaterLevel = std::max(0.0f, 
-                   std::min(1.0f,
-                   ((static_cast<float>(adcVoltage) - minVoltage) / (float)(maxVoltage - minVoltage))));
-    ESP_LOGI(TAG, "WaterLevelCheck adcVolt:%dmV min:%dmv max:%dmv rate:%0.2f", adcVoltage, minVoltage, maxVoltage, m_WaterLevel);
-
+    m_Check = true;
 }
 
 float WaterLevelChecker::GetWaterLevel() const

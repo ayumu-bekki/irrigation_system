@@ -27,7 +27,7 @@ public:
     static constexpr int CORE_ID = APP_CPU_NUM;
 
 public:
-    explicit ValveTask(const IrrigationInterfaceConstWeakPtr pIrrigationInterface);
+    explicit ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
 
     void Update() override;
     
@@ -41,7 +41,7 @@ private:
     void SetValve();
 
 private:
-    const IrrigationInterfaceConstWeakPtr m_pIrrigationInterface;
+    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
     bool m_IsTimerOpen;
     bool m_IsForceOpen;
     std::time_t m_CloseEpoch;

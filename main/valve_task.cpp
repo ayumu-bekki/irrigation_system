@@ -14,7 +14,7 @@
 
 namespace IrrigationSystem {
 
-ValveTask::ValveTask(const IrrigationInterfaceConstWeakPtr pIrrigationInterface)
+ValveTask::ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     :Task(TASK_NAME, PRIORITY, CORE_ID)
     ,m_pIrrigationInterface(pIrrigationInterface)
     ,m_IsTimerOpen(false)
@@ -84,7 +84,7 @@ void ValveTask::SetValve()
 {
     ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-    const IrrigationInterfaceConstSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
+    const IrrigationInterfaceSharedPtr irrigationInterface = m_pIrrigationInterface.lock();
     if (!irrigationInterface) {
         return;
     }
@@ -103,6 +103,10 @@ void ValveTask::SetValve()
     const float rate = (m_IsTimerOpen || m_IsForceOpen) ? 1.0f : 0.0f;
 #endif
     m_pwm.SetRate(rate);
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    irrigationInterface->CheckWaterLevel();
+#endif
 }
 
 } // IrrigationSystem
