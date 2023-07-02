@@ -49,7 +49,7 @@ menu "Irrigation System Configuration"
             GPIO number for voltage check signals
 
     config VAOLTAGE_CHECK_INPUT_ADC_CHANNEL_NO
-        int "Voltage Check Input ADC Channel No"
+        int "Voltage Check Input ADC1 Channel No"
         default 7
         help
             GPIO number for voltage check adc input signals
@@ -65,6 +65,24 @@ menu "Irrigation System Configuration"
         default 2200
         help
             voltage check bottom register 
+
+    config IS_ENABLE_WATER_LEVEL_CHECK
+        bool "Is Enable Water Level Check Option"
+        default y
+        help
+            If you do not use the water level check process, disable it
+
+    config WATER_LEVEL_CHECK_OUTPUT_GPIO_NO
+        int "Voltage Check Output GPIO No"
+        default 27
+        help
+            GPIO number for voltage check signals
+
+    config WATER_LEVEL_CHECK_INPUT_ADC_CHANNEL_NO
+        int "Voltage Check Input ADC1 Channel No"
+        default 3
+        help
+            GPIO number for voltage check adc input signals
 
     config LOCAL_TIME_ZONE
         string "Local Time Zone"

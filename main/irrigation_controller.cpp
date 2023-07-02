@@ -27,6 +27,12 @@ IrrigationController::IrrigationController()
     ,m_WeatherForecast()
     ,m_WateringSetting()
     ,m_WateringRecord()
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
+    ,m_VoltageCheckTask()
+#endif
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    ,m_WaterLevelChecker()
+#endif
 {}
 
 
@@ -98,6 +104,10 @@ void IrrigationController::Start()
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     m_VoltageCheckTask.Start();
+#endif
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    m_WaterLevelChecker.Initialize();
 #endif
 
     // Monitoring LED Off
@@ -180,6 +190,21 @@ float IrrigationController::GetMainVoltage() const
 #endif
 }
 
+void IrrigationController::CheckWaterLevel()
+{
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    m_WaterLevelChecker.Check();
+#endif
+}
+
+float IrrigationController::GetWaterLevel() const
+{
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    return m_WaterLevelChecker.GetWaterLevel();
+#else
+    return 0.0f;
+#endif
+}
 
 } // IrrigationSystem
 

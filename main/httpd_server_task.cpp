@@ -128,6 +128,17 @@ httpd_handle_t HttpdServerTask::StartWebServer()
     };
     httpd_register_uri_handler(httpdServerHandle, &routingGetVoltageUriHandler);
 
+    // Post "/waterlevel" handle
+    const httpd_uri_t routingGetWaterLevelUriHandler = {
+        .uri       = "/waterlevel",
+        .method    = HTTP_GET,
+        .handler   = this->GetWaterLevelHandler,
+        .user_ctx  = this,
+    };
+    httpd_register_uri_handler(httpdServerHandle, &routingGetWaterLevelUriHandler);
+
+
+
 
     // Not Found Handle
     httpd_register_err_handler(httpdServerHandle, HTTPD_404_NOT_FOUND, this->ErrorNotFoundHandler);
@@ -221,6 +232,8 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
+        << ".water_level { border:solid 1px steelblue; background-color:lightgray; width: 300px; margin 10px 0; }"
+        << ".water_level > div{ height: 10px; background: steelblue; }"
         << "</style>"
         << "<script>var checkSubmit = function(msg) { return confirm(msg); };</script>"
         << "</head>";
@@ -304,6 +317,12 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
     responseBody.str("");
     responseBody.clear(std::stringstream::goodbit);
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    responseBody
+        << "<hr><h2>Warter Level</h2>"
+        << "<div class=\"water_level\"><div style=\"width:85%\"></div></div>";
+#endif
 
     responseBody
         << "<hr><h2>Information</h2>"
@@ -645,6 +664,47 @@ esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *pHttpRequestData)
     httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), responseBody.str().length());
     return ESP_OK;
 }
+
+esp_err_t HttpdServerTask::GetWaterLevelHandler(httpd_req_t *pHttpRequestData)
+{
+    ESP_LOGV(TAG, "WebServer Request Recv. Get:GetWaterLevel");
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    HttpdServerTask *const pHttpdServerTask = static_cast<HttpdServerTask*>(pHttpRequestData->user_ctx);
+    if (!pHttpdServerTask) {
+        ESP_LOGE(TAG, "Failed HttpdServerTask is null");
+        return ESP_FAIL;
+    }
+    const IrrigationInterfaceSharedPtr irrigationInterface = pHttpdServerTask->m_pIrrigationInterface.lock();
+    if (!irrigationInterface) {
+        ESP_LOGE(TAG, "Failed IrrigationInterface is null");
+        return ESP_FAIL;
+    }
+    
+    irrigationInterface->CheckWaterLevel();
+    const float waterLevel = irrigationInterface->GetWaterLevel();
+
+    // Generate Response 
+    std::stringstream responseBody;
+    responseBody 
+        << "{\"water_level\":"
+        << std::setfill('0') 
+        << std::fixed 
+        << std::setprecision(2) 
+        << waterLevel
+        << "}";
+#else
+    ESP_LOGI(TAG, "WATER LEVEL CHECK 5 ");
+    std::stringstream responseBody;
+    responseBody
+        << "{\"water_level\": 0}";
+
+#endif
+    httpd_resp_set_type(pHttpRequestData, "application/json");
+    httpd_resp_send(pHttpRequestData, responseBody.str().c_str(), responseBody.str().length());
+    return ESP_OK;
+}
+
 
 esp_err_t HttpdServerTask::ErrorNotFoundHandler(httpd_req_t *pHttpRequestData, httpd_err_code_t errCode)
 {

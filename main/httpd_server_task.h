@@ -38,6 +38,7 @@ private:
     static esp_err_t DownloadSettingHandler(httpd_req_t *pHttpRequestData);
     static esp_err_t DeleteSettingHandler(httpd_req_t *pHttpRequestData);
     static esp_err_t GetVoltageHandler(httpd_req_t *pHttpRequestData);
+    static esp_err_t GetWaterLevelHandler(httpd_req_t *pHttpRequestData);
     static esp_err_t ErrorNotFoundHandler(httpd_req_t *pHttpRequestData, httpd_err_code_t errCode);
 
 private:

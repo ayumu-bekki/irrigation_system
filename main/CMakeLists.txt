@@ -22,6 +22,7 @@ idf_component_register(SRCS "main.cpp"
                             "watering_record.cpp"
                             "watering_setting.cpp"
                             "weather_forecast.cpp"
+                            "water_level_checker.cpp"
                     INCLUDE_DIRS "")
 
 

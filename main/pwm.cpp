@@ -45,6 +45,8 @@ void Pwm::Initialize(const ledc_channel_t channelNo, const ledc_timer_t ledcTime
     m_channelNo = channelNo;
     m_ledcDutyBit = CalcFrequencyToBit(frequency);
 
+    ESP_LOGI(TAG, "PWD INIT Channel:%d Timer:%d Bit:%d Freq:%d gpio:%d", m_channelNo, ledcTimer, m_ledcDutyBit, frequency, gpioNo);
+
     // Prepare and then apply the LEDC PWM timer configuration
     const ledc_timer_config_t ledc_timer = {
         .speed_mode       = m_ledcMode,
@@ -73,6 +75,8 @@ void Pwm::SetRate(const float rate)
 {
     // rate to duty
     const int32_t ledc_duty = (std::pow(2, static_cast<int32_t>(m_ledcDutyBit)) - 1) * rate;
+
+    ESP_LOGI(TAG, "PWD RATE rate:%0.2f bitrate:%d ledcbit:%d", rate, ledc_duty, m_ledcDutyBit);
 
     ledc_set_duty(m_ledcMode, m_channelNo, ledc_duty);
     ledc_update_duty(m_ledcMode, m_channelNo);

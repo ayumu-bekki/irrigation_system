@@ -31,6 +31,8 @@ public:
     virtual void SaveLastWateringEpoch(const std::time_t wateringEpoch) = 0;
     virtual std::time_t GetLastWateringEpoch() const = 0;
     virtual float GetMainVoltage() const = 0;
+    virtual void CheckWaterLevel() = 0;
+    virtual float GetWaterLevel() const = 0;
 };
 
 using IrrigationInterfaceSharedPtr = std::shared_ptr<IrrigationInterface>;

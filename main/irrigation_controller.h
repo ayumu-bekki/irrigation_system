@@ -13,6 +13,7 @@
 #include "watering_setting.h"
 #include "watering_record.h"
 #include "voltage_check_task.h"
+#include "water_level_checker.h"
 #include "valve_task.h"
 
 namespace IrrigationSystem {
@@ -63,6 +64,12 @@ public:
     /// (IrrigationInterface:override)
     float GetMainVoltage() const override;
 
+    /// (IrrigationInterface:override)
+    void CheckWaterLevel() override;
+
+    /// (IrrigationInterface:override)
+    float GetWaterLevel() const override;
+
 private:
     WifiManager m_WifiManager;
     ValveTaskUniquePtr m_ValveTask;
@@ -74,6 +81,11 @@ private:
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     VoltageCheckTask m_VoltageCheckTask;
 #endif
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    WaterLevelChecker m_WaterLevelChecker;
+#endif
+
 };
 
 } // IrrigationSystem
