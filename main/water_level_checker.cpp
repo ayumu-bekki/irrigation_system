@@ -10,11 +10,15 @@
 #include "util.h"
 #include "gpio_control.h"
 
+namespace {
+    constexpr std::time_t CHECK_WATER_LEVEL_INTERVAL_SEC = 10 * 60;
+}
+
 namespace IrrigationSystem {
 
 WaterLevelChecker::WaterLevelChecker()
     :Task(TASK_NAME, PRIORITY, CORE_ID)
-    ,m_Check(true)
+    ,m_CheckSec(0)
     ,m_WaterLevel(0.0f)
     ,m_pwm()
 {}
@@ -32,7 +36,7 @@ void WaterLevelChecker::Initialize()
 
 void WaterLevelChecker::Update()
 {
-    if (m_Check) {
+    if (m_CheckSec < Util::GetEpoch()) {
       m_pwm.SetRate(0.5f);
       Util::SleepMillisecond(500);
 
@@ -49,7 +53,7 @@ void WaterLevelChecker::Update()
                      ((static_cast<float>(adcVoltage) - minVoltage) / (float)(maxVoltage - minVoltage))));
       ESP_LOGI(TAG, "WaterLevelCheck adcVolt:%dmV min:%dmv max:%dmv rate:%0.2f", adcVoltage, minVoltage, maxVoltage, m_WaterLevel);
 
-      m_Check = false;
+      m_CheckSec = Util::GetEpoch() + CHECK_WATER_LEVEL_INTERVAL_SEC;
     }
 
     static const int32_t NEXT_CHECK_MILLISECOND = 1000;
@@ -58,7 +62,7 @@ void WaterLevelChecker::Update()
 
 void WaterLevelChecker::Check()
 {
-    m_Check = true;
+    m_CheckSec = 0;
 }
 
 float WaterLevelChecker::GetWaterLevel() const

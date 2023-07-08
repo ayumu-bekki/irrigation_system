@@ -5,6 +5,7 @@
 
 // Include ----------------------
 #include <soc/soc.h>
+#include <chrono>
 
 #include "pwm.h"
 #include "task.h"
@@ -29,7 +30,7 @@ public:
     float GetWaterLevel() const;
 
 private:
-    bool m_Check;
+    std::time_t m_CheckSec;
     float m_WaterLevel;
     Pwm m_pwm;
 };
