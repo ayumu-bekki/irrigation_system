@@ -38,7 +38,9 @@ void WaterLevelChecker::Update()
 {
     if (m_CheckSec < Util::GetEpoch()) {
       m_pwm.SetRate(0.5f);
-      Util::SleepMillisecond(500);
+
+      static const int32_t WATER_LEVEL_VOLTAGE_CHECK_PRE_WARMING_MILISEC = 100;
+      Util::SleepMillisecond(WATER_LEVEL_VOLTAGE_CHECK_PRE_WARMING_MILISEC);
 
       static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;
       const uint32_t adcVoltage = GPIO::GetAdcVoltage(CONFIG_WATER_LEVEL_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
