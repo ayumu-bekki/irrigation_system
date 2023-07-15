@@ -25,15 +25,26 @@ namespace {
     std::string voltageToColorName(const float voltage) 
     {
         if (12.5f <= voltage) {
-            return "chartreuse";
+            return "lime";
         } else if (12.0f <= voltage) {
-            return "";
+            return "chartreuse";
         } else if (11.8f <= voltage) {
             return "yellow";
         } else if (11.5f <= voltage) {
             return "coral";
         }
         return "darkgray";
+    }
+#endif
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    std::string waterLevelToColorName(const int waterLevel) 
+    {
+        if (60 <= waterLevel) {
+            return "steelblue";
+        } else if (25 <= waterLevel) {
+            return "lightseagreen";
+        }
+        return "yellow";
     }
 #endif
 }
@@ -190,6 +201,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     const std::time_t valveCloseEpoch = irrigationInterface->ValveCloseEpoch();
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
     const float batteryVoltage = irrigationInterface->GetMainVoltage();
+    const int32_t voltageGuage = ((batteryVoltage - 10.0f) / (15.0 - 10.0f)) * 100.0f;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
@@ -223,11 +235,12 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "<title>" << title << "</title>"
         << "<style>" 
         << "*{box-sizing:border-box;margin:0;padding:0;}"
-        << "html{font-size: 16px}"
-        << "h1, h2 {margin: 14px}"
+        << "h1 {margin: 10px 12px; font-size: 1.3em;}"
+        << "h2 {margin: 10px 12px; font-size: 1.2em;}"
+        << "h3 {margin: 8px 12px; font-size: 1.0em;}"
         << "hr {margin:0px 6px}"
-        << "p, form {margin: 8px 10px}"
-        << "table {margin: 16px 20px}"
+        << "p, form {margin: 4px 12px; font-size: 1.0em;}"
+        << "table {margin: 10px 20px}"
         << "input {border-style:none; padding: 5px}"
         << bodyStyle
         << "hr {height:0;border:0;overflow:visible;border-top:3px dotted white;}"
@@ -236,8 +249,8 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
         << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
         << ".schedule_disable { background-color: silver;}"
         << ".schedule_executable { background-color: greenyellow;}"
-        << ".water_level { position: relative; border:solid 1px steelblue; background-color:lightgray; width: 300px; margin: 16px 20px; }"
-        << "div#inner { height: 20px; background: steelblue; }"
+        << ".gauge{ position: relative; border:solid 1px steelblue; background-color:lightgray; width: 300px; margin: 6px 20px; }"
+        << "div#inner { height: 20px; }"
         << "div#num { position: absolute; top: 0px; left: 0px; line-height: 20px; text-align: center; width: 300px;}"
         << "</style>"
         << "<script>var checkSubmit = function(msg) { return confirm(msg); };</script>"
@@ -298,6 +311,41 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     responseBody.str("");
     responseBody.clear(std::stringstream::goodbit);
 
+    // -- Status -----
+    responseBody
+        << "<hr><h2>Status</h2>";
+ 
+    responseBody
+        << "<h3>Valve Status</h3>";
+    if (valveCloseEpoch == 0) {
+        responseBody << "<p>Close</p>";
+    } else {
+        responseBody 
+            << "<p><span style=\"background:coral;\">Open</span> &gt; Close At(" 
+            << Util::TimeToStr(Util::EpochToLocalTime(valveCloseEpoch)) << ")</p>";
+    }
+
+    responseBody
+        << "<h3>Weather Forecast</h3>"
+        << "<p>" << weatherInfo.str() << "</p>";
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    responseBody
+        << "<h3>Warter Level</h3>"
+        << "<div class=\"gauge\"><div id=\"inner\" style=\"width:" << waterLevel << "%;  background-color:" << ::waterLevelToColorName(waterLevel) << ";\"></div><div id=\"num\">" << waterLevel << "%</div></div>";
+#endif
+
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
+    responseBody
+        << "<h3>Battery Voltage</h3>"
+        << "<div class=\"gauge\"><div id=\"inner\" style=\"width:" << voltageGuage << "%; background-color:" << ::voltageToColorName(batteryVoltage) << ";\"></div><div id=\"num\">" << std::setfill('0') << std::fixed << std::setprecision(2) << batteryVoltage << "[V]</div></div>";
+#endif
+
+    httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
+    responseBody.str("");
+    responseBody.clear(std::stringstream::goodbit);
+
+    // -- Operation -----
     responseBody
         << "<hr><h2>Operation</h2>"
         << "<form action=\"/manual_watering\" method=\"post\">"
@@ -323,29 +371,9 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData)
     responseBody.str("");
     responseBody.clear(std::stringstream::goodbit);
 
-#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+    // -- Information -----
     responseBody
-        << "<hr><h2>Warter Level</h2>"
-        << "<div class=\"water_level\"><div id=\"inner\" style=\"width:" << waterLevel << "%\"></div><div id=\"num\">" << waterLevel << "%</div></div>";
-#endif
-
-    responseBody
-        << "<hr><h2>Information</h2>"
-        << "<p>Valve Status : ";
-    if (valveCloseEpoch == 0) {
-        responseBody << "Close</p>";
-    } else {
-        responseBody 
-            << "<span style=\"background:coral;\">Open</span> &gt; Close At(" 
-            << Util::TimeToStr(Util::EpochToLocalTime(valveCloseEpoch)) << ")</p>";
-    }
-    responseBody
-        << "<p>Weather Forecast : " << weatherInfo.str() << "</p>";
-#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-    responseBody
-        << "<p>Voltage : <span style=\"background-color:" << ::voltageToColorName(batteryVoltage) << ";\">" << std::setfill('0') << std::fixed << std::setprecision(2) << batteryVoltage << "[V]</span></p>";
-#endif
-    responseBody
+        << "<hr>"
         << "<p>Version : " << GIT_VERSION << "</p>"
         << "</body></html>";
 
