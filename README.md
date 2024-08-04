@@ -39,6 +39,15 @@ You can check the system's time and schedule, or run the watering manually.
 If no configuration file has been registered, the message "No settings have been made."
 You need to register the settings file in order for the irrigation schedule to work.
 
+### Retrieving Weather Forecast Information
+The weather forecast is obtained from the JMA.
+As the request is made via HTTPS, it is necessary to incorporate the root certificate.
+The following command is used to obtain a list of certificates, and only the root certificate needs to be extracted and loaded into the program.
+```
+$ openssl s_client -connect www.jma.go.jp:443 -showcerts < /dev/null 
+```
+The relevant file is main/DigiCertGlobalRootCA.pem.
+
 ### Sample
 This is a sample description of the irrigation setup.
 

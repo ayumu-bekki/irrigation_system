@@ -14,7 +14,7 @@
 #include "http_request.h"
 
 // Request Server Root Cert (PEM)
-extern const uint8_t CERT_SCRoot2ca_PEM[] asm("_binary_SCRoot2caPem_cer_start");
+extern const uint8_t CERT_JMA_ROOT_CA_PEM[] asm("_binary_DigiCertGlobalRootCA_cer_start");
 
 namespace IrrigationSystem {
 
@@ -49,7 +49,7 @@ void WeatherForecast::Request()
                << m_JMAAreaPathCode << ".json";
 
     HttpRequest httpRequest;
-    httpRequest.EnableTLS(reinterpret_cast<const char*>(CERT_SCRoot2ca_PEM));
+    httpRequest.EnableTLS(reinterpret_cast<const char*>(CERT_JMA_ROOT_CA_PEM));
     httpRequest.Request(requestUrl.str());
     if (httpRequest.GetStatus() == HttpRequest::STATUS_OK) {
         Parse(httpRequest.GetResponseBody());
