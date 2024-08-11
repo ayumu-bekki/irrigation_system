@@ -5,14 +5,14 @@
 // Utilities
 
 // Include ----------------------
+#include <chrono>
 #include <string>
 #include <vector>
-#include <chrono>
 
 namespace IrrigationSystem {
 namespace Util {
 
-/// Sleep 
+/// Sleep
 void SleepMillisecond(const unsigned int sleepMillisecond);
 
 /// SyncTime
@@ -43,16 +43,18 @@ int32_t GregToMJD(const std::tm& timeInfo);
 std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo);
 
 /// Split Text
-std::vector<std::string> SplitString(const std::string &str, const char delim);
+std::vector<std::string> SplitString(const std::string& str, const char delim);
 
 /// GetVoltage
 float GetVoltage();
 
 /// Get Original Voltage Divider Resistor
-float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage, const float topResistanceValue, const float bottomRegistanceValue);
+float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage,
+                                            const float topResistanceValue,
+                                            const float bottomRegistanceValue);
 
-} // Util
-} // IrrigationSystem
+}  // namespace Util
+}  // namespace IrrigationSystem
 
-#endif // UTIL_H_
+#endif  // UTIL_H_
 // EOF

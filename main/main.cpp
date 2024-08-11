@@ -5,10 +5,10 @@
 #include "irrigation_controller.h"
 
 /// Entry Point
-extern "C" void app_main()
-{
-    const auto irrigationController = std::make_shared<IrrigationSystem::IrrigationController>();
-    irrigationController->Start();
+extern "C" void app_main() {
+  const auto irrigationController =
+      std::make_shared<IrrigationSystem::IrrigationController>();
+  irrigationController->Start();
 }
 
 // EOF

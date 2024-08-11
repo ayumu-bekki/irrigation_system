@@ -7,40 +7,36 @@
 #include <esp_system.h>
 #include <soc/soc.h>
 
+#include "irrigation_interface.h"
 #include "system_queue.h"
 #include "task.h"
-#include "irrigation_interface.h"
-
 
 namespace IrrigationSystem {
 
-class WateringButtonTask
-    :public Task
-    ,public SystemQueue
-{
-public:
-    static constexpr char *const TASK_NAME = (char*)"WateringButtonTask";
-    static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
-    static constexpr int CORE_ID = APP_CPU_NUM;
+class WateringButtonTask : public Task, public SystemQueue {
+ public:
+  static constexpr char *const TASK_NAME = (char *)"WateringButtonTask";
+  static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
+  static constexpr int CORE_ID = APP_CPU_NUM;
 
-public:
-    explicit WateringButtonTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
-    ~WateringButtonTask();
+ public:
+  explicit WateringButtonTask(
+      const IrrigationInterfaceWeakPtr pIrrigationInterface);
+  ~WateringButtonTask();
 
-private:
-    void Update() override;
+ private:
+  void Update() override;
 
-    void Receive() override;
+  void Receive() override;
 
-private:
-    static void IRAM_ATTR GpioIsrHandler(void*);
+ private:
+  static void IRAM_ATTR GpioIsrHandler(void *);
 
-private:
-    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+ private:
+  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-
-#endif // WATERING_BUTTON_TASK_H_
+#endif  // WATERING_BUTTON_TASK_H_
 // EOF

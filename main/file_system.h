@@ -25,9 +25,8 @@ bool Read(const std::string& filePath, std::string& body);
 /// Delete
 bool Delete(const std::string& filePath);
 
+}  // namespace FileSystem
+}  // namespace IrrigationSystem
 
-} // FileSystem
-} // IrrigationSystem
-
-#endif // FILE_SYSTEM_H_
+#endif  // FILE_SYSTEM_H_
 // EOF

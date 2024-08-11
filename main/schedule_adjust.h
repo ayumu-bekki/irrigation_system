@@ -4,30 +4,30 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include "schedule_base.h"
 #include "irrigation_interface.h"
+#include "schedule_base.h"
 
 namespace IrrigationSystem {
 
-class ScheduleAdjust final : public ScheduleBase
-{
-public:
-    static constexpr char* SCHEDULE_NAME = (char*)"Adjust";
-    static constexpr bool IS_VISIBLE_TASK = true;
+class ScheduleAdjust final : public ScheduleBase {
+ public:
+  static constexpr char* SCHEDULE_NAME = (char*)"Adjust";
+  static constexpr bool IS_VISIBLE_TASK = true;
 
-private:
-    ScheduleAdjust();
+ private:
+  ScheduleAdjust();
 
-public:
-    ScheduleAdjust(const IrrigationInterfaceWeakPtr pIrrigationInterface, const int hour, const int minute);
+ public:
+  ScheduleAdjust(const IrrigationInterfaceWeakPtr pIrrigationInterface,
+                 const int hour, const int minute);
 
-    void Exec() override;
+  void Exec() override;
 
-private:
-    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+ private:
+  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // SCHEDULE_ADJUST_H_
+#endif  // SCHEDULE_ADJUST_H_
 // EOF

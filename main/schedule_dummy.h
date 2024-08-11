@@ -4,27 +4,26 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include "schedule_base.h"
 #include "irrigation_interface.h"
+#include "schedule_base.h"
 
 namespace IrrigationSystem {
 
-class ScheduleDummy final : public ScheduleBase
-{
-public:
-    static constexpr char* SCHEDULE_NAME = (char*)"Dummy";
-    static constexpr bool IS_VISIBLE_TASK = false;
+class ScheduleDummy final : public ScheduleBase {
+ public:
+  static constexpr char* SCHEDULE_NAME = (char*)"Dummy";
+  static constexpr bool IS_VISIBLE_TASK = false;
 
-private:
-    ScheduleDummy();
+ private:
+  ScheduleDummy();
 
-public:
-    ScheduleDummy(const int hour, const int minute);
+ public:
+  ScheduleDummy(const int hour, const int minute);
 
-    void Exec() override;
+  void Exec() override;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // SCHEDULE_DUMMY_H_
+#endif  // SCHEDULE_DUMMY_H_
 // EOF

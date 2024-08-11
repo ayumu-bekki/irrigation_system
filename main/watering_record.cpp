@@ -4,118 +4,110 @@
 // Include ----------------------
 #include "watering_record.h"
 
-#include <stdexcept>
-#include <sstream>
-
 #include <cJSON.h>
 
+#include <sstream>
+#include <stdexcept>
+
+#include "file_system.h"
 #include "logger.h"
 #include "util.h"
-#include "file_system.h"
 
 namespace IrrigationSystem {
 
-WateringRecord::WateringRecord()
-    :m_LastWateringEpoch(0)
-{}
+WateringRecord::WateringRecord() : m_LastWateringEpoch(0) {}
 
-bool WateringRecord::Save() const
-{
-    // Write History
-    std::stringstream historyBody;
-    historyBody << "{\"last_watering_date\":\""
-                << Util::TimeToStr(Util::EpochToLocalTime(m_LastWateringEpoch))
-                << "\"}";
-    return FileSystem::Write(WateringRecord::RECORD_FILE_NAME, historyBody.str());
+bool WateringRecord::Save() const {
+  // Write History
+  std::stringstream historyBody;
+  historyBody << "{\"last_watering_date\":\""
+              << Util::TimeToStr(Util::EpochToLocalTime(m_LastWateringEpoch))
+              << "\"}";
+  return FileSystem::Write(WateringRecord::RECORD_FILE_NAME, historyBody.str());
 }
 
-bool WateringRecord::Load() noexcept
-{
-    m_LastWateringEpoch = 0;
+bool WateringRecord::Load() noexcept {
+  m_LastWateringEpoch = 0;
 
-    std::string recordBody;
-    const bool isReadOk = FileSystem::Read(WateringRecord::RECORD_FILE_NAME, recordBody);
-    if (!isReadOk) {
-        ESP_LOGE(TAG, "Failed Read File.");
-        return false;
+  std::string recordBody;
+  const bool isReadOk =
+      FileSystem::Read(WateringRecord::RECORD_FILE_NAME, recordBody);
+  if (!isReadOk) {
+    ESP_LOGE(TAG, "Failed Read File.");
+    return false;
+  }
+  ESP_LOGV(TAG, "Log Body:%s", recordBody.c_str());
+
+  // Parse
+  cJSON* pJsonRoot = nullptr;
+  try {
+    pJsonRoot = cJSON_Parse(recordBody.c_str());
+    if (!pJsonRoot) {
+      const char* error_ptr = cJSON_GetErrorPtr();
+      if (error_ptr) {
+        throw std::runtime_error(error_ptr);
+      }
+      throw std::runtime_error("Json Parse Error.");
     }
-    ESP_LOGV(TAG, "Log Body:%s", recordBody.c_str());
- 
-    // Parse 
-    cJSON* pJsonRoot = nullptr;
-    try {
-        pJsonRoot = cJSON_Parse(recordBody.c_str());
-        if (!pJsonRoot){
-            const char *error_ptr = cJSON_GetErrorPtr();
-            if (error_ptr)
-            {
-                throw std::runtime_error(error_ptr);
-            }
-            throw std::runtime_error("Json Parse Error.");
-        }
 
-        const cJSON *const pJsonLastWateringDate = cJSON_GetObjectItemCaseSensitive(pJsonRoot, "last_watering_date");
-        if (!cJSON_IsString(pJsonLastWateringDate)) {
-            throw std::runtime_error("Illegal object type weatherAreaCode.");
-        }
-        const std::string lastWateringDateStr = pJsonLastWateringDate->valuestring;
+    const cJSON* const pJsonLastWateringDate =
+        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "last_watering_date");
+    if (!cJSON_IsString(pJsonLastWateringDate)) {
+      throw std::runtime_error("Illegal object type weatherAreaCode.");
+    }
+    const std::string lastWateringDateStr = pJsonLastWateringDate->valuestring;
 
-        tm timeInfo;
-        strptime(lastWateringDateStr.c_str(), "%Y/%m/%d %H:%M:%S", &timeInfo);
-        m_LastWateringEpoch = mktime(&timeInfo);
-        
+    tm timeInfo;
+    strptime(lastWateringDateStr.c_str(), "%Y/%m/%d %H:%M:%S", &timeInfo);
+    m_LastWateringEpoch = mktime(&timeInfo);
+
 #if CONFIG_DEBUG != 0
-        // show read date
-        char buf[255] = {};
-        strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M", &timeInfo);
-        ESP_LOGV(TAG, "Read Date:%s", buf);
+    // show read date
+    char buf[255] = {};
+    strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M", &timeInfo);
+    ESP_LOGV(TAG, "Read Date:%s", buf);
 
-        //std::cout << "Y:" << (timeInfo.tm_year + 1900) << std::endl;
-        //std::cout << "M:" << (timeInfo.tm_mon + 1) << std::endl;
-        //std::cout << "D:" << timeInfo.tm_mday << std::endl;
-#endif // CONFIG_DEBUG != 0
+    // std::cout << "Y:" << (timeInfo.tm_year + 1900) << std::endl;
+    // std::cout << "M:" << (timeInfo.tm_mon + 1) << std::endl;
+    // std::cout << "D:" << timeInfo.tm_mday << std::endl;
+#endif  // CONFIG_DEBUG != 0
 
-    } catch (const std::invalid_argument& e) {
-        ESP_LOGW(TAG, "Catch Exception. Invalid Argument String to Number.");
-        return false;
-    } catch (const std::out_of_range& e) {
-        ESP_LOGW(TAG, "Catch Exception. Out Of Range String to Number.");
-        return false;
-    } catch (const std::runtime_error& e) {
-        ESP_LOGW(TAG, "Catch Exception. Runtime Exception message:%s", e.what());
-        return false;
-    } catch(...) {
-        ESP_LOGW(TAG, "An error occurred.");
-        return false;
-    }
+  } catch (const std::invalid_argument& e) {
+    ESP_LOGW(TAG, "Catch Exception. Invalid Argument String to Number.");
+    return false;
+  } catch (const std::out_of_range& e) {
+    ESP_LOGW(TAG, "Catch Exception. Out Of Range String to Number.");
+    return false;
+  } catch (const std::runtime_error& e) {
+    ESP_LOGW(TAG, "Catch Exception. Runtime Exception message:%s", e.what());
+    return false;
+  } catch (...) {
+    ESP_LOGW(TAG, "An error occurred.");
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 #if CONFIG_DEBUG != 0
-bool WateringRecord::Delete()
-{
-    if (!FileSystem::Delete(WateringRecord::RECORD_FILE_NAME)) {
-        ESP_LOGE(TAG, "Failed Delete File.");
-        return false;
-    }
-    ESP_LOGE(TAG, "Deleted File.");
-    return true;
+bool WateringRecord::Delete() {
+  if (!FileSystem::Delete(WateringRecord::RECORD_FILE_NAME)) {
+    ESP_LOGE(TAG, "Failed Delete File.");
+    return false;
+  }
+  ESP_LOGE(TAG, "Deleted File.");
+  return true;
 }
-#endif // CONFIG_DEBUG != 0
+#endif  // CONFIG_DEBUG != 0
 
-void WateringRecord::SetLastWateringEpoch(const std::time_t wateringEpoch)
-{
-    m_LastWateringEpoch = wateringEpoch;
+void WateringRecord::SetLastWateringEpoch(const std::time_t wateringEpoch) {
+  m_LastWateringEpoch = wateringEpoch;
 }
 
-
-time_t WateringRecord::GetLastWateringEpoch() const
-{
-    return m_LastWateringEpoch;
+time_t WateringRecord::GetLastWateringEpoch() const {
+  return m_LastWateringEpoch;
 }
 
-
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
 // EOF

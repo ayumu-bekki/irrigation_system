@@ -4,54 +4,51 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
+#include <esp_http_client.h>
+#include <esp_system.h>
+
 #include <string>
 #include <vector>
-
-#include <esp_system.h>
-#include <esp_http_client.h>
 
 namespace IrrigationSystem {
 
 /// HttpGetRequest (synchronous process)
-class HttpRequest
-{
-public:
-    enum Status
-    {
-        STATUS_WAIT,
-        STATUS_OK,
-        STATUS_NG,
-    };
+class HttpRequest {
+ public:
+  enum Status {
+    STATUS_WAIT,
+    STATUS_OK,
+    STATUS_NG,
+  };
 
-public:
-    HttpRequest();
-    
-    /// Begin Request
-    void Request(const std::string& url);
+ public:
+  HttpRequest();
 
-    void EnableTLS(const char *const pCert);
+  /// Begin Request
+  void Request(const std::string& url);
 
-    const std::string GetResponseBody() const;
-    
-    Status GetStatus() const;
+  void EnableTLS(const char* const pCert);
 
-private:
-    void Event(esp_http_client_event_t *const pEventData);
+  const std::string GetResponseBody() const;
 
-    void AddResponseBody(const size_t length, const void* data);
+  Status GetStatus() const;
 
-public:
-    static esp_err_t EventHandle(esp_http_client_event_t *pEventData);
+ private:
+  void Event(esp_http_client_event_t* const pEventData);
 
+  void AddResponseBody(const size_t length, const void* data);
 
-private:
-    Status m_Status;
-    std::string m_Url;
-    std::vector<char> m_ResponseBody;
-    const char* m_pServerRootCert;
+ public:
+  static esp_err_t EventHandle(esp_http_client_event_t* pEventData);
+
+ private:
+  Status m_Status;
+  std::string m_Url;
+  std::vector<char> m_ResponseBody;
+  const char* m_pServerRootCert;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // HTTP_REQUEST_H_
+#endif  // HTTP_REQUEST_H_
 // EOF

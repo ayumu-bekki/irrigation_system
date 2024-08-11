@@ -10,7 +10,6 @@
 #undef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
-
 namespace IrrigationSystem {
 
 /// Application Log Tag
@@ -20,8 +19,8 @@ namespace Logger {
 
 void InitializeLogLevel();
 
-} // Logger
-} // IrrigationSystem
+}  // namespace Logger
+}  // namespace IrrigationSystem
 
-#endif // LOGGER_H_
+#endif  // LOGGER_H_
 // EOF

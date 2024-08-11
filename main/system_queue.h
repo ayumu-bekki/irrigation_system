@@ -10,28 +10,25 @@
 namespace IrrigationSystem {
 
 /// FreeRTOS Queue Wrap
-class SystemQueue
-{
-public:
-    SystemQueue();
-    virtual ~SystemQueue() {}
+class SystemQueue {
+ public:
+  SystemQueue();
+  virtual ~SystemQueue() {}
 
-    void StartPoll();
+  void StartPoll();
 
-    virtual void Receive() = 0;
+  virtual void Receive() = 0;
 
-protected:
-    void CreateQueue();
+ protected:
+  void CreateQueue();
 
-    void SendQueueFromISR();
+  void SendQueueFromISR();
 
-protected:
-    QueueHandle_t m_QueueHandle;
+ protected:
+  QueueHandle_t m_QueueHandle;
 };
 
+}  // namespace IrrigationSystem
 
-} // IrrigationSystem
-
-
-#endif // SYSTEM_QUEUE_H_
+#endif  // SYSTEM_QUEUE_H_
 // EOF

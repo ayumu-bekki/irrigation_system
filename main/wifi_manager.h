@@ -4,30 +4,30 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
 #include <esp_event.h>
 #include <esp_wifi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/event_groups.h>
 
 namespace IrrigationSystem {
 
-class WifiManager final
-{
-public:
-    WifiManager();
-    ~WifiManager();
+class WifiManager final {
+ public:
+  WifiManager();
+  ~WifiManager();
 
-    void Connect();
+  void Connect();
 
-    void Disconnect();
+  void Disconnect();
 
-    void EventHandler(const esp_event_base_t eventBase, const int32_t eventId, void *const eventData);
+  void EventHandler(const esp_event_base_t eventBase, const int32_t eventId,
+                    void *const eventData);
 
-private:
-    int m_RetryNum;
+ private:
+  int m_RetryNum;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // WIFI_MANAGER_H_
+#endif  // WIFI_MANAGER_H_
 // EOF

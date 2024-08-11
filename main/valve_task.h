@@ -9,48 +9,43 @@
 #include <chrono>
 #include <memory>
 
-#include "task.h"
-#include "pwm.h"
-
 #include "irrigation_interface.h"
+#include "pwm.h"
+#include "task.h"
 
 namespace IrrigationSystem {
 
-//class IrrigationInterface;
-//using IrrigationInterfaceConstWeakPtr = std::weak_ptr<const IrrigationInterface>;
+class ValveTask final : public Task {
+ public:
+  static constexpr char *const TASK_NAME = (char *)"ValveTask";
+  static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
+  static constexpr int CORE_ID = APP_CPU_NUM;
 
-class ValveTask final : public Task
-{
-public:
-    static constexpr char *const TASK_NAME = (char*)"ValveTask";
-    static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
-    static constexpr int CORE_ID = APP_CPU_NUM;
+ public:
+  explicit ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
 
-public:
-    explicit ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
+  void Update() override;
 
-    void Update() override;
-    
-    void AddOpenSecond(const int second);
-    void ResetTimer();
-    void Force(const bool isOpen);
+  void AddOpenSecond(const int second);
+  void ResetTimer();
+  void Force(const bool isOpen);
 
-    std::time_t GetCloseEpoch() const;
+  std::time_t GetCloseEpoch() const;
 
-private:
-    void SetValve();
+ private:
+  void SetValve();
 
-private:
-    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-    bool m_IsTimerOpen;
-    bool m_IsForceOpen;
-    std::time_t m_CloseEpoch;
-    Pwm m_pwm;
+ private:
+  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  bool m_IsTimerOpen;
+  bool m_IsForceOpen;
+  std::time_t m_CloseEpoch;
+  Pwm m_pwm;
 };
 
 using ValveTaskUniquePtr = std::unique_ptr<ValveTask>;
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // VALVE_TASK_H_
+#endif  // VALVE_TASK_H_
 // EOF

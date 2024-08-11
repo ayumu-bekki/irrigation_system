@@ -10,28 +10,26 @@
 
 namespace IrrigationSystem {
 
-class VoltageCheckTask final : public Task
-{
-public:
-    static constexpr char *const TASK_NAME = (char*)"VoltageCheckTask";
-    static constexpr int PRIORITY = Task::PRIORITY_LOW;
-    static constexpr int CORE_ID = APP_CPU_NUM;
+class VoltageCheckTask final : public Task {
+ public:
+  static constexpr char *const TASK_NAME = (char *)"VoltageCheckTask";
+  static constexpr int PRIORITY = Task::PRIORITY_LOW;
+  static constexpr int CORE_ID = APP_CPU_NUM;
 
-public:
-    VoltageCheckTask();
+ public:
+  VoltageCheckTask();
 
-    void Initialize() override;
+  void Initialize() override;
 
-    void Update() override;
+  void Update() override;
 
-    float GetVoltage() const;
+  float GetVoltage() const;
 
-private:
-    float m_Voltage;
+ private:
+  float m_Voltage;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-
-#endif // VOLTAGE_CHECKER_TASK_H_
+#endif  // VOLTAGE_CHECKER_TASK_H_
 // EOF

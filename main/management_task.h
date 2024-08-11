@@ -8,28 +8,28 @@
 
 #include <chrono>
 
-#include "task.h"
 #include "irrigation_interface.h"
+#include "task.h"
 
 namespace IrrigationSystem {
 
-class ManagementTask final : public Task
-{
-public:
-    static constexpr char *const TASK_NAME = (char*)"ManagementTask";
-    static constexpr int PRIORITY = Task::PRIORITY_HIGH;
-    static constexpr int CORE_ID = APP_CPU_NUM;
+class ManagementTask final : public Task {
+ public:
+  static constexpr char *const TASK_NAME = (char *)"ManagementTask";
+  static constexpr int PRIORITY = Task::PRIORITY_HIGH;
+  static constexpr int CORE_ID = APP_CPU_NUM;
 
-public:
-    explicit ManagementTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
+ public:
+  explicit ManagementTask(
+      const IrrigationInterfaceWeakPtr pIrrigationInterface);
 
-    void Update() override;
+  void Update() override;
 
-private:
-    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+ private:
+  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // MANAGEMENT_TASK_H_
+#endif  // MANAGEMENT_TASK_H_
 // EOF

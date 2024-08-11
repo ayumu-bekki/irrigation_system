@@ -4,64 +4,59 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include "schedule_base.h"
-
 #include <chrono>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "irrigation_interface.h"
-
 #include "schedule_base.h"
 
 namespace IrrigationSystem {
 
-class ScheduleManager final
-{
-public:
-    using ScheduleBaseList = std::vector<ScheduleBaseUniquePtr>;
+class ScheduleManager final {
+ public:
+  using ScheduleBaseList = std::vector<ScheduleBaseUniquePtr>;
 
-public:
-    explicit ScheduleManager(const IrrigationInterfaceWeakPtr pIrrigationInterface);
+ public:
+  explicit ScheduleManager(
+      const IrrigationInterfaceWeakPtr pIrrigationInterface);
 
-    void Execute();
+  void Execute();
 
-    /// Date change schedule initialization
-    void InitializeNewDay(const std::tm& nowTimeInfo);
+  /// Date change schedule initialization
+  void InitializeNewDay(const std::tm& nowTimeInfo);
 
-    const ScheduleBaseList& GetScheduleList() const;
+  const ScheduleBaseList& GetScheduleList() const;
 
-    void AdjustSchedule();
+  void AdjustSchedule();
 
-    int GetCurrentMonth() const;
-    int GetCurrentDay() const;
+  int GetCurrentMonth() const;
+  int GetCurrentDay() const;
 
-private:
+ private:
+  /// Add a schedule to the list
+  void AddSchedule(ScheduleBaseUniquePtr&& scheduleItem);
 
-    /// Add a schedule to the list
-    void AddSchedule(ScheduleBaseUniquePtr&& scheduleItem);
+  /// Disable a schedule whose execution time has already expired.
+  void DisableExpiredSchedule(const std::tm& timeInfo);
 
-    /// Disable a schedule whose execution time has already expired.
-    void DisableExpiredSchedule(const std::tm& timeInfo);
+  /// Sort the schedule in ascending order
+  void SortScheduleTime();
 
-    /// Sort the schedule in ascending order
-    void SortScheduleTime();
+  /// DebugOnly
+  void DebugOutputSchedules();
 
-    /// DebugOnly
-    void DebugOutputSchedules();
-
-private:
-    const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-    ScheduleBaseList m_ScheduleList;
-    int m_CurrentMonth;
-    int m_CurrentDay;
-    
+ private:
+  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  ScheduleBaseList m_ScheduleList;
+  int m_CurrentMonth;
+  int m_CurrentDay;
 };
 
 using ScheduleManagerSharedPtr = std::shared_ptr<ScheduleManager>;
 using ScheduleManagerWeakPtr = std::weak_ptr<ScheduleManager>;
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // SCHEDULE_MANAGER_H_
+#endif  // SCHEDULE_MANAGER_H_
 // EOF

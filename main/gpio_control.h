@@ -21,9 +21,8 @@ void InitAdc(const int32_t adcChannelNo);
 /// Get ADC Voltage (Input) [mV]
 uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round = 1);
 
+}  // namespace GPIO
+}  // namespace IrrigationSystem
 
-} // GPIO
-} // IrrigationSystem
-
-#endif // GPIO_H_
+#endif  // GPIO_H_
 // EOF

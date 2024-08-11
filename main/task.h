@@ -9,63 +9,62 @@
 namespace IrrigationSystem {
 
 /// FreeRTOS xTask Wrap
-class Task
-{
-public:
-    enum TaskStatus {
-        TASK_STATUS_READY,
-        TASK_STATUS_RUN,
-        TASK_STATUS_END,
-    };
+class Task {
+ public:
+  enum TaskStatus {
+    TASK_STATUS_READY,
+    TASK_STATUS_RUN,
+    TASK_STATUS_END,
+  };
 
-    static constexpr int TASK_STAC_DEPTH = 8192;
+  static constexpr int TASK_STAC_DEPTH = 8192;
 
-    /// Task Priority
-    static constexpr int PRIORITY_LOW = 0;
-    static constexpr int PRIORITY_NORMAL = 1;
-    static constexpr int PRIORITY_HIGH = 2;
+  /// Task Priority
+  static constexpr int PRIORITY_LOW = 0;
+  static constexpr int PRIORITY_NORMAL = 1;
+  static constexpr int PRIORITY_HIGH = 2;
 
-private:
-    Task() {}
+ private:
+  Task() {}
 
-public:
-    Task(const std::string& taskName, const int priority, const int coreId);
-    virtual ~Task();
-    
-    /// Start Task
-    void Start();
+ public:
+  Task(const std::string& taskName, const int priority, const int coreId);
+  virtual ~Task();
 
-    /// Stop Task
-    void Stop();
+  /// Start Task
+  void Start();
 
-    /// Initialize (Called when the Start function is executed.)
-    virtual void Initialize() {}
+  /// Stop Task
+  void Stop();
 
-    /// (override) sub class processing
-    virtual void Update() = 0;
+  /// Initialize (Called when the Start function is executed.)
+  virtual void Initialize() {}
 
-public:
-    /// Task Running
-    void Run();
+  /// (override) sub class processing
+  virtual void Update() = 0;
 
-    /// Task Listener
-    static void Listener(void *const pParam);
+ public:
+  /// Task Running
+  void Run();
 
-protected:
-    /// Task Status
-    TaskStatus m_Status;
+  /// Task Listener
+  static void Listener(void* const pParam);
 
-    /// Task Name
-    std::string m_TaskName;
+ protected:
+  /// Task Status
+  TaskStatus m_Status;
 
-    /// Task Priority
-    int m_Priority;
+  /// Task Name
+  std::string m_TaskName;
 
-    /// Use Core Id
-    int m_CoreId;
+  /// Task Priority
+  int m_Priority;
+
+  /// Use Core Id
+  int m_CoreId;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
-#endif // TASK_H_
+#endif  // TASK_H_
 // EOF

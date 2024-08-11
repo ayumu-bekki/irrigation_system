@@ -6,28 +6,20 @@
 
 namespace IrrigationSystem {
 
-SystemQueue::SystemQueue()
-    :m_QueueHandle(nullptr)
-{}
+SystemQueue::SystemQueue() : m_QueueHandle(nullptr) {}
 
-void SystemQueue::StartPoll()
-{
-    if (xQueueReceive(m_QueueHandle, nullptr, portMAX_DELAY)) {
-        Receive();
-    }
+void SystemQueue::StartPoll() {
+  if (xQueueReceive(m_QueueHandle, nullptr, portMAX_DELAY)) {
+    Receive();
+  }
 }
 
-void SystemQueue::CreateQueue()
-{
-    m_QueueHandle = xQueueCreate(10, 0);
+void SystemQueue::CreateQueue() { m_QueueHandle = xQueueCreate(10, 0); }
+
+void SystemQueue::SendQueueFromISR() {
+  xQueueSendFromISR(m_QueueHandle, nullptr, nullptr);
 }
 
-void SystemQueue::SendQueueFromISR()
-{
-    xQueueSendFromISR(m_QueueHandle, nullptr, nullptr);
-}
-
-
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
 // EOF
