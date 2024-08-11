@@ -38,7 +38,7 @@ uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round) {
   adc_oneshot_new_unit(&adcInitConfig, &adcHandle);
 
   adc_oneshot_chan_cfg_t adcConfig = {
-      .atten = ADC_ATTEN_DB_11,
+      .atten = ADC_ATTEN_DB_12,
       .bitwidth = ADC_BITWIDTH_12,
   };
   adc_oneshot_config_channel(
@@ -47,7 +47,7 @@ uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round) {
   adc_cali_handle_t adcCaliHandle = nullptr;
   adc_cali_line_fitting_config_t caliConfig = {
       .unit_id = ADC_UNIT_1,
-      .atten = ADC_ATTEN_DB_11,
+      .atten = ADC_ATTEN_DB_12,
       .bitwidth = ADC_BITWIDTH_12,
 #if CONFIG_IDF_TARGET_ESP32
       .default_vref = ADC_CALI_LINE_FITTING_EFUSE_VAL_DEFAULT_VREF,

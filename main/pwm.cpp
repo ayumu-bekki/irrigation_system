@@ -53,7 +53,8 @@ void Pwm::Initialize(const ledc_channel_t channelNo,
                                           .duty_resolution = m_ledcDutyBit,
                                           .timer_num = ledcTimer,
                                           .freq_hz = frequency,
-                                          .clk_cfg = LEDC_AUTO_CLK};
+                                          .clk_cfg = LEDC_AUTO_CLK,
+                                          .deconfigure = false};
   ledc_timer_config(&ledc_timer);
 
   // Prepare and then apply the LEDC PWM channel configuration
