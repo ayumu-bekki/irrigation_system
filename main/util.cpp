@@ -156,5 +156,5 @@ float GetOriginalVoltageFromDividerRegister(const uint32_t output_voltage,
 
 }  // namespace Util
 }  // namespace IrrigationSystem
-‰
+
 // EOF
