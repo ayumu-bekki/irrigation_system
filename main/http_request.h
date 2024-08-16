@@ -27,25 +27,25 @@ class HttpRequest {
   /// Begin Request
   void Request(const std::string& url);
 
-  void EnableTLS(const char* const pCert);
+  void EnableTLS(const char* const cert);
 
   const std::string GetResponseBody() const;
 
   Status GetStatus() const;
 
  private:
-  void Event(esp_http_client_event_t* const pEventData);
+  void Event(esp_http_client_event_t* const event_data);
 
   void AddResponseBody(const size_t length, const void* data);
 
  public:
-  static esp_err_t EventHandle(esp_http_client_event_t* pEventData);
+  static esp_err_t EventHandle(esp_http_client_event_t* event_data);
 
  private:
-  Status m_Status;
-  std::string m_Url;
-  std::vector<char> m_ResponseBody;
-  const char* m_pServerRootCert;
+  Status status_;
+  std::string url_;
+  std::vector<char> response_body_;
+  const char* server_root_cert_;
 };
 
 }  // namespace IrrigationSystem

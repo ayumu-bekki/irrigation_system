@@ -52,16 +52,16 @@ class Task {
 
  protected:
   /// Task Status
-  TaskStatus m_Status;
+  TaskStatus status_;
 
   /// Task Name
-  std::string m_TaskName;
+  std::string task_name_;
 
   /// Task Priority
-  int m_Priority;
+  int priority_;
 
   /// Use Core Id
-  int m_CoreId;
+  int core_id_;
 };
 
 }  // namespace IrrigationSystem

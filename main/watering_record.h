@@ -22,11 +22,11 @@ class WateringRecord final {
   bool Delete();
 #endif
 
-  void SetLastWateringEpoch(const std::time_t wateringEpoch);
+  void SetLastWateringEpoch(const std::time_t watering_epoch);
   std::time_t GetLastWateringEpoch() const;
 
  private:
-  std::time_t m_LastWateringEpoch;
+  std::time_t last_watering_epoch_;
 };
 
 }  // namespace IrrigationSystem

@@ -5,6 +5,7 @@
 
 // Include ----------------------
 #include <soc/soc.h>
+
 #include <cstdint>
 
 #include "driver/pulse_cnt.h"
@@ -30,7 +31,9 @@ class WaterFlowSensor final : public Task {
   int32_t FinishMeasurement();
   int32_t GetSensorHz() const;
 
-  static bool TimerCallback(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_data);
+  static bool TimerCallback(gptimer_handle_t timer,
+                            const gptimer_alarm_event_data_t *edata,
+                            void *user_data);
 
   static float CountToCubicCentimetres(const int32_t count);
 

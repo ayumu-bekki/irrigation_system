@@ -19,7 +19,7 @@ class ScheduleManager final {
 
  public:
   explicit ScheduleManager(
-      const IrrigationInterfaceWeakPtr pIrrigationInterface);
+      const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Execute();
 
@@ -41,16 +41,16 @@ class ScheduleManager final {
 
  private:
   /// Disable a schedule whose execution time has already expired.
-  void DisableExpiredSchedule(const std::tm& timeInfo);
+  void DisableExpiredSchedule(const std::tm& time_info);
 
   /// DebugOnly
   void DebugOutputSchedules();
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-  ScheduleBaseList m_ScheduleList;
-  int m_CurrentMonth;
-  int m_CurrentDay;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
+  ScheduleBaseList schedule_list_;
+  int current_month_;
+  int current_day_;
 };
 
 using ScheduleManagerSharedPtr = std::shared_ptr<ScheduleManager>;

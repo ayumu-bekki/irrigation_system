@@ -18,13 +18,13 @@ class ScheduleAdjust final : public ScheduleBase {
   ScheduleAdjust();
 
  public:
-  ScheduleAdjust(const IrrigationInterfaceWeakPtr pIrrigationInterface,
+  ScheduleAdjust(const IrrigationInterfaceWeakPtr irrigation_interface,
                  const int hour, const int minute);
 
   void Exec() override;
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
 };
 
 }  // namespace IrrigationSystem

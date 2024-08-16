@@ -14,15 +14,14 @@
 #include "logger.h"
 #include "schedule_base.h"
 #include "schedule_manager.h"
+#include "schedule_manual.h"
+#include "schedule_watering.h"
 #include "util.h"
-#include "version.h"
 #include "valve_executor.h"
+#include "version.h"
+#include "water_flow_sensor.h"
 #include "watering_setting.h"
 #include "weather_forecast.h"
-#include "water_flow_sensor.h"
-
-#include "schedule_watering.h"
-#include "schedule_manual.h"
 
 namespace {
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
@@ -40,10 +39,10 @@ std::string voltageToColorName(const float voltage) {
 }
 #endif
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-std::string waterLevelToColorName(const int waterLevel) {
-  if (60 <= waterLevel) {
+std::string water_levelToColorName(const int water_level) {
+  if (60 <= water_level) {
     return "steelblue";
-  } else if (25 <= waterLevel) {
+  } else if (25 <= water_level) {
     return "lightseagreen";
   }
   return "yellow";
@@ -53,190 +52,190 @@ std::string waterLevelToColorName(const int waterLevel) {
 
 namespace IrrigationSystem {
 
-static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 60;
+static constexpr int WEB_RELAY_OPEN_MAX_SECOND = 180;
 
 HttpdServerTask::HttpdServerTask(
-    const IrrigationInterfaceWeakPtr pIrrigationInterface)
+    const IrrigationInterfaceWeakPtr irrigation_interface)
     : Task(TASK_NAME, PRIORITY, CORE_ID),
-      m_pIrrigationInterface(pIrrigationInterface),
-      m_HttpdHandle(NULL) {}
+      irrigation_interface_(irrigation_interface),
+      httpd_handle_(NULL) {}
 
 void HttpdServerTask::Initialize() {
   StopWebServer();
-  m_HttpdHandle = StartWebServer();
+  httpd_handle_ = StartWebServer();
 }
 
 httpd_handle_t HttpdServerTask::StartWebServer() {
   ESP_LOGI(TAG, "Starting HTTP Server");
 
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-  httpd_handle_t httpdServerHandle = NULL;
-  if (httpd_start(&httpdServerHandle, &config) != ESP_OK) {
+  httpd_handle_t httpd_server_handle = NULL;
+  if (httpd_start(&httpd_server_handle, &config) != ESP_OK) {
     return NULL;
   }
 
   // Get "/" Handle
-  const httpd_uri_t routingRootUriHandler = {
+  const httpd_uri_t routing_root_uri_handler = {
       .uri = "/",
       .method = HTTP_GET,
       .handler = this->RootHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle, &routingRootUriHandler);
+  httpd_register_uri_handler(httpd_server_handle, &routing_root_uri_handler);
 
   // Post "/manual_watering" handle
-  const httpd_uri_t routingManualWateringUriHandler = {
+  const httpd_uri_t routing_manual_watering_uri_handler = {
       .uri = "/manual_watering",
       .method = HTTP_POST,
       .handler = this->ManualWateringHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingManualWateringUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_manual_watering_uri_handler);
 
   // Post "/emergency_stop" handle
-  const httpd_uri_t routingEmergencyStopyUriHandler = {
+  const httpd_uri_t routing_emergency_stop_uri_handler = {
       .uri = "/emergency_stop",
       .method = HTTP_POST,
       .handler = this->EmergencyStopHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingEmergencyStopyUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_emergency_stop_uri_handler);
 
   // Post "/upload_setting" handle
-  const httpd_uri_t routingUploadSettingUriHandler = {
+  const httpd_uri_t routing_upload_setting_uri_handler = {
       .uri = "/upload_setting",
       .method = HTTP_POST,
       .handler = this->UploadSettingHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingUploadSettingUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_upload_setting_uri_handler);
 
   // Post "/download_setting" handle
-  const httpd_uri_t routingDownloadSettingUriHandler = {
+  const httpd_uri_t routing_download_setting_uri_handler = {
       .uri = "/download_setting",
       .method = HTTP_GET,
       .handler = this->DownloadSettingHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingDownloadSettingUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_download_setting_uri_handler);
 
   // Post "/delete_setting" handle
-  const httpd_uri_t routingDeleteSettingUriHandler = {
+  const httpd_uri_t routing_delete_setting_uri_handler = {
       .uri = "/delete_setting",
       .method = HTTP_POST,
       .handler = this->DeleteSettingHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingDeleteSettingUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_delete_setting_uri_handler);
 
   // Post "/voltage" handle
-  const httpd_uri_t routingGetVoltageUriHandler = {
+  const httpd_uri_t routing_get_voltage_uri_handler = {
       .uri = "/voltage",
       .method = HTTP_GET,
       .handler = this->GetVoltageHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle, &routingGetVoltageUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_get_voltage_uri_handler);
 
-  // Post "/waterlevel" handle
-  const httpd_uri_t routingGetWaterLevelUriHandler = {
-      .uri = "/waterlevel",
+  // Post "/water_level" handle
+  const httpd_uri_t routing_gat_water_level_uri_handler = {
+      .uri = "/water_level",
       .method = HTTP_GET,
       .handler = this->GetWaterLevelHandler,
       .user_ctx = this,
   };
-  httpd_register_uri_handler(httpdServerHandle,
-                             &routingGetWaterLevelUriHandler);
+  httpd_register_uri_handler(httpd_server_handle,
+                             &routing_gat_water_level_uri_handler);
 
   // Not Found Handle
-  httpd_register_err_handler(httpdServerHandle, HTTPD_404_NOT_FOUND,
+  httpd_register_err_handler(httpd_server_handle, HTTPD_404_NOT_FOUND,
                              this->ErrorNotFoundHandler);
 
-  return httpdServerHandle;
+  return httpd_server_handle;
 }
 
 void HttpdServerTask::StopWebServer() {
-  if (m_HttpdHandle) {
+  if (httpd_handle_) {
     ESP_LOGI(TAG, "Stop HTTP Server");
-    httpd_stop(m_HttpdHandle);
-    m_HttpdHandle = nullptr;
+    httpd_stop(httpd_handle_);
+    httpd_handle_ = nullptr;
   }
 }
 
 void HttpdServerTask::Update() { Util::SleepMillisecond(10 * 1000); }
 
-esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::RootHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Get:Root");
 
-  if (!pHttpRequestData->user_ctx) {
+  if (!request_data->user_ctx) {
     ESP_LOGE(TAG, "Failed user_ctx is null");
     return ESP_FAIL;
   }
 
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
-  const WeatherForecast &weatherForecast =
-      irrigationInterface->GetWeatherForecast();
-  const WateringSetting &weatherSetting =
-      irrigationInterface->GetWateringSetting();
-  const ScheduleManagerSharedPtr scheduleManager =
-      irrigationInterface->GetScheduleManager().lock();
-  if (!scheduleManager) {
+  const WeatherForecast &weather_forecast =
+      irrigation_interface->GetWeatherForecast();
+  const WateringSetting &weather_setting =
+      irrigation_interface->GetWateringSetting();
+  const ScheduleManagerSharedPtr schedule_manager =
+      irrigation_interface->GetScheduleManager().lock();
+  if (!schedule_manager) {
     ESP_LOGE(TAG, "Failed Schedule Manager is null");
     return ESP_FAIL;
   }
-  const ScheduleManager::ScheduleBaseList &scheduleList =
-      scheduleManager->GetScheduleList();
-  //const std::time_t valveCloseEpoch = irrigationInterface->ValveCloseEpoch();
+  const ScheduleManager::ScheduleBaseList &schedule_list =
+      schedule_manager->GetScheduleList();
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  const float batteryVoltage = irrigationInterface->GetMainVoltage();
+  const float batteryVoltage = irrigation_interface->GetMainVoltage();
   const int32_t voltageGuage =
       ((batteryVoltage - 10.0f) / (15.0 - 10.0f)) * 100.0f;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  const int32_t waterLevel = irrigationInterface->GetWaterLevel() * 100.0f;
+  const int32_t water_level = irrigation_interface->Getwater_level() * 100.0f;
 #endif
 
 #if CONFIG_DEBUG != 0
   static const std::string title = "Irrigation System (DEBUG)";
-  static const std::string bodyStyle = "body {background-color:lightgray;}";
+  static const std::string body_style = "body {background-color:lightgray;}";
 #else
   static const std::string title = "Irrigation System";
-  static const std::string bodyStyle = "body {background-color:lightskyblue;}";
+  static const std::string body_style = "body {background-color:lightskyblue;}";
 #endif
 
   std::stringstream weatherInfo;
-  if (weatherForecast.GetRequestStatus() == WeatherForecast::NOT_REQUEST) {
+  if (weather_forecast.GetRequestStatus() == WeatherForecast::NOT_REQUEST) {
     weatherInfo << " Not yet acquired.";
-  } else if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {
+  } else if (weather_forecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {
     weatherInfo << " Weather("
                 << WeatherForecast::WeatherCodeToStr(
-                       weatherForecast.GetCurrentWeatherCode())
-                << ") MaxTemp(" << weatherForecast.GetCurrentMaxTemperature()
+                       weather_forecast.GetCurrentWeatherCode())
+                << ") MaxTemp(" << weather_forecast.GetCurrentMaxTemperature()
                 << "°C)";
   } else {
     weatherInfo << " <span style=\"background-color: yellow;\">Failed to "
                    "retrieve data</span>";
   }
 
-  std::stringstream responseBody;
-  responseBody
+  std::stringstream response_body;
+  response_body
       << "<!doctype html><head>"
       << "<meta charset=\"utf-8\"/>"
       << "<meta name=\"viewport\" "
@@ -251,7 +250,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
       << "hr {margin:0px 6px}"
       << "p, form {margin: 4px 12px; font-size: 1.0em;}"
       << "table {margin: 10px 20px}"
-      << "input {border-style:none; padding: 5px}" << bodyStyle
+      << "input {border-style:none; padding: 5px}" << body_style
       << "hr {height:0;border:0;overflow:visible;border-top:3px dotted white;}"
       << "table {border-collapse: collapse;border-spacing: "
          "0;background-color:aliceblue;border:solid 1px steelblue;}"
@@ -271,138 +270,143 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
          "};</script>"
       << "</head>";
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
-  responseBody.str("");
-  responseBody.clear(std::stringstream::goodbit);
+  httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
+  response_body.str("");
+  response_body.clear(std::stringstream::goodbit);
 
-  responseBody << "<body><h1>" << title << "</h1>"
-               << "<hr><h2>Schedule</h2>";
+  response_body << "<body><h1>" << title << "</h1>"
+                << "<hr><h2>Schedule</h2>";
 
-  if (weatherSetting.IsActive()) {
-    const std::tm wateringTm =
-        Util::EpochToLocalTime(irrigationInterface->GetLastWateringEpoch());
+  if (weather_setting.IsActive()) {
+    const std::tm watering_date =
+        Util::EpochToLocalTime(irrigation_interface->GetLastWateringEpoch());
 
-    responseBody << "<p>System Time : " << Util::GetNowTimeStr()
-                 << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
-                 << std::setfill('0') << "<p>Current Date : " << std::setw(2)
-                 << scheduleManager->GetCurrentMonth() << "/" << std::setw(2)
-                 << scheduleManager->GetCurrentDay()
-                 << "&nbsp;&nbsp; Last Watering Date : " << std::setw(2)
-                 << (wateringTm.tm_mon + 1) << "/" << std::setw(2)
-                 << wateringTm.tm_mday << "</p>";
+    response_body << "<p>System Time : " << Util::GetNowTimeStr()
+                  << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
+                  << std::setfill('0') << "<p>Current Date : " << std::setw(2)
+                  << schedule_manager->GetCurrentMonth() << "/" << std::setw(2)
+                  << schedule_manager->GetCurrentDay()
+                  << "&nbsp;&nbsp; Last Watering Date : " << std::setw(2)
+                  << (watering_date.tm_mon + 1) << "/" << std::setw(2)
+                  << watering_date.tm_mday << "</p>";
 
     // Create Schedule Table
-    responseBody << "<table><thead><tr>"
-                 << "<th>ScheduleName</th>" 
-                 << "<th>Time</th>"
-                 << "<th>Status</th>"
+    response_body << "<table><thead><tr>"
+                  << "<th>ScheduleName</th>"
+                  << "<th>Time</th>"
+                  << "<th>Status</th>"
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-                 << "<th>Amount Of Water</th>"
+                  << "<th>Amount Of Water</th>"
 #endif
-                 << "</tr></thead><tbody>";
+                  << "</tr></thead><tbody>";
 
-    if (std::any_of(scheduleList.begin(), scheduleList.end(),
+    if (std::any_of(schedule_list.begin(), schedule_list.end(),
                     [](const ScheduleBaseUniquePtr &item) {
                       return item->IsVisible();
                     })) {
       // Found Visible Schedule Item
-      for (const auto &pScheduleItem : scheduleList) {
-        if (pScheduleItem->IsVisible()) {
-          responseBody << std::setfill('0') << "<tr class=\""
-                       << ScheduleBase::StatusToRecordStyle(
-                              pScheduleItem->GetStatus())
-                       << "\">"
-                       << "<td>" << pScheduleItem->GetName() << "</td>"
-                       << "<td>" << std::setw(2) << pScheduleItem->GetHour()
-                       << ":" << std::setw(2) << pScheduleItem->GetMinute()
-                       << "</td>"
-                       << "<td>"
-                       << ScheduleBase::StatusToStr(pScheduleItem->GetStatus())
-                       << "</td>"
+      for (const auto &schedule_item : schedule_list) {
+        if (schedule_item->IsVisible()) {
+          response_body << std::setfill('0') << "<tr class=\""
+                        << ScheduleBase::StatusToRecordStyle(
+                               schedule_item->GetStatus())
+                        << "\">"
+                        << "<td>" << schedule_item->GetName() << "</td>"
+                        << "<td>" << std::setw(2) << schedule_item->GetHour()
+                        << ":" << std::setw(2) << schedule_item->GetMinute()
+                        << "</td>"
+                        << "<td>"
+                        << ScheduleBase::StatusToStr(schedule_item->GetStatus())
+                        << "</td>"
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-                       << "<td>";
-          if (pScheduleItem->GetWaterFlow() < 0) {
-            responseBody << "-";
+                        << "<td>";
+          if (schedule_item->GetWaterFlow() < 0) {
+            response_body << "-";
           } else {
-            responseBody << WaterFlowSensor::CountToCubicCentimetres(pScheduleItem->GetWaterFlow()) << "cm³";
+            response_body << WaterFlowSensor::CountToCubicCentimetres(
+                                 schedule_item->GetWaterFlow())
+                          << "cm³";
           }
-          responseBody << "</td>"
+          response_body << "</td>"
 #endif
-                       << "</tr>";
+                        << "</tr>";
         }
       }
     } else {
       // Not Found Visible Schedule Item
-      responseBody << "<tr><td colspan=\"3\">Empty</td></tr>";
+      response_body << "<tr><td colspan=\"3\">Empty</td></tr>";
     }
 
-    responseBody << "</tbody></table>";
+    response_body << "</tbody></table>";
   } else {
-    responseBody << "<p><span style=\"background-color:yellow;\">No settings "
-                    "have been made.<span></p>";
+    response_body << "<p><span style=\"background-color:yellow;\">No settings "
+                     "have been made.<span></p>";
   }
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
-  responseBody.str("");
-  responseBody.clear(std::stringstream::goodbit);
+  httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
+  response_body.str("");
+  response_body.clear(std::stringstream::goodbit);
 
   // -- Status -----
-  responseBody << "<hr><h2>Status</h2>";
-  responseBody << "<h3>Valve Status</h3>";
+  response_body << "<hr><h2>Status</h2>";
+  response_body << "<h3>Valve Status</h3>";
 
-  ValveExecutorSharedPtr executor = irrigationInterface->GetCurrentValveExecutor();
+  ValveExecutorSharedPtr executor =
+      irrigation_interface->GetCurrentValveExecutor();
   if (executor) {
-    responseBody
-        << "<p><span style=\"background:coral;\">Open</span>";
-    if (executor->GetStatus() == ValveExecutor::ExecutorStatus::EXECUTOR_SCHEDULE) {
-      responseBody
-          << " &gt; Close At("
-          << Util::TimeToStr(Util::EpochToLocalTime(executor->GetCloseEpoch())) 
-          << ")";
-    } else if (executor->GetStatus() == ValveExecutor::ExecutorStatus::EXECUTOR_MANUAL_START) {
-      responseBody
-          << " &gt; Manual";
+    response_body << "<p><span style=\"background:coral;\">Open</span>";
+    if (executor->GetStatus() ==
+        ValveExecutor::ExecutorStatus::EXECUTOR_SCHEDULE) {
+      response_body << " &gt; Close At("
+                    << Util::TimeToStr(
+                           Util::EpochToLocalTime(executor->GetCloseEpoch()))
+                    << ")";
+    } else if (executor->GetStatus() ==
+               ValveExecutor::ExecutorStatus::EXECUTOR_MANUAL_START) {
+      response_body << " &gt; Manual";
     }
-    responseBody << "</p>";
+    response_body << "</p>";
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-    responseBody
-        << "<p>"
-        << "Water Flow : " 
-        << WaterFlowSensor::CountToCubicCentimetres(irrigationInterface->GetWaterFlowHz()) << "cm³"
-        <<"</p>";
+    response_body << "<p>"
+                  << "Water Flow : "
+                  << WaterFlowSensor::CountToCubicCentimetres(
+                         irrigation_interface->GetWaterFlowHz())
+                  << "cm³"
+                  << "</p>";
 #endif
   } else {
-    responseBody << "<p>Close</p>";
+    response_body << "<p>Close</p>";
   }
 
-  responseBody << "<h3>Weather Forecast</h3>"
-               << "<p>" << weatherInfo.str() << "</p>";
+  response_body << "<h3>Weather Forecast</h3>"
+                << "<p>" << weatherInfo.str() << "</p>";
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  responseBody << "<h3>Warter Level</h3>"
-               << "<div class=\"gauge\"><div id=\"inner\" style=\"width:"
-               << waterLevel
-               << "%;  background-color:" << ::waterLevelToColorName(waterLevel)
-               << ";\"></div><div id=\"num\">" << waterLevel << "%</div></div>";
+  response_body << "<h3>Warter Level</h3>"
+                << "<div class=\"gauge\"><div id=\"inner\" style=\"width:"
+                << water_level << "%;  background-color:"
+                << ::water_levelToColorName(water_level)
+                << ";\"></div><div id=\"num\">" << water_level
+                << "%</div></div>";
 #endif
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  responseBody << "<h3>Battery Voltage</h3>"
-               << "<div class=\"gauge\"><div id=\"inner\" style=\"width:"
-               << voltageGuage
-               << "%; background-color:" << ::voltageToColorName(batteryVoltage)
-               << ";\"></div><div id=\"num\">" << std::setfill('0')
-               << std::fixed << std::setprecision(2) << batteryVoltage
-               << "[V]</div></div>";
+  response_body << "<h3>Battery Voltage</h3>"
+                << "<div class=\"gauge\"><div id=\"inner\" style=\"width:"
+                << voltageGuage << "%; background-color:"
+                << ::voltageToColorName(batteryVoltage)
+                << ";\"></div><div id=\"num\">" << std::setfill('0')
+                << std::fixed << std::setprecision(2) << batteryVoltage
+                << "[V]</div></div>";
 #endif
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
-  responseBody.str("");
-  responseBody.clear(std::stringstream::goodbit);
+  httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
+  response_body.str("");
+  response_body.clear(std::stringstream::goodbit);
 
   // -- Operation -----
-  responseBody
+  response_body
       << "<hr><h2>Operation</h2>"
       << "<form action=\"/manual_watering\" method=\"post\">"
       << "Manual Watering. time (sec) : <input type=\"number\" name=\"second\" "
@@ -419,8 +423,8 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
          "name=\"setting_file\"><input type=\"submit\" value=\"Upload\">"
       << "</form>";
 
-  if (weatherSetting.IsActive()) {
-    responseBody
+  if (weather_setting.IsActive()) {
+    response_body
         << ":<form action=\"/download_setting\" method=\"get\" "
            "style=\"display:inline;\"><input type=\"submit\" "
            "value=\"Download\"></form>"
@@ -431,38 +435,37 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
         << "</p>";
   }
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
-  responseBody.str("");
-  responseBody.clear(std::stringstream::goodbit);
+  httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
+  response_body.str("");
+  response_body.clear(std::stringstream::goodbit);
 
   // -- Information -----
-  responseBody << "<hr>"
-               << "<p>Version : " << GIT_VERSION << "</p>"
-               << "</body></html>";
+  response_body << "<hr>"
+                << "<p>Version : " << GIT_VERSION << "</p>"
+                << "</body></html>";
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, responseBody.str().c_str());
-  responseBody.str("");
-  responseBody.clear(std::stringstream::goodbit);
+  httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
+  response_body.str("");
+  response_body.clear(std::stringstream::goodbit);
 
-  httpd_resp_sendstr_chunk(pHttpRequestData, nullptr);
+  httpd_resp_sendstr_chunk(request_data, nullptr);
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::ManualWateringHandler(
-    httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::ManualWateringHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Post:ManualWatering");
 
-  if (!pHttpRequestData->user_ctx) {
+  if (!request_data->user_ctx) {
     ESP_LOGE(TAG, "Failed user_ctx is null");
     return ESP_FAIL;
   }
 
   // Receive Post Data
   static constexpr size_t SCRATCH_BUFSIZE = 256;
-  const int total_len = pHttpRequestData->content_len;
+  const int total_len = request_data->content_len;
 
   if (SCRATCH_BUFSIZE <= total_len) {
-    httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+    httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "content too long");
     return ESP_FAIL;
   }
@@ -470,9 +473,9 @@ esp_err_t HttpdServerTask::ManualWateringHandler(
   int cur_len = 0;
   int received = 0;
   while (cur_len < total_len) {
-    received = httpd_req_recv(pHttpRequestData, buf + cur_len, total_len);
+    received = httpd_req_recv(request_data, buf + cur_len, total_len);
     if (received <= 0) {
-      httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+      httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                           "Failed to post control value");
       return ESP_FAIL;
     }
@@ -483,95 +486,96 @@ esp_err_t HttpdServerTask::ManualWateringHandler(
   ESP_LOGV(TAG, " Recv Data Length:%d Data:%s", total_len, buf);
 
   // Parse
-  int valveOpenSecond = 0;
+  int valve_open_second = 0;
   std::vector<std::string> elements = Util::SplitString(buf, '=');
   if (elements.size() == 2) {
     if (elements.at(0) == "second") {
-      valveOpenSecond =
+      valve_open_second =
           std::max(1, std::min(WEB_RELAY_OPEN_MAX_SECOND,
                                static_cast<int>(std::stol(elements.at(1)))));
     }
   }
 
   // Valve Open
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
 
   ESP_LOGI(TAG, "Add Open");
   std::tm now = Util::GetLocalTime();
-  const ScheduleManagerSharedPtr scheduleManager =
-      irrigationInterface->GetScheduleManager().lock();
-  if (!scheduleManager) {
+  const ScheduleManagerSharedPtr schedule_manager =
+      irrigation_interface->GetScheduleManager().lock();
+  if (!schedule_manager) {
     ESP_LOGE(TAG, "Failed Schedule Manager is null");
     return ESP_FAIL;
   }
-  scheduleManager->AddSchedule(std::make_unique<ScheduleWatering>(irrigationInterface, now.tm_hour, now.tm_min, valveOpenSecond));
-  scheduleManager->SortScheduleTime();
+  schedule_manager->AddSchedule(std::make_unique<ScheduleWatering>(
+      irrigation_interface, now.tm_hour, now.tm_min, valve_open_second));
+  schedule_manager->SortScheduleTime();
 
   // Redirect
-  httpd_resp_set_status(pHttpRequestData, "303 See Other");
-  httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
-  httpd_resp_send(pHttpRequestData, NULL, 0);
+  httpd_resp_set_status(request_data, "303 See Other");
+  httpd_resp_set_hdr(request_data, "Location", "/");
+  httpd_resp_send(request_data, NULL, 0);
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Post:EmergencyStop");
 
-  if (!pHttpRequestData->user_ctx) {
+  if (!request_data->user_ctx) {
     ESP_LOGE(TAG, "Failed user_ctx is null");
     return ESP_FAIL;
   }
 
   // Valve Open
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
-  irrigationInterface->ForceStopValve();
+  irrigation_interface->ForceStopValve();
 
   // Redirect
-  httpd_resp_set_status(pHttpRequestData, "303 See Other");
-  httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
-  httpd_resp_send(pHttpRequestData, NULL, 0);
+  httpd_resp_set_status(request_data, "303 See Other");
+  httpd_resp_set_hdr(request_data, "Location", "/");
+  httpd_resp_send(request_data, NULL, 0);
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Post:UploadSetting");
 
   // Check
-  if (!pHttpRequestData->user_ctx) {
+  if (!request_data->user_ctx) {
     ESP_LOGE(TAG, "Failed user_ctx is null");
     return ESP_FAIL;
   }
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
@@ -579,41 +583,41 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData) {
   // Receive Header (get Multipart boundary)
   static constexpr char *const HTTP_HEADER_CONTENT_TYPE =
       (char *)"Content-Type";
-  const size_t contentTypeHeaderLen =
-      httpd_req_get_hdr_value_len(pHttpRequestData, HTTP_HEADER_CONTENT_TYPE);
-  if (contentTypeHeaderLen == 0) {
+  const size_t content_typeHeaderLen =
+      httpd_req_get_hdr_value_len(request_data, HTTP_HEADER_CONTENT_TYPE);
+  if (content_typeHeaderLen == 0) {
     ESP_LOGE(TAG, "Not Found Rqeust Header Empty: %s",
              HTTP_HEADER_CONTENT_TYPE);
     return ESP_FAIL;
   }
-  std::string contentType;
-  contentType.resize(contentTypeHeaderLen);
-  if (httpd_req_get_hdr_value_str(pHttpRequestData, HTTP_HEADER_CONTENT_TYPE,
-                                  &contentType.at(0),
-                                  contentTypeHeaderLen + 1) != ESP_OK) {
+  std::string content_type;
+  content_type.resize(content_typeHeaderLen);
+  if (httpd_req_get_hdr_value_str(request_data, HTTP_HEADER_CONTENT_TYPE,
+                                  &content_type.at(0),
+                                  content_typeHeaderLen + 1) != ESP_OK) {
     ESP_LOGE(TAG, "Not Found Rqeust Header : %s", HTTP_HEADER_CONTENT_TYPE);
     return ESP_FAIL;
   }
   // ESP_LOGV(TAG, "Found header => %s: %s",HTTP_HEADER_CONTENT_TYPE,
-  // contentType.c_str());
+  // content_type.c_str());
 
   // Get Boundary String
   const std::string BOUNDARY_STR = "boundary=";
-  std::string::size_type pos = contentType.find(BOUNDARY_STR);
+  std::string::size_type pos = content_type.find(BOUNDARY_STR);
   if (pos == std::string::npos) {
     ESP_LOGE(TAG, "Failed Get Rqeust Header : %s", HTTP_HEADER_CONTENT_TYPE);
     return ESP_FAIL;
   }
   const std::string boundaryStr =
-      contentType.substr(pos + BOUNDARY_STR.length());
+      content_type.substr(pos + BOUNDARY_STR.length());
   const std::string::size_type boundaryStrLength = boundaryStr.length();
   // ESP_LOGV(TAG, "Boundary => %s", boundaryStr.c_str());
 
   // Receive Post Data
   static constexpr size_t MAX_FILE_SIZE = 10240;  // 10 KB
-  const int total_len = pHttpRequestData->content_len;
+  const int total_len = request_data->content_len;
   if (MAX_FILE_SIZE <= total_len) {
-    httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+    httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "content too long");
     return ESP_FAIL;
   }
@@ -624,10 +628,9 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData) {
   int cur_len = 0;
   int received = 0;
   while (cur_len < total_len) {
-    received =
-        httpd_req_recv(pHttpRequestData, &body.at(0) + cur_len, total_len);
+    received = httpd_req_recv(request_data, &body.at(0) + cur_len, total_len);
     if (received <= 0) {
-      httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+      httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                           "Failed to post control value");
       return ESP_FAIL;
     }
@@ -656,7 +659,7 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData) {
   }
 
   // Get Json Data
-  std::string payloadJsonData;
+  std::string payload_json_data;
   for (std::vector<std::string>::const_iterator iter = list.begin();
        iter != list.end(); ++iter) {
     // ESP_LOGV(TAG, "Split\n%s", (*iter).c_str());
@@ -666,168 +669,168 @@ esp_err_t HttpdServerTask::UploadSettingHandler(httpd_req_t *pHttpRequestData) {
       if ((end - begin) <= 0) {
         break;
       }
-      payloadJsonData = iter->substr(begin, end - begin);
-      ESP_LOGV(TAG, "OK Payload-------\n%s\n-----", payloadJsonData.c_str());
+      payload_json_data = iter->substr(begin, end - begin);
+      ESP_LOGV(TAG, "OK Payload-------\n%s\n-----", payload_json_data.c_str());
       break;
     }
   }
 
   // Parse
-  WateringSetting &weatherSetting = irrigationInterface->GetWateringSetting();
-  if (!weatherSetting.SetSettingData(payloadJsonData)) {
-    httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+  WateringSetting &weather_setting = irrigation_interface->GetWateringSetting();
+  if (!weather_setting.SetSettingData(payload_json_data)) {
+    httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "Invalid Data");
     return ESP_FAIL;
   }
 
   // Save
-  if (!WateringSetting::Save(payloadJsonData)) {
-    httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+  if (!WateringSetting::Save(payload_json_data)) {
+    httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "Failed save");
     return ESP_FAIL;
   }
 
   // Init Schedule
-  const ScheduleManagerSharedPtr scheduleManager =
-      irrigationInterface->GetScheduleManager().lock();
-  if (!scheduleManager) {
+  const ScheduleManagerSharedPtr schedule_manager =
+      irrigation_interface->GetScheduleManager().lock();
+  if (!schedule_manager) {
     ESP_LOGE(TAG, "Failed Schedule Manager is null");
     return ESP_FAIL;
   }
-  const std::tm nowTimeInfo = Util::GetLocalTime();
-  scheduleManager->InitializeNewDay(nowTimeInfo);
+  const std::tm now_data = Util::GetLocalTime();
+  schedule_manager->InitializeNewDay(now_data);
 
   // Redirect
-  httpd_resp_set_status(pHttpRequestData, "303 See Other");
-  httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
-  httpd_resp_send(pHttpRequestData, NULL, 0);
+  httpd_resp_set_status(request_data, "303 See Other");
+  httpd_resp_set_hdr(request_data, "Location", "/");
+  httpd_resp_send(request_data, NULL, 0);
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::DownloadSettingHandler(
-    httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::DownloadSettingHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Post:DownloadSetting");
 
-  std::string rawSettingData;
-  if (!WateringSetting::Load(rawSettingData)) {
+  std::string raw_Setting_data;
+  if (!WateringSetting::Load(raw_Setting_data)) {
     ESP_LOGE(TAG, "Failed Load Setting File");
     return ESP_FAIL;
   }
 
-  httpd_resp_set_type(pHttpRequestData, "application/json");
-  httpd_resp_send(pHttpRequestData, rawSettingData.c_str(),
-                  rawSettingData.length());
+  httpd_resp_set_type(request_data, "application/json");
+  httpd_resp_send(request_data, raw_Setting_data.c_str(),
+                  raw_Setting_data.length());
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::DeleteSettingHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Post:DeleteSetting");
 
-  if (!pHttpRequestData->user_ctx) {
+  if (!request_data->user_ctx) {
     ESP_LOGE(TAG, "Failed user_ctx is null");
     return ESP_FAIL;
   }
 
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
 
   // Delete
   if (!WateringSetting::Delete()) {
-    httpd_resp_send_err(pHttpRequestData, HTTPD_500_INTERNAL_SERVER_ERROR,
+    httpd_resp_send_err(request_data, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "Failed delete");
     return ESP_FAIL;
   }
 
   // WateringSetting init
-  WateringSetting &wateringSetting = irrigationInterface->GetWateringSetting();
-  wateringSetting = WateringSetting();
+  WateringSetting &watering_settings =
+      irrigation_interface->GetWateringSetting();
+  watering_settings = WateringSetting();
 
   // Init Schedule
-  const ScheduleManagerSharedPtr scheduleManager =
-      irrigationInterface->GetScheduleManager().lock();
-  if (!scheduleManager) {
+  const ScheduleManagerSharedPtr schedule_manager =
+      irrigation_interface->GetScheduleManager().lock();
+  if (!schedule_manager) {
     ESP_LOGE(TAG, "Failed Schedule Manager is null");
     return ESP_FAIL;
   }
-  const std::tm nowTimeInfo = Util::GetLocalTime();
-  scheduleManager->InitializeNewDay(nowTimeInfo);
+  const std::tm now_data = Util::GetLocalTime();
+  schedule_manager->InitializeNewDay(now_data);
 
   // Redirect
-  httpd_resp_set_status(pHttpRequestData, "303 See Other");
-  httpd_resp_set_hdr(pHttpRequestData, "Location", "/");
-  httpd_resp_send(pHttpRequestData, NULL, 0);
+  httpd_resp_set_status(request_data, "303 See Other");
+  httpd_resp_set_hdr(request_data, "Location", "/");
+  httpd_resp_send(request_data, NULL, 0);
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *pHttpRequestData) {
+esp_err_t HttpdServerTask::GetVoltageHandler(httpd_req_t *request_data) {
   ESP_LOGV(TAG, "WebServer Request Recv. Get:GetVoltage");
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
   const float voltage = Util::GetVoltage();
 
   // Generate Response
-  std::stringstream responseBody;
-  responseBody << "{\"voltage\":" << std::setfill('0') << std::fixed
-               << std::setprecision(2) << voltage << "}";
+  std::stringstream response_body;
+  response_body << "{\"voltage\":" << std::setfill('0') << std::fixed
+                << std::setprecision(2) << voltage << "}";
 #else
-  std::stringstream responseBody;
-  responseBody << "{\"voltage\": 0}";
+  std::stringstream response_body;
+  response_body << "{\"voltage\": 0}";
 
 #endif
-  httpd_resp_set_type(pHttpRequestData, "application/json");
-  httpd_resp_send(pHttpRequestData, responseBody.str().c_str(),
-                  responseBody.str().length());
+  httpd_resp_set_type(request_data, "application/json");
+  httpd_resp_send(request_data, response_body.str().c_str(),
+                  response_body.str().length());
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::GetWaterLevelHandler(httpd_req_t *pHttpRequestData) {
-  ESP_LOGV(TAG, "WebServer Request Recv. Get:GetWaterLevel");
+esp_err_t HttpdServerTask::GetWaterLevelHandler(httpd_req_t *request_data) {
+  ESP_LOGV(TAG, "WebServer Request Recv. Get:Getwater_level");
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  HttpdServerTask *const pHttpdServerTask =
-      static_cast<HttpdServerTask *>(pHttpRequestData->user_ctx);
-  if (!pHttpdServerTask) {
+  HttpdServerTask *const httpd_server_task =
+      static_cast<HttpdServerTask *>(request_data->user_ctx);
+  if (!httpd_server_task) {
     ESP_LOGE(TAG, "Failed HttpdServerTask is null");
     return ESP_FAIL;
   }
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      pHttpdServerTask->m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      httpd_server_task->irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
 
-  const float waterLevel = irrigationInterface->GetWaterLevel();
+  const float water_level = irrigation_interface->Getwater_level();
 
   // Generate Response
-  std::stringstream responseBody;
-  responseBody << "{\"water_level\":" << std::setfill('0') << std::fixed
-               << std::setprecision(2) << waterLevel << "}";
+  std::stringstream response_body;
+  response_body << "{\"water_level\":" << std::setfill('0') << std::fixed
+                << std::setprecision(2) << water_level << "}";
 #else
   ESP_LOGI(TAG, "WATER LEVEL CHECK 5 ");
-  std::stringstream responseBody;
-  responseBody << "{\"water_level\": 0}";
+  std::stringstream response_body;
+  response_body << "{\"water_level\": 0}";
 
 #endif
-  httpd_resp_set_type(pHttpRequestData, "application/json");
-  httpd_resp_send(pHttpRequestData, responseBody.str().c_str(),
-                  responseBody.str().length());
+  httpd_resp_set_type(request_data, "application/json");
+  httpd_resp_send(request_data, response_body.str().c_str(),
+                  response_body.str().length());
   return ESP_OK;
 }
 
-esp_err_t HttpdServerTask::ErrorNotFoundHandler(httpd_req_t *pHttpRequestData,
+esp_err_t HttpdServerTask::ErrorNotFoundHandler(httpd_req_t *request_data,
                                                 httpd_err_code_t errCode) {
-  httpd_resp_send_err(pHttpRequestData, HTTPD_404_NOT_FOUND,
+  httpd_resp_send_err(request_data, HTTPD_404_NOT_FOUND,
                       "HTTP Status 404 Not Found");
   return ESP_FAIL;
 }

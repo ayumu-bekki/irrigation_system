@@ -25,7 +25,7 @@ class ValveTask final : public Task {
   static constexpr int CORE_ID = APP_CPU_NUM;
 
  public:
-  explicit ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface);
+  explicit ValveTask(const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Update() override;
 
@@ -38,12 +38,12 @@ class ValveTask final : public Task {
   void Close();
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
 
   ValveExecutorSharedPtr current_executor_;
   std::queue<ValveExecutorSharedPtr> executors_;
 
-  Pwm m_pwm;
+  Pwm pwm_;
   std::mutex mtx_;
 };
 

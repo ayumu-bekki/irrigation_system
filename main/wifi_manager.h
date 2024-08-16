@@ -20,11 +20,11 @@ class WifiManager final {
 
   void Disconnect();
 
-  void EventHandler(const esp_event_base_t eventBase, const int32_t eventId,
-                    void *const eventData);
+  void EventHandler(const esp_event_base_t event_base, const int32_t event_id,
+                    void *const event_data);
 
  private:
-  int m_RetryNum;
+  int retry_num_;
 };
 
 }  // namespace IrrigationSystem

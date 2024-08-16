@@ -8,16 +8,16 @@
 #include <string>
 
 #include "driver/gpio.h"
-#include "hal/gpio_types.h"
 #include "freertos/FreeRTOS.h"
-#include "sdkconfig.h"
-#include "message_queue.h"
 #include "gpio_control.h"
+#include "hal/gpio_types.h"
 #include "logger.h"
+#include "message_queue.h"
+#include "sdkconfig.h"
 #include "util.h"
 
 namespace {
-  constexpr float WATER_FLOW_COUNT_TO_CUBIC_CENTIMETRES = 1000.0f / 11.0f;
+constexpr float WATER_FLOW_COUNT_TO_CUBIC_CENTIMETRES = 1000.0f / 11.0f;
 }
 
 namespace IrrigationSystem {
@@ -32,7 +32,7 @@ WaterFlowSensor::WaterFlowSensor()
 
 void WaterFlowSensor::Initialize() {
   ESP_LOGI(TAG, "Initialize WaterFlowSensor");
- 
+
   // Create MessageQueue
   if (!queue_.Create(1)) {
     ESP_LOGE(TAG, "Creating queue failed");
@@ -43,7 +43,7 @@ void WaterFlowSensor::Initialize() {
   gptimer_.Create(1000000u, &WaterFlowSensor::TimerCallback,
                   &queue_);  // 1MHz, 1 tick=1ns
 
-  // Pulse Counter 
+  // Pulse Counter
   pcnt_unit_config_t pcnt_unit_config = {
       .low_limit = INT16_MIN,
       .high_limit = INT16_MAX,
@@ -106,7 +106,7 @@ void WaterFlowSensor::Update() {
       const int hz =
           pulse_count - last_pc + (pulse_count < last_pc ? INT16_MAX : 0);
 
-      //ESP_LOGI(TAG, "hz: %d lpc:%d pc:%d", hz, last_pc, pulse_count);
+      // ESP_LOGI(TAG, "hz: %d lpc:%d pc:%d", hz, last_pc, pulse_count);
       last_pc = pulse_count;
 
       sensor_hz_ = hz;
@@ -117,26 +117,21 @@ void WaterFlowSensor::Update() {
   }
 }
 
-void WaterFlowSensor::StartMeasurement()
-{
+void WaterFlowSensor::StartMeasurement() {
   GPIO::SetLevel(CONFIG_WATER_FLOW_OUTPUT_GPIO_NO, 1);
   total_count_ = 0;
 }
 
-int32_t WaterFlowSensor::FinishMeasurement()
-{
+int32_t WaterFlowSensor::FinishMeasurement() {
   GPIO::SetLevel(CONFIG_WATER_FLOW_OUTPUT_GPIO_NO, 0);
   return total_count_;
 }
 
-int32_t WaterFlowSensor::GetSensorHz() const
-{
-  return sensor_hz_;
-}
+int32_t WaterFlowSensor::GetSensorHz() const { return sensor_hz_; }
 
-bool IRAM_ATTR WaterFlowSensor::TimerCallback(gptimer_handle_t timer,
-                                        const gptimer_alarm_event_data_t *edata,
-                                        void *user_data) {
+bool IRAM_ATTR WaterFlowSensor::TimerCallback(
+    gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata,
+    void *user_data) {
   MessageQueue<int32_t> *const queue =
       static_cast<MessageQueue<int32_t> *>(user_data);
   return queue->SendFromISR(0);

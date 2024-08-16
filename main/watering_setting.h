@@ -77,37 +77,37 @@ class WateringSetting final {
 
  private:
   /// Is Read Setting
-  bool m_IsActive;
+  bool is_active_;
   /// Current Watering Mode
-  WateringMode m_WateringMode;
+  WateringMode watering_mode_;
 
   // Share --------------------------
   /// Watering Second
-  std::int32_t m_WateringSec;
+  std::int32_t watering_sec_;
 
   // Simple --------------------------
   /// Watering Hour List
-  WateringHourList m_WateringHourList;
+  WateringHourList watering_hour_list_;
 
   // Advanced --------------------------
   /// Area path code for weather forecast determination.
-  std::int32_t m_JMAAreaPathCode;
+  std::int32_t jma_area_path_code_;
   /// Area number for weather forecast determination.
-  std::int32_t m_JMALocalCode;
+  std::int32_t jma_local_code_;
   /// AMeDAS observation point number for weather forecast determination.
-  std::int32_t m_JMAAMeDAS;
+  std::int32_t jmaamedas_point_num_;
   /// Watering Type Dictionary
-  WateringTypeDict m_WateringTypeDict;
+  WateringTypeDict watering_type_dict_;
   /// Watering Tempature List
-  TemperatureWateringList m_TemperatureWateringList;
+  TemperatureWateringList temperature_watering_list_;
   /// Month To Type Dict
-  MonthToTypeDict m_MonthToTypeDict;
+  MonthToTypeDict month_to_type_dict_;
   /// ValvePowerBaseRate
-  float m_BaseRate;
+  float base_rate_;
   /// ValvePowerBaseVoltage
-  float m_BaseVoltage;
+  float base_voltage_;
   /// ValvePowerVoltageRate
-  float m_VoltageRate;
+  float voltage_rate_;
 };
 
 }  // namespace IrrigationSystem

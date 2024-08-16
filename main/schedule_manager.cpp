@@ -22,69 +22,69 @@
 namespace IrrigationSystem {
 
 ScheduleManager::ScheduleManager(
-    const IrrigationInterfaceWeakPtr pIrrigationInterface)
-    : m_pIrrigationInterface(pIrrigationInterface),
-      m_ScheduleList(),
-      m_CurrentMonth(0),
-      m_CurrentDay(0) {}
+    const IrrigationInterfaceWeakPtr irrigation_interface)
+    : irrigation_interface_(irrigation_interface),
+      schedule_list_(),
+      current_month_(0),
+      current_day_(0) {}
 
 void ScheduleManager::Execute() {
   // Get Current Time
-  const std::tm nowTimeInfo = Util::GetLocalTime();
+  const std::tm now_time_info = Util::GetLocalTime();
 
   // Date changed.
-  if (m_CurrentDay != nowTimeInfo.tm_mday) {
-    InitializeNewDay(nowTimeInfo);
+  if (current_day_ != now_time_info.tm_mday) {
+    InitializeNewDay(now_time_info);
   }
 
   // Run the schedule
-  for (auto&& pScheduleItem : m_ScheduleList) {
-    if (pScheduleItem->CanExecute(nowTimeInfo)) {
-      pScheduleItem->Exec();
+  for (auto&& schedule_item : schedule_list_) {
+    if (schedule_item->CanExecute(now_time_info)) {
+      schedule_item->Exec();
     }
   }
 }
 
 const ScheduleManager::ScheduleBaseList& ScheduleManager::GetScheduleList()
     const {
-  return m_ScheduleList;
+  return schedule_list_;
 }
 
 void ScheduleManager::AdjustSchedule() {
   ESP_LOGI(TAG, "Start Schedule Adjust. %s", Util::GetNowTimeStr().c_str());
 
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return;
   }
 
   // GetWateringSetting
-  const WateringSetting& wateringSetting =
-      irrigationInterface->GetWateringSetting();
-  if (!wateringSetting.IsActive()) {
+  const WateringSetting& watering_setting =
+      irrigation_interface->GetWateringSetting();
+  if (!watering_setting.IsActive()) {
     ESP_LOGI(TAG, "Watering Setting is not activated.");
     return;
   }
 
   // Get TimeInfo
-  const tm nowTimeInfo = Util::GetLocalTime();
+  const tm now_time_info = Util::GetLocalTime();
 
   // CreateSchedule
-  if (wateringSetting.GetWateringMode() ==
+  if (watering_setting.GetWateringMode() ==
       WateringSetting::WATERING_MODE_SIMPLE) {
     const WateringSetting::WateringHourList& hourList =
-        wateringSetting.GetWateringHourList();
+        watering_setting.GetWateringHourList();
     for (const std::int32_t& hour : hourList) {
       AddSchedule(std::make_unique<ScheduleWatering>(
-          irrigationInterface, hour, 0, wateringSetting.GetWateringSec()));
+          irrigation_interface, hour, 0, watering_setting.GetWateringSec()));
     }
-  } else if (wateringSetting.GetWateringMode() ==
+  } else if (watering_setting.GetWateringMode() ==
              WateringSetting::WATERING_MODE_ADVANCE) {
     // Read History
-    const std::tm wateringTm =
-        Util::EpochToLocalTime(irrigationInterface->GetLastWateringEpoch());
+    const std::tm watering_time_info =
+        Util::EpochToLocalTime(irrigation_interface->GetLastWateringEpoch());
 
     /// WateringWeather
     enum WateringWeather : int {
@@ -95,74 +95,76 @@ void ScheduleManager::AdjustSchedule() {
     };
 
     // Request weather forecast
-    WateringWeather wateringWeather = WATERING_WEATHER_NONE;
-    std::int32_t maxTemperature = 0;
+    WateringWeather watering_weather = WATERING_WEATHER_NONE;
+    std::int32_t max_temperature = 0;
 
-    WeatherForecast& weatherForecast =
-        irrigationInterface->GetWeatherForecast();
-    weatherForecast.SetJMAParamter(wateringSetting.GetJMAAreaPathCode(),
-                                   wateringSetting.GetJMALocalCode(),
-                                   wateringSetting.GetJMAAMeDAS());
-    weatherForecast.Request();
-    if (weatherForecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {
-      wateringWeather = (weatherForecast.IsRain()) ? WATERING_WEATHER_RAIN
-                                                   : WATERING_WEATHER_NORMAL;
-      maxTemperature = weatherForecast.GetCurrentMaxTemperature();
+    WeatherForecast& weather_forecast =
+        irrigation_interface->GetWeatherForecast();
+    weather_forecast.SetJMAParamter(watering_setting.GetJMAAreaPathCode(),
+                                    watering_setting.GetJMALocalCode(),
+                                    watering_setting.GetJMAAMeDAS());
+    weather_forecast.Request();
+    if (weather_forecast.GetRequestStatus() == WeatherForecast::ACQUIRED) {
+      watering_weather = (weather_forecast.IsRain()) ? WATERING_WEATHER_RAIN
+                                                     : WATERING_WEATHER_NORMAL;
+      max_temperature = weather_forecast.GetCurrentMaxTemperature();
       ESP_LOGI(TAG, "Weather OK. Weather:%s MaxTemperature:%d°C",
                WeatherForecast::WeatherCodeToStr(
-                   weatherForecast.GetCurrentWeatherCode()),
-               maxTemperature);
+                   weather_forecast.GetCurrentWeatherCode()),
+               max_temperature);
     } else {
       ESP_LOGW(TAG, "Failed to get the weather forecast.");
     }
 
     // Match WateringType
-    std::string wateringTypeStr;
-    if (wateringWeather == WATERING_WEATHER_NONE) {
+    std::string watering_type_str;
+    if (watering_weather == WATERING_WEATHER_NONE) {
       // could not Get Weather
-      const int month = nowTimeInfo.tm_mon + 1;
+      const int month = now_time_info.tm_mon + 1;
 
       // Reference from the monthly table and treat it as normal weather
       const WateringSetting::MonthToTypeDict& monthToTypeDict =
-          wateringSetting.GetMonthToTypeDict();
+          watering_setting.GetMonthToTypeDict();
       WateringSetting::MonthToTypeDict::const_iterator iter =
           monthToTypeDict.find(std::to_string(month));
       if (iter != monthToTypeDict.end()) {
-        wateringTypeStr = iter->second;
+        watering_type_str = iter->second;
       }
-      wateringWeather = WATERING_WEATHER_NORMAL;
+      watering_weather = WATERING_WEATHER_NORMAL;
     } else {
-      const WateringSetting::TemperatureWateringList& temperatureWateringList =
-          wateringSetting.GetTemperatureWateringList();
+      const WateringSetting::TemperatureWateringList&
+          temperature_watering_list =
+              watering_setting.GetTemperatureWateringList();
       for (const WateringSetting::TemperatureWatering& temperatureWatering :
-           temperatureWateringList) {
-        if (temperatureWatering.Temperature <= maxTemperature) {
-          wateringTypeStr = (wateringWeather == WATERING_WEATHER_RAIN)
-                                ? temperatureWatering.RainType
-                                : temperatureWatering.NormalType;
+           temperature_watering_list) {
+        if (temperatureWatering.Temperature <= max_temperature) {
+          watering_type_str = (watering_weather == WATERING_WEATHER_RAIN)
+                                  ? temperatureWatering.RainType
+                                  : temperatureWatering.NormalType;
         }
       }
     }
 
-    ESP_LOGI(TAG, "Watering Type:%s wateringWeather:%d",
-             wateringTypeStr.c_str(), wateringWeather);
+    ESP_LOGI(TAG, "Watering Type:%s watering_weather:%d",
+             watering_type_str.c_str(), watering_weather);
 
     // WateringType To Schedule
-    const WateringSetting::WateringTypeDict& wateringTypeDict =
-        wateringSetting.GetWateringTypeDict();
+    const WateringSetting::WateringTypeDict& watering_type_dicst =
+        watering_setting.GetWateringTypeDict();
     WateringSetting::WateringTypeDict::const_iterator iter =
-        wateringTypeDict.find(wateringTypeStr);
-    if (iter != wateringTypeDict.end()) {
-      const WateringSetting::WateringType& wateringType = iter->second;
+        watering_type_dicst.find(watering_type_str);
+    if (iter != watering_type_dicst.end()) {
+      const WateringSetting::WateringType& watering_type = iter->second;
 
-      const std::int32_t lastWateringDuration =
-          Util::GregToMJD(nowTimeInfo) - Util::GregToMJD(wateringTm);
-      ESP_LOGI(TAG, "Watering DaysDuration:%d", lastWateringDuration);
+      const std::int32_t last_watering_duration =
+          Util::GregToMJD(now_time_info) - Util::GregToMJD(watering_time_info);
+      ESP_LOGI(TAG, "Watering DaysDuration:%d", last_watering_duration);
 
-      if (wateringType.DaySpan <= lastWateringDuration) {
-        for (const std::int32_t& hour : wateringType.WateringHours) {
+      if (watering_type.DaySpan <= last_watering_duration) {
+        for (const std::int32_t& hour : watering_type.WateringHours) {
           AddSchedule(std::make_unique<ScheduleWatering>(
-              irrigationInterface, hour, 0, wateringSetting.GetWateringSec()));
+              irrigation_interface, hour, 0,
+              watering_setting.GetWateringSec()));
         }
       } else {
         ESP_LOGI(TAG, "Skip DaysDuration");
@@ -177,7 +179,7 @@ void ScheduleManager::AdjustSchedule() {
 #endif
 
   // Disable
-  DisableExpiredSchedule(nowTimeInfo);
+  DisableExpiredSchedule(now_time_info);
 
   // Sort
   SortScheduleTime();
@@ -191,44 +193,45 @@ void ScheduleManager::AdjustSchedule() {
   return;
 }
 
-int ScheduleManager::GetCurrentMonth() const { return m_CurrentMonth; }
+int ScheduleManager::GetCurrentMonth() const { return current_month_; }
 
-int ScheduleManager::GetCurrentDay() const { return m_CurrentDay; }
+int ScheduleManager::GetCurrentDay() const { return current_day_; }
 
 /// Date change schedule initialization
-void ScheduleManager::InitializeNewDay(const std::tm& nowTimeInfo) {
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+void ScheduleManager::InitializeNewDay(const std::tm& now_time_info) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return;
   }
 
-  m_CurrentMonth = nowTimeInfo.tm_mon + 1;
-  m_CurrentDay = nowTimeInfo.tm_mday;
+  current_month_ = now_time_info.tm_mon + 1;
+  current_day_ = now_time_info.tm_mday;
 
-  m_ScheduleList.clear();
-  AddSchedule(std::make_unique<ScheduleAdjust>(irrigationInterface, 0, 30));
+  schedule_list_.clear();
+  AddSchedule(std::make_unique<ScheduleAdjust>(irrigation_interface, 0, 30));
 
-  WeatherForecast& weatherForecast = irrigationInterface->GetWeatherForecast();
-  weatherForecast.Initialize();
+  WeatherForecast& weather_forecast =
+      irrigation_interface->GetWeatherForecast();
+  weather_forecast.Initialize();
 }
 
 /// Add a schedule to the list
 void ScheduleManager::AddSchedule(ScheduleBaseUniquePtr&& scheduleItem) {
-  m_ScheduleList.emplace_back(std::move(scheduleItem));
+  schedule_list_.emplace_back(std::move(scheduleItem));
 }
 
 /// Disable a schedule whose execution time has already expired.
-void ScheduleManager::DisableExpiredSchedule(const std::tm& timeInfo) {
-  for (auto&& pScheduleItem : m_ScheduleList) {
-    pScheduleItem->DisableExpired(timeInfo);
+void ScheduleManager::DisableExpiredSchedule(const std::tm& time_info) {
+  for (auto&& schedule_item : schedule_list_) {
+    schedule_item->DisableExpired(time_info);
   }
 }
 
 /// Sort the schedule in ascending order
 void ScheduleManager::SortScheduleTime() {
-  std::sort(m_ScheduleList.begin(), m_ScheduleList.end(),
+  std::sort(schedule_list_.begin(), schedule_list_.end(),
             [](const ScheduleBaseUniquePtr& left,
                const ScheduleBaseUniquePtr& right) {
               return left->GetDiffTime() < right->GetDiffTime();
@@ -237,9 +240,9 @@ void ScheduleManager::SortScheduleTime() {
 
 #if CONFIG_DEBUG != 0
 void ScheduleManager::DebugOutputSchedules() {
-  for (const auto& pScheduleItem : m_ScheduleList) {
-    ESP_LOGD(TAG, "Test Schedule Item %02d:%02d %s", pScheduleItem->GetHour(),
-             pScheduleItem->GetMinute(), pScheduleItem->GetName().c_str());
+  for (const auto& schedule_item : schedule_list_) {
+    ESP_LOGD(TAG, "Test Schedule Item %02d:%02d %s", schedule_item->GetHour(),
+             schedule_item->GetMinute(), schedule_item->GetName().c_str());
   }
 }
 #endif  // CONFIG_DEBUG

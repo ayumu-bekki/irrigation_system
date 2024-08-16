@@ -5,16 +5,11 @@
 #include "freertos/queue.h"
 
 template <typename T>
-class MessageQueue 
-{
+class MessageQueue {
  public:
-  MessageQueue() 
-    :queue_(nullptr)
-  {}
+  MessageQueue() : queue_(nullptr) {}
 
-  virtual ~MessageQueue() {
-    Destroy();
-  }
+  virtual ~MessageQueue() { Destroy(); }
 
   bool Create(const int queueSize = 1) {
     if (queue_) {
@@ -22,11 +17,11 @@ class MessageQueue
     }
     queue_ = xQueueCreate(queueSize, sizeof(T));
     if (!queue_) {
-        return false;
+      return false;
     }
     return true;
   }
-  
+
   void Destroy() {
     if (queue_) {
       xQueueReset(queue_);
@@ -39,7 +34,8 @@ class MessageQueue
     if (!queue_) {
       return false;
     }
-    return xQueueReceive(queue_, receive_data, pdMS_TO_TICKS(max_wait_millisecond));
+    return xQueueReceive(queue_, receive_data,
+                         pdMS_TO_TICKS(max_wait_millisecond));
   }
 
   bool ReceiveNonBlock(T *const receive_data) {
@@ -56,7 +52,7 @@ class MessageQueue
     return xQueueReceive(queue_, receive_data, portMAX_DELAY);
   }
 
-  bool SendFromISR(const T& data) {
+  bool SendFromISR(const T &data) {
     if (!queue_) {
       return false;
     }
@@ -70,4 +66,3 @@ class MessageQueue
 };
 
 #endif  // MESSAGE_QUEUE_H_
-

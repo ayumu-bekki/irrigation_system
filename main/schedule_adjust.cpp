@@ -10,36 +10,36 @@
 
 namespace IrrigationSystem {
 
-ScheduleAdjust::ScheduleAdjust() : ScheduleBase(), m_pIrrigationInterface() {}
+ScheduleAdjust::ScheduleAdjust() : ScheduleBase(), irrigation_interface_() {}
 
 ScheduleAdjust::ScheduleAdjust(
-    const IrrigationInterfaceWeakPtr pIrrigationInterface, const int hour,
+    const IrrigationInterfaceWeakPtr irrigation_interface, const int hour,
     const int minute)
     : ScheduleBase(ScheduleBase::STATUS_WAIT, ScheduleAdjust::SCHEDULE_NAME,
                    hour, minute, ScheduleAdjust::IS_VISIBLE_TASK),
-      m_pIrrigationInterface(pIrrigationInterface) {}
+      irrigation_interface_(irrigation_interface) {}
 
 void ScheduleAdjust::Exec() {
   ESP_LOGI(TAG, "Schedule Exec - Adjust Executer. %02d:%02d", GetHour(),
            GetMinute());
   SetStatus(STATUS_EXECUTED);
 
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return;
   }
 
   // Schedule Manager
-  const ScheduleManagerSharedPtr scheduleManager =
-      irrigationInterface->GetScheduleManager().lock();
-  if (!scheduleManager) {
+  const ScheduleManagerSharedPtr schedule_manager =
+      irrigation_interface->GetScheduleManager().lock();
+  if (!schedule_manager) {
     ESP_LOGE(TAG, "Failed ScheduleManager is null");
     return;
   }
 
-  scheduleManager->AdjustSchedule();
+  schedule_manager->AdjustSchedule();
 }
 
 }  // namespace IrrigationSystem

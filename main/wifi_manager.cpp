@@ -12,15 +12,15 @@
 namespace IrrigationSystem {
 
 // EventHandler
-static void eventHandler(void* callbackObject, esp_event_base_t eventBase,
-                         int32_t eventId, void* eventData) {
-  if (callbackObject) {
-    static_cast<WifiManager*>(callbackObject)
-        ->EventHandler(eventBase, eventId, eventData);
+static void eventHandler(void* callback_object, esp_event_base_t event_base,
+                         int32_t event_id, void* event_data) {
+  if (callback_object) {
+    static_cast<WifiManager*>(callback_object)
+        ->EventHandler(event_base, event_id, event_data);
   }
 }
 
-WifiManager::WifiManager() : m_RetryNum(0) {}
+WifiManager::WifiManager() : retry_num_(0) {}
 
 WifiManager::~WifiManager() { Disconnect(); }
 
@@ -62,26 +62,26 @@ void WifiManager::Disconnect() {
   ESP_ERROR_CHECK(esp_wifi_stop());
 }
 
-void WifiManager::EventHandler(const esp_event_base_t eventBase,
-                               const int32_t eventId, void* const eventData) {
-  if (eventBase == WIFI_EVENT) {
-    if (eventId == WIFI_EVENT_STA_START) {
+void WifiManager::EventHandler(const esp_event_base_t event_base,
+                               const int32_t event_id, void* const event_data) {
+  if (event_base == WIFI_EVENT) {
+    if (event_id == WIFI_EVENT_STA_START) {
       esp_wifi_connect();
-    } else if (eventId == WIFI_EVENT_STA_DISCONNECTED) {
-      if (CONFIG_WIFI_MAXIMUM_RETRY <= m_RetryNum) {
+    } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
+      if (CONFIG_WIFI_MAXIMUM_RETRY <= retry_num_) {
         ESP_LOGE(TAG, "Failed Wi-Fi Connect. System Restart...");
         esp_restart();
       } else {
-        ++m_RetryNum;
-        ESP_LOGW(TAG, "Disconnect Wi-Fi. retry to connect. try:%d", m_RetryNum);
+        ++retry_num_;
+        ESP_LOGW(TAG, "Disconnect Wi-Fi. retry to connect. try:%d", retry_num_);
         esp_wifi_connect();
       }
     }
-  } else if (eventBase == IP_EVENT) {
-    if (eventId == IP_EVENT_STA_GOT_IP) {
-      ip_event_got_ip_t* event = static_cast<ip_event_got_ip_t*>(eventData);
+  } else if (event_base == IP_EVENT) {
+    if (event_id == IP_EVENT_STA_GOT_IP) {
+      ip_event_got_ip_t* event = static_cast<ip_event_got_ip_t*>(event_data);
       ESP_LOGI(TAG, "Connected Wi-Fi. ip:" IPSTR, IP2STR(&event->ip_info.ip));
-      m_RetryNum = 0;
+      retry_num_ = 0;
     }
   }
 }

@@ -21,14 +21,14 @@ class WateringButtonTask : public Task {
 
  public:
   explicit WateringButtonTask(
-      const IrrigationInterfaceWeakPtr pIrrigationInterface);
+      const IrrigationInterfaceWeakPtr irrigation_interface);
   ~WateringButtonTask();
 
  private:
   void Update() override;
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
   bool button_current_;
   int button_counter_;
   ValveExecutorSharedPtr valve_executor_;

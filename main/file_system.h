@@ -7,8 +7,7 @@
 // Include ----------------------
 #include <string>
 
-namespace IrrigationSystem {
-namespace FileSystem {
+namespace IrrigationSystem::FileSystem {
 
 /// Mount File system
 bool Mount();
@@ -17,16 +16,15 @@ bool Mount();
 void Unmount();
 
 /// Write
-bool Write(const std::string& filePath, const std::string& body);
+bool Write(const std::string& file_path, const std::string& body);
 
 /// Read
-bool Read(const std::string& filePath, std::string& body);
+bool Read(const std::string& file_path, std::string& body);
 
 /// Delete
-bool Delete(const std::string& filePath);
+bool Delete(const std::string& file_path);
 
-}  // namespace FileSystem
-}  // namespace IrrigationSystem
+}  // namespace IrrigationSystem::FileSystem
 
 #endif  // FILE_SYSTEM_H_
 // EOF

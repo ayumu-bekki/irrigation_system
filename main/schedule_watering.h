@@ -19,16 +19,16 @@ class ScheduleWatering final : public ScheduleBase {
   ScheduleWatering();
 
  public:
-  ScheduleWatering(const IrrigationInterfaceWeakPtr pIrrigationInterface,
-                   const int hour, const int minute, const int openSecond);
+  ScheduleWatering(const IrrigationInterfaceWeakPtr irrigation_interface,
+                   const int hour, const int minute, const int open_seconds);
 
   void Exec() override;
 
   int32_t GetWaterFlow() const override;
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-  int m_OpenSecond;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
+  int open_seconds_;
   ValveExecutorSharedPtr valve_executor_;
 };
 

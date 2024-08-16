@@ -26,7 +26,7 @@ class VoltageCheckTask final : public Task {
   float GetVoltage() const;
 
  private:
-  float m_Voltage;
+  float voltage_;
 };
 
 }  // namespace IrrigationSystem

@@ -16,7 +16,7 @@
 namespace IrrigationSystem {
 
 namespace {
-const std::string jsonWateringModeTable[WateringSetting::WATERING_MODE_MAX] = {
+const std::string JSON_WATERING_MODE_TABLE[WateringSetting::WATERING_MODE_MAX] = {
     "",         // WATERING_MODE_NONE
     "simple",   // WATERING_MODE_SIMPLE
     "advance",  // WATERING_MODE_ADVANCE
@@ -24,77 +24,77 @@ const std::string jsonWateringModeTable[WateringSetting::WATERING_MODE_MAX] = {
 }
 
 WateringSetting::WateringSetting()
-    : m_IsActive(false),
-      m_WateringMode(WATERING_MODE_NONE),
-      m_WateringSec(0),
-      m_WateringHourList(),
-      m_JMAAreaPathCode(0),
-      m_JMALocalCode(0),
-      m_JMAAMeDAS(0),
-      m_WateringTypeDict(),
-      m_TemperatureWateringList(),
-      m_MonthToTypeDict(),
-      m_BaseRate(0.0f),
-      m_BaseVoltage(0.0f),
-      m_VoltageRate(0.0f) {}
+    : is_active_(false),
+      watering_mode_(WATERING_MODE_NONE),
+      watering_sec_(0),
+      watering_hour_list_(),
+      jma_area_path_code_(0),
+      jma_local_code_(0),
+      jmaamedas_point_num_(0),
+      watering_type_dict_(),
+      temperature_watering_list_(),
+      month_to_type_dict_(),
+      base_rate_(0.0f),
+      base_voltage_(0.0f),
+      voltage_rate_(0.0f) {}
 
 bool WateringSetting::SetSettingData(const std::string &body) {
   return Parse(body);
 }
 
-bool WateringSetting::IsActive() const { return m_IsActive; }
+bool WateringSetting::IsActive() const { return is_active_; }
 
 WateringSetting::WateringMode WateringSetting::GetWateringMode() const {
-  return m_WateringMode;
+  return watering_mode_;
 }
 
-std::int32_t WateringSetting::GetWateringSec() const { return m_WateringSec; }
+std::int32_t WateringSetting::GetWateringSec() const { return watering_sec_; }
 
 const std::vector<std::int32_t> &WateringSetting::GetWateringHourList() const {
-  return m_WateringHourList;
+  return watering_hour_list_;
 }
 
 std::int32_t WateringSetting::GetJMAAreaPathCode() const {
-  return m_JMAAreaPathCode;
+  return jma_area_path_code_;
 }
 
-std::int32_t WateringSetting::GetJMALocalCode() const { return m_JMALocalCode; }
+std::int32_t WateringSetting::GetJMALocalCode() const { return jma_local_code_; }
 
-std::int32_t WateringSetting::GetJMAAMeDAS() const { return m_JMAAMeDAS; }
+std::int32_t WateringSetting::GetJMAAMeDAS() const { return jmaamedas_point_num_; }
 
 const WateringSetting::WateringTypeDict &WateringSetting::GetWateringTypeDict()
     const {
-  return m_WateringTypeDict;
+  return watering_type_dict_;
 }
 
 const WateringSetting::TemperatureWateringList &
 WateringSetting::GetTemperatureWateringList() const {
-  return m_TemperatureWateringList;
+  return temperature_watering_list_;
 }
 
 const WateringSetting::MonthToTypeDict &WateringSetting::GetMonthToTypeDict()
     const {
-  return m_MonthToTypeDict;
+  return month_to_type_dict_;
 }
 
-float WateringSetting::GetValvePowerBaseRate() const { return m_BaseRate; }
+float WateringSetting::GetValvePowerBaseRate() const { return base_rate_; }
 
 float WateringSetting::GetValvePowerBaseVoltage() const {
-  return m_BaseVoltage;
+  return base_voltage_;
 }
 
 float WateringSetting::GetValvePowerVoltageRate() const {
-  return m_VoltageRate;
+  return voltage_rate_;
 }
 
 bool WateringSetting::Parse(const std::string &body) noexcept {
   // Initialize
-  m_WateringMode = WATERING_MODE_NONE;
+  watering_mode_ = WATERING_MODE_NONE;
 
-  cJSON *pJsonRoot = nullptr;
+  cJSON *json_root = nullptr;
   try {
-    pJsonRoot = cJSON_Parse(body.c_str());
-    if (!pJsonRoot) {
+    json_root = cJSON_Parse(body.c_str());
+    if (!json_root) {
       const char *error_ptr = cJSON_GetErrorPtr();
       if (error_ptr) {
         throw std::runtime_error(error_ptr);
@@ -103,27 +103,27 @@ bool WateringSetting::Parse(const std::string &body) noexcept {
     }
 
     // Get Watering Mode
-    const cJSON *const pJsonWateringMode =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "watering_mode");
-    if (!cJSON_IsString(pJsonWateringMode)) {
+    const cJSON *const json_watering_mode =
+        cJSON_GetObjectItemCaseSensitive(json_root, "watering_mode");
+    if (!cJSON_IsString(json_watering_mode)) {
       throw std::runtime_error("Illegal object type watering_mode.");
     }
-    const std::string wateringModeStr = pJsonWateringMode->valuestring;
+    const std::string watering_mode_str = json_watering_mode->valuestring;
 
     for (std::int32_t idx = WATERING_MODE_NONE; idx < WATERING_MODE_MAX;
          ++idx) {
-      if (jsonWateringModeTable[idx] == wateringModeStr) {
-        m_WateringMode = static_cast<WateringMode>(idx);
+      if (JSON_WATERING_MODE_TABLE[idx] == watering_mode_str) {
+        watering_mode_ = static_cast<WateringMode>(idx);
         break;
       }
     }
 
-    if (m_WateringMode == WATERING_MODE_NONE) {
+    if (watering_mode_ == WATERING_MODE_NONE) {
       throw std::runtime_error("Illegal type watering_mode.");
-    } else if (m_WateringMode == WATERING_MODE_SIMPLE) {
-      return ParseSimple(pJsonRoot);
-    } else if (m_WateringMode == WATERING_MODE_ADVANCE) {
-      return ParseAdvance(pJsonRoot);
+    } else if (watering_mode_ == WATERING_MODE_SIMPLE) {
+      return ParseSimple(json_root);
+    } else if (watering_mode_ == WATERING_MODE_ADVANCE) {
+      return ParseAdvance(json_root);
     }
 
   } catch (const std::invalid_argument &e) {
@@ -143,251 +143,251 @@ bool WateringSetting::Parse(const std::string &body) noexcept {
   return false;
 }
 
-bool WateringSetting::ParseSimple(cJSON *pJsonRoot) noexcept(false) {
+bool WateringSetting::ParseSimple(cJSON *json_root) noexcept(false) {
   ESP_LOGI(TAG, "Parse SimpleSetting");
 
   // Initialize
-  m_WateringSec = 0;
-  m_WateringHourList.clear();
+  watering_sec_ = 0;
+  watering_hour_list_.clear();
 
   // Get Watering Sec
-  const cJSON *const pJsonWateringSec =
-      cJSON_GetObjectItemCaseSensitive(pJsonRoot, "watering_sec");
-  if (!cJSON_IsNumber(pJsonWateringSec)) {
+  const cJSON *const json_watering_sec =
+      cJSON_GetObjectItemCaseSensitive(json_root, "watering_sec");
+  if (!cJSON_IsNumber(json_watering_sec)) {
     throw std::runtime_error("Illegal object type watering_sec.");
   }
-  m_WateringSec = pJsonWateringSec->valueint;
+  watering_sec_ = json_watering_sec->valueint;
 
   // Get WateringHour
-  const cJSON *const pJsonWateringHourList =
-      cJSON_GetObjectItemCaseSensitive(pJsonRoot, "watering_hour");
-  if (!cJSON_IsArray(pJsonWateringHourList)) {
+  const cJSON *const json_watering_hour_list =
+      cJSON_GetObjectItemCaseSensitive(json_root, "watering_hour");
+  if (!cJSON_IsArray(json_watering_hour_list)) {
     throw std::runtime_error("Illegal object type WateringHourList.");
   }
-  const cJSON *pJsonWateringHour = nullptr;
-  cJSON_ArrayForEach(pJsonWateringHour, pJsonWateringHourList) {
-    if (!cJSON_IsNumber(pJsonWateringHour)) {
+  const cJSON *json_watering_hour = nullptr;
+  cJSON_ArrayForEach(json_watering_hour, json_watering_hour_list) {
+    if (!cJSON_IsNumber(json_watering_hour)) {
       throw std::runtime_error("Illegal object type weatherArea.");
     }
-    m_WateringHourList.push_back(pJsonWateringHour->valueint);
+    watering_hour_list_.push_back(json_watering_hour->valueint);
   }
 
-  m_IsActive = true;
+  is_active_ = true;
   return true;
 }
 
-bool WateringSetting::ParseAdvance(cJSON *pJsonRoot) noexcept(false) {
+bool WateringSetting::ParseAdvance(cJSON *json_root) noexcept(false) {
   ESP_LOGI(TAG, "Parse AdvanceSetting");
 
   // Initialize
-  m_WateringSec = 0;
-  m_JMAAreaPathCode = 0;
-  m_JMALocalCode = 0;
-  m_JMAAMeDAS = 0;
-  m_WateringTypeDict.clear();
-  m_TemperatureWateringList.clear();
-  m_MonthToTypeDict.clear();
+  watering_sec_ = 0;
+  jma_area_path_code_ = 0;
+  jma_local_code_ = 0;
+  jmaamedas_point_num_ = 0;
+  watering_type_dict_.clear();
+  temperature_watering_list_.clear();
+  month_to_type_dict_.clear();
 
   // Get Watering Sec
-  const cJSON *const pJsonWateringSec =
-      cJSON_GetObjectItemCaseSensitive(pJsonRoot, "watering_sec");
-  if (!cJSON_IsNumber(pJsonWateringSec)) {
+  const cJSON *const json_watering_sec =
+      cJSON_GetObjectItemCaseSensitive(json_root, "watering_sec");
+  if (!cJSON_IsNumber(json_watering_sec)) {
     throw std::runtime_error("Illegal object type watering_sec.");
   }
-  m_WateringSec = pJsonWateringSec->valueint;
+  watering_sec_ = json_watering_sec->valueint;
 
   {
     // Get Weather Forecast
-    const cJSON *const pJsonWeatherForecast =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "wether_forecast");
-    if (!cJSON_IsObject(pJsonWeatherForecast)) {
+    const cJSON *const json_weather_forecast =
+        cJSON_GetObjectItemCaseSensitive(json_root, "wether_forecast");
+    if (!cJSON_IsObject(json_weather_forecast)) {
       throw std::runtime_error("Illegal object type weather_forecast.");
     }
 
     // Service
-    const cJSON *const pJsonService =
-        cJSON_GetObjectItemCaseSensitive(pJsonWeatherForecast, "service");
-    if (!cJSON_IsString(pJsonService)) {
+    const cJSON *const json_service =
+        cJSON_GetObjectItemCaseSensitive(json_weather_forecast, "service");
+    if (!cJSON_IsString(json_service)) {
       throw std::runtime_error("Illegal object type weaarherAreaCode.");
     }
-    const std::string serviceStr = pJsonService->valuestring;
-    if (serviceStr != "jma") {
+    const std::string service_str = json_service->valuestring;
+    if (service_str != "jma") {
       throw std::runtime_error("Invalid Service.");
     }
 
     // AreaPathCode(jma)
-    const cJSON *const pJsonAreaPathCode = cJSON_GetObjectItemCaseSensitive(
-        pJsonWeatherForecast, "area_path_code");
-    if (!cJSON_IsNumber(pJsonAreaPathCode)) {
+    const cJSON *const json_area_path_code = cJSON_GetObjectItemCaseSensitive(
+        json_weather_forecast, "area_path_code");
+    if (!cJSON_IsNumber(json_area_path_code)) {
       throw std::runtime_error("Illegal object type area_path_code.");
     }
-    m_JMAAreaPathCode = pJsonAreaPathCode->valueint;
+    jma_area_path_code_ = json_area_path_code->valueint;
 
     // LocalCode(jma)
-    const cJSON *const pJsonLocalCode =
-        cJSON_GetObjectItemCaseSensitive(pJsonWeatherForecast, "local_code");
-    if (!cJSON_IsNumber(pJsonLocalCode)) {
+    const cJSON *const json_local_code =
+        cJSON_GetObjectItemCaseSensitive(json_weather_forecast, "local_code");
+    if (!cJSON_IsNumber(json_local_code)) {
       throw std::runtime_error("Illegal object type local_code.");
     }
-    m_JMALocalCode = pJsonLocalCode->valueint;
+    jma_local_code_ = json_local_code->valueint;
 
     // AMeDASObservationPointNumber(jma)
-    const cJSON *const pJsonAMeDASObservationPointNumber =
-        cJSON_GetObjectItemCaseSensitive(pJsonWeatherForecast,
+    const cJSON *const json_amedas_observation_point_number =
+        cJSON_GetObjectItemCaseSensitive(json_weather_forecast,
                                          "amedas_observation_point_number");
-    if (!cJSON_IsNumber(pJsonAMeDASObservationPointNumber)) {
+    if (!cJSON_IsNumber(json_amedas_observation_point_number)) {
       throw std::runtime_error(
           "Illegal object type amedas_observation_point_number.");
     }
-    m_JMAAMeDAS = pJsonAMeDASObservationPointNumber->valueint;
+    jmaamedas_point_num_ = json_amedas_observation_point_number->valueint;
   }
   {
     // Get Watering Type
-    const cJSON *const pJsonWateringTypeList =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "watering_type");
-    if (!cJSON_IsArray(pJsonWateringTypeList)) {
+    const cJSON *const json_watering_type_list =
+        cJSON_GetObjectItemCaseSensitive(json_root, "watering_type");
+    if (!cJSON_IsArray(json_watering_type_list)) {
       throw std::runtime_error("Illegal object type watering_type.");
     }
 
-    const cJSON *pJsonWateringType = nullptr;
-    cJSON_ArrayForEach(pJsonWateringType, pJsonWateringTypeList) {
+    const cJSON *json_watering_type = nullptr;
+    cJSON_ArrayForEach(json_watering_type, json_watering_type_list) {
       WateringType wateringType;
 
       // Watering type name
-      const cJSON *const pJsonType =
-          cJSON_GetObjectItemCaseSensitive(pJsonWateringType, "type");
-      if (!cJSON_IsString(pJsonType)) {
+      const cJSON *const json_type =
+          cJSON_GetObjectItemCaseSensitive(json_watering_type, "type");
+      if (!cJSON_IsString(json_type)) {
         throw std::runtime_error("Illegal object type \"type\".");
       }
-      wateringType.WateringType = pJsonType->valuestring;
+      wateringType.WateringType = json_type->valuestring;
 
       // Day Span
-      const cJSON *const pJsonDaySpan =
-          cJSON_GetObjectItemCaseSensitive(pJsonWateringType, "day_span");
-      if (!cJSON_IsNumber(pJsonDaySpan)) {
+      const cJSON *const json_day_span =
+          cJSON_GetObjectItemCaseSensitive(json_watering_type, "day_span");
+      if (!cJSON_IsNumber(json_day_span)) {
         throw std::runtime_error("Illegal object type day_span.");
       }
-      wateringType.DaySpan = pJsonDaySpan->valueint;
+      wateringType.DaySpan = json_day_span->valueint;
 
       // WateringHour
-      std::vector<std::int32_t> wateringHours;
-      const cJSON *const pJsonWateringHourList =
-          cJSON_GetObjectItemCaseSensitive(pJsonWateringType, "watering_hour");
-      if (!cJSON_IsArray(pJsonWateringHourList)) {
+      std::vector<std::int32_t> watering_hours;
+      const cJSON *const json_watering_hour_list =
+          cJSON_GetObjectItemCaseSensitive(json_watering_type, "watering_hour");
+      if (!cJSON_IsArray(json_watering_hour_list)) {
         throw std::runtime_error("Illegal object type WateringHourList.");
       }
-      const cJSON *pJsonWateringHour = nullptr;
-      cJSON_ArrayForEach(pJsonWateringHour, pJsonWateringHourList) {
-        if (!cJSON_IsNumber(pJsonWateringHour)) {
+      const cJSON *json_watering_hour = nullptr;
+      cJSON_ArrayForEach(json_watering_hour, json_watering_hour_list) {
+        if (!cJSON_IsNumber(json_watering_hour)) {
           throw std::runtime_error("Illegal object type weatherArea.");
         }
-        wateringType.WateringHours.push_back(pJsonWateringHour->valueint);
+        wateringType.WateringHours.push_back(json_watering_hour->valueint);
       }
 
-      m_WateringTypeDict.insert(
+      watering_type_dict_.insert(
           std::make_pair(wateringType.WateringType, wateringType));
     }
   }
   {
     // Temperature Watering
-    const cJSON *const pJsonTemperatureWateringList =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "temperature_watering");
-    if (!cJSON_IsArray(pJsonTemperatureWateringList)) {
+    const cJSON *const json_temperature_watering_list =
+        cJSON_GetObjectItemCaseSensitive(json_root, "temperature_watering");
+    if (!cJSON_IsArray(json_temperature_watering_list)) {
       throw std::runtime_error("Illegal object type watering_type.");
     }
 
-    const cJSON *pJsonTemparatureWatering = nullptr;
-    cJSON_ArrayForEach(pJsonTemparatureWatering, pJsonTemperatureWateringList) {
+    const cJSON *json_temperature_watering = nullptr;
+    cJSON_ArrayForEach(json_temperature_watering, json_temperature_watering_list) {
       TemperatureWatering temperatureWatering;
 
       // UnderTemp
-      const cJSON *const pJsonTemparature = cJSON_GetObjectItemCaseSensitive(
-          pJsonTemparatureWatering, "temperature");
-      if (!cJSON_IsNumber(pJsonTemparature)) {
+      const cJSON *const json_temperature = cJSON_GetObjectItemCaseSensitive(
+          json_temperature_watering, "temperature");
+      if (!cJSON_IsNumber(json_temperature)) {
         throw std::runtime_error("Illegal object type temperature.");
       }
-      temperatureWatering.Temperature = pJsonTemparature->valueint;
+      temperatureWatering.Temperature = json_temperature->valueint;
 
       // NormalType
-      const cJSON *const pJsonNormalType = cJSON_GetObjectItemCaseSensitive(
-          pJsonTemparatureWatering, "normal_type");
-      if (!cJSON_IsString(pJsonNormalType)) {
+      const cJSON *const json_normal_type = cJSON_GetObjectItemCaseSensitive(
+          json_temperature_watering, "normal_type");
+      if (!cJSON_IsString(json_normal_type)) {
         throw std::runtime_error("Illegal object type normal_type.");
       }
-      temperatureWatering.NormalType = pJsonNormalType->valuestring;
+      temperatureWatering.NormalType = json_normal_type->valuestring;
 
       // RainType
-      const cJSON *const pJsonRainType = cJSON_GetObjectItemCaseSensitive(
-          pJsonTemparatureWatering, "rain_type");
-      if (!cJSON_IsString(pJsonRainType)) {
+      const cJSON *const json_rain_type = cJSON_GetObjectItemCaseSensitive(
+          json_temperature_watering, "rain_type");
+      if (!cJSON_IsString(json_rain_type)) {
         throw std::runtime_error("Illegal object type rain_type.");
       }
-      temperatureWatering.RainType = pJsonRainType->valuestring;
+      temperatureWatering.RainType = json_rain_type->valuestring;
 
-      m_TemperatureWateringList.push_back(temperatureWatering);
+      temperature_watering_list_.push_back(temperatureWatering);
     }
     // Sort
     std::sort(
-        m_TemperatureWateringList.begin(), m_TemperatureWateringList.end(),
+        temperature_watering_list_.begin(), temperature_watering_list_.end(),
         [](const TemperatureWatering &left, const TemperatureWatering &right) {
           return left.Temperature < right.Temperature;
         });
   }
   {
     // Month To Type (could not get Wether forecast)
-    const cJSON *const pJsonMonthToTypeList =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "month_to_type");
-    if (!cJSON_IsArray(pJsonMonthToTypeList)) {
+    const cJSON *const json_month_to_type_list =
+        cJSON_GetObjectItemCaseSensitive(json_root, "month_to_type");
+    if (!cJSON_IsArray(json_month_to_type_list)) {
       throw std::runtime_error("Illegal object type month_to_type.");
     }
 
-    const cJSON *pJsonMonthToTypeIter = nullptr;
-    cJSON_ArrayForEach(pJsonMonthToTypeIter, pJsonMonthToTypeList) {
-      if (!cJSON_IsObject(pJsonMonthToTypeIter)) {
+    const cJSON *json_month_to_type_iter = nullptr;
+    cJSON_ArrayForEach(json_month_to_type_iter, json_month_to_type_list) {
+      if (!cJSON_IsObject(json_month_to_type_iter)) {
         throw std::runtime_error("Illegal object type month_to_type.");
       }
-      const cJSON *pJsonMonthToType = pJsonMonthToTypeIter->child;
-      if (!pJsonMonthToType || !pJsonMonthToType->string) {
+      const cJSON *json_month_to_type = json_month_to_type_iter->child;
+      if (!json_month_to_type || !json_month_to_type->string) {
         throw std::runtime_error("Illegal object type month_to_type.");
       }
-      m_MonthToTypeDict.insert(std::make_pair(pJsonMonthToType->string,
-                                              pJsonMonthToType->valuestring));
+      month_to_type_dict_.insert(std::make_pair(json_month_to_type->string,
+                                              json_month_to_type->valuestring));
     }
   }
   {
     // Valve Power Control
-    const cJSON *const pJsonValvePowerControl =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "valve_power_control");
-    if (!cJSON_IsObject(pJsonValvePowerControl)) {
+    const cJSON *const json_valve_power_control =
+        cJSON_GetObjectItemCaseSensitive(json_root, "valve_power_control");
+    if (!cJSON_IsObject(json_valve_power_control)) {
       throw std::runtime_error("Illegal object type valve_power_control.");
     }
 
     // Base Voltage
-    const cJSON *const pJsonBaseVoltage = cJSON_GetObjectItemCaseSensitive(
-        pJsonValvePowerControl, "base_voltage");
-    if (!cJSON_IsNumber(pJsonBaseVoltage)) {
+    const cJSON *const json_base_voltage = cJSON_GetObjectItemCaseSensitive(
+        json_valve_power_control, "base_voltage");
+    if (!cJSON_IsNumber(json_base_voltage)) {
       throw std::runtime_error("Illegal object type base_voltage.");
     }
-    m_BaseVoltage = pJsonBaseVoltage->valuedouble;
+    base_voltage_ = json_base_voltage->valuedouble;
 
     // BaseRate
-    const cJSON *const pJsonBaseRate =
-        cJSON_GetObjectItemCaseSensitive(pJsonValvePowerControl, "base_rate");
-    if (!cJSON_IsNumber(pJsonBaseRate)) {
+    const cJSON *const json_base_rate =
+        cJSON_GetObjectItemCaseSensitive(json_valve_power_control, "base_rate");
+    if (!cJSON_IsNumber(json_base_rate)) {
       throw std::runtime_error("Illegal object type base_rate.");
     }
-    m_BaseRate = pJsonBaseRate->valuedouble;
+    base_rate_ = json_base_rate->valuedouble;
 
     // Voltage Rate
-    const cJSON *const pJsonVoltageRate = cJSON_GetObjectItemCaseSensitive(
-        pJsonValvePowerControl, "voltage_rate");
-    if (!cJSON_IsNumber(pJsonVoltageRate)) {
+    const cJSON *const json_voltage_rate = cJSON_GetObjectItemCaseSensitive(
+        json_valve_power_control, "voltage_rate");
+    if (!cJSON_IsNumber(json_voltage_rate)) {
       throw std::runtime_error("Illegal object type voltage_rate.");
     }
-    m_VoltageRate = pJsonVoltageRate->valuedouble;
+    voltage_rate_ = json_voltage_rate->valuedouble;
   }
 
-  m_IsActive = true;
+  is_active_ = true;
   return true;
 }
 
@@ -398,9 +398,9 @@ bool WateringSetting::Save(const std::string &body) {
 
 bool WateringSetting::Load(std::string &body) {
   body.clear();
-  const bool isReadOk =
+  const bool is_read_ok =
       FileSystem::Read(WateringSetting::SETTING_FILE_NAME, body);
-  if (!isReadOk) {
+  if (!is_read_ok) {
     return false;
   }
   return true;

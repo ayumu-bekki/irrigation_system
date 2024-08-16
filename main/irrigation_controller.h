@@ -4,20 +4,20 @@
 // (C)2021 bekki.jp
 
 // Include ----------------------
-#include <memory>
 #include <cstdint>
+#include <memory>
 
 #include "irrigation_interface.h"
 #include "schedule_manager.h"
+#include "valve_executor.h"
 #include "valve_task.h"
 #include "voltage_check_task.h"
+#include "water_flow_sensor.h"
 #include "water_level_checker.h"
 #include "watering_record.h"
 #include "watering_setting.h"
 #include "weather_forecast.h"
 #include "wifi_manager.h"
-#include "water_flow_sensor.h"
-#include "valve_executor.h"
 
 namespace IrrigationSystem {
 
@@ -55,7 +55,7 @@ class IrrigationController final
   const WateringSetting& GetWateringSetting() const override;
 
   /// (IrrigationInterface:override)
-  void SaveLastWateringEpoch(const std::time_t wateringEpoch) override;
+  void SaveLastWateringEpoch(const std::time_t watering_epoch) override;
 
   /// (IrrigationInterface:override)
   std::time_t GetLastWateringEpoch() const override;
@@ -79,23 +79,23 @@ class IrrigationController final
   int32_t GetWaterFlowHz() override;
 
  private:
-  WifiManager m_WifiManager;
-  ValveTaskUniquePtr m_ValveTask;
-  ScheduleManagerSharedPtr m_ScheduleManager;
-  WeatherForecast m_WeatherForecast;
-  WateringSetting m_WateringSetting;
-  WateringRecord m_WateringRecord;
+  WifiManager wifi_manager_;
+  ValveTaskUniquePtr valve_task_;
+  ScheduleManagerSharedPtr schedule_manager_;
+  WeatherForecast weather_forecast_;
+  WateringSetting watering_setting_;
+  WateringRecord watering_record_;
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  VoltageCheckTask m_VoltageCheckTask;
+  VoltageCheckTask voltage_check_task_;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  WaterLevelChecker m_WaterLevelChecker;
+  WaterLevelChecker water_level_checker_;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  WaterFlowSensor m_WaterLevelSensor;
+  WaterFlowSensor water_level_sensor_;
 #endif
 };
 

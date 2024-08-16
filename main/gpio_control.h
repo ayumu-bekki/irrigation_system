@@ -6,28 +6,25 @@
 // Include ----------------------
 #include <stdint.h>
 
-namespace IrrigationSystem {
-namespace GPIO {
+namespace IrrigationSystem::GPIO {
 
 /// Init GPIO (Output)
-void InitOutput(const int32_t gpioNumber, const int32_t level = 0);
+void InitOutput(const int32_t gpio_num, const int32_t level = 0);
 
 /// Set GPIO Level (Output)
-void SetLevel(const int32_t gpioNumber, const int32_t level);
+void SetLevel(const int32_t gpio_num, const int32_t level);
 
 /// Init GPIO (Input)
-void InitInput(const int32_t gpioNumber);
-
-
+void InitInput(const int32_t gpio_num);
 
 /// Init ADC (Input)
-void InitAdc(const int32_t adcChannelNo);
+void InitAdc(const int32_t adc_channel_no);
 
 /// Get ADC Voltage (Input) [mV]
-uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round = 1);
+uint32_t GetAdcVoltage(const int32_t adc_channel_no, const int32_t round = 1);
 
-}  // namespace GPIO
-}  // namespace IrrigationSystem
+}  // namespace IrrigationSystem::GPIO
 
 #endif  // GPIO_H_
+
 // EOF

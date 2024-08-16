@@ -21,15 +21,16 @@ class ManagementTask final : public Task {
 
  public:
   explicit ManagementTask(
-      const IrrigationInterfaceWeakPtr pIrrigationInterface);
+      const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Update() override;
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
 };
 
 }  // namespace IrrigationSystem
 
 #endif  // MANAGEMENT_TASK_H_
+
 // EOF

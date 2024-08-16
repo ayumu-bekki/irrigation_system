@@ -20,7 +20,7 @@ class HttpdServerTask final : public Task {
 
  public:
   explicit HttpdServerTask(
-      const IrrigationInterfaceWeakPtr pIrrigationInterface);
+      const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Initialize() override;
 
@@ -31,20 +31,20 @@ class HttpdServerTask final : public Task {
   void StopWebServer();
 
  private:
-  static esp_err_t RootHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t ManualWateringHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t EmergencyStopHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t UploadSettingHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t DownloadSettingHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t DeleteSettingHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t GetVoltageHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t GetWaterLevelHandler(httpd_req_t *pHttpRequestData);
-  static esp_err_t ErrorNotFoundHandler(httpd_req_t *pHttpRequestData,
+  static esp_err_t RootHandler(httpd_req_t *request_data);
+  static esp_err_t ManualWateringHandler(httpd_req_t *request_data);
+  static esp_err_t EmergencyStopHandler(httpd_req_t *request_data);
+  static esp_err_t UploadSettingHandler(httpd_req_t *request_data);
+  static esp_err_t DownloadSettingHandler(httpd_req_t *request_data);
+  static esp_err_t DeleteSettingHandler(httpd_req_t *request_data);
+  static esp_err_t GetVoltageHandler(httpd_req_t *request_data);
+  static esp_err_t GetWaterLevelHandler(httpd_req_t *request_data);
+  static esp_err_t ErrorNotFoundHandler(httpd_req_t *request_data,
                                         httpd_err_code_t errCode);
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-  httpd_handle_t m_HttpdHandle;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
+  httpd_handle_t httpd_handle_;
 };
 
 }  // namespace IrrigationSystem

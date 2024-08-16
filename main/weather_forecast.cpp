@@ -20,22 +20,22 @@ extern const uint8_t CERT_JMA_ROOT_CA_PEM[] asm(
 namespace IrrigationSystem {
 
 WeatherForecast::WeatherForecast()
-    : m_RequestStatus(NOT_REQUEST),
-      m_CurrentWeatherCode(0),
-      m_CurrentMaxTemperature(0),
-      m_JMAAreaPathCode(0),
-      m_JMAAreaForecastLocalCode(0),
-      m_JMAAMeDASObservationPointNumber(0) {}
+    : request_status_(NOT_REQUEST),
+      current_weather_code_(0),
+      current_max_temperature_(0),
+      jma_area_path_code_(0),
+      jma_area_forecast_local_code_(0),
+      jma_amedas_observation_point_number_(0) {}
 
 void WeatherForecast::Initialize() { *this = WeatherForecast(); }
 
 /// Set JMA Parameter
-void WeatherForecast::SetJMAParamter(const std::int32_t areaPathCode,
-                                     const std::int32_t localCode,
-                                     const std::int32_t AMeDASPoint) {
-  m_JMAAreaPathCode = areaPathCode;
-  m_JMAAreaForecastLocalCode = localCode;
-  m_JMAAMeDASObservationPointNumber = AMeDASPoint;
+void WeatherForecast::SetJMAParamter(const std::int32_t area_path_code,
+                                     const std::int32_t local_code,
+                                     const std::int32_t amedas_point) {
+  jma_area_path_code_ = area_path_code;
+  jma_area_forecast_local_code_ = local_code;
+  jma_amedas_observation_point_number_ = amedas_point;
 }
 
 /// Obtaining weather forecast information via the JMA API
@@ -43,7 +43,7 @@ void WeatherForecast::Request() {
   // Weather Forecast API by JMA
   std::stringstream requestUrl;
   requestUrl << "https://www.jma.go.jp/bosai/forecast/data/forecast/"
-             << m_JMAAreaPathCode << ".json";
+             << jma_area_path_code_ << ".json";
 
   HttpRequest httpRequest;
   httpRequest.EnableTLS(reinterpret_cast<const char *>(CERT_JMA_ROOT_CA_PEM));
@@ -56,15 +56,15 @@ void WeatherForecast::Request() {
 }
 
 WeatherForecast::RequestStatus WeatherForecast::GetRequestStatus() const {
-  return m_RequestStatus;
+  return request_status_;
 }
 
 int WeatherForecast::GetCurrentWeatherCode() const {
-  return m_CurrentWeatherCode;
+  return current_weather_code_;
 }
 
 int WeatherForecast::GetCurrentMaxTemperature() const {
-  return m_CurrentMaxTemperature;
+  return current_max_temperature_;
 }
 
 bool WeatherForecast::IsRain() const {
@@ -72,17 +72,17 @@ bool WeatherForecast::IsRain() const {
   static constexpr int WEATHER_TOP_CATEGORY_SNOW = 4;
   static constexpr int WEATHER_TOP_CATEGORY_DIGITS = 100;
   const int weatherCodeTopCategory =
-      (m_CurrentWeatherCode / WEATHER_TOP_CATEGORY_DIGITS);
+      (current_weather_code_ / WEATHER_TOP_CATEGORY_DIGITS);
   return (weatherCodeTopCategory == WEATHER_TOP_CATEGORY_RAIN ||
           weatherCodeTopCategory == WEATHER_TOP_CATEGORY_SNOW);
 }
 
-void WeatherForecast::Parse(const std::string &jsonStr) {
-  m_RequestStatus = FAILED;
+void WeatherForecast::Parse(const std::string &json_str) {
+  request_status_ = FAILED;
   cJSON *pJsonRoot = nullptr;
 
   try {
-    pJsonRoot = cJSON_Parse(jsonStr.c_str());
+    pJsonRoot = cJSON_Parse(json_str.c_str());
     if (!pJsonRoot) {
       const char *error_ptr = cJSON_GetErrorPtr();
       if (error_ptr) {
@@ -160,7 +160,7 @@ void WeatherForecast::Parse(const std::string &jsonStr) {
         }
 
         const int code = std::stoi(pJsonCode->valuestring);
-        if (code == m_JMAAreaForecastLocalCode) {
+        if (code == jma_area_forecast_local_code_) {
           const cJSON *const pJsonWeatherCodeList =
               cJSON_GetObjectItemCaseSensitive(pJsonWeatherAreas,
                                                "weatherCodes");
@@ -183,7 +183,7 @@ void WeatherForecast::Parse(const std::string &jsonStr) {
             throw std::runtime_error("Illegal object type TimeSeriesWeather.");
           }
 
-          m_CurrentWeatherCode = std::stoi(pJsonWeatherCode->valuestring);
+          current_weather_code_ = std::stoi(pJsonWeatherCode->valuestring);
 
           break;
         }
@@ -220,7 +220,7 @@ void WeatherForecast::Parse(const std::string &jsonStr) {
         }
 
         const int code = std::stoi(pJsonCode->valuestring);
-        if (code == m_JMAAMeDASObservationPointNumber) {
+        if (code == jma_amedas_observation_point_number_) {
           const cJSON *const pJsonTemperatureList =
               cJSON_GetObjectItemCaseSensitive(pJsonTemperatureAreas, "temps");
           if (!cJSON_IsArray(pJsonTemperatureList)) {
@@ -241,13 +241,13 @@ void WeatherForecast::Parse(const std::string &jsonStr) {
             throw std::runtime_error("Illegal object type temperature.");
           }
 
-          m_CurrentMaxTemperature = std::stoi(pJsonTemperature->valuestring);
+          current_max_temperature_ = std::stoi(pJsonTemperature->valuestring);
           break;
         }
       }
     }
 
-    m_RequestStatus = ACQUIRED;
+    request_status_ = ACQUIRED;
     ESP_LOGD(TAG, "WeatherForecast Parse OK.");
 
   } catch (const std::invalid_argument &e) {
@@ -263,7 +263,7 @@ void WeatherForecast::Parse(const std::string &jsonStr) {
   cJSON_Delete(pJsonRoot);
 }
 
-const char *WeatherForecast::WeatherCodeToStr(const int weatherCode) {
+const char *WeatherForecast::WeatherCodeToStr(const int weather_code) {
   static const std::unordered_map<int, std::string> WEATHER_CODE_TO_STR_MAP = {
       {100, "CLEAR"},
       {101, "PARTLY CLOUDY"},
@@ -432,7 +432,7 @@ const char *WeatherForecast::WeatherCodeToStr(const int weatherCode) {
 
   static constexpr char EMPTY[] = "";
   std::unordered_map<int, std::string>::const_iterator iter =
-      WEATHER_CODE_TO_STR_MAP.find(weatherCode);
+      WEATHER_CODE_TO_STR_MAP.find(weather_code);
   if (iter == WEATHER_CODE_TO_STR_MAP.end()) {
     return EMPTY;
     ;

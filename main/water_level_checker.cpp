@@ -18,22 +18,22 @@ namespace IrrigationSystem {
 
 WaterLevelChecker::WaterLevelChecker()
     : Task(TASK_NAME, PRIORITY, CORE_ID),
-      m_CheckSec(0),
-      m_WaterLevel(0.0f),
-      m_pwm() {}
+      check_sec_(0),
+      water_level_(0.0f),
+      pwm_() {}
 
 void WaterLevelChecker::Initialize() {
   constexpr uint32_t VALVE_FREQUENCY = 1000000;  // 1MHz
   constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_1;
-  m_pwm.Initialize(
+  pwm_.Initialize(
       static_cast<ledc_channel_t>(LEDC_CHANNEL_1), VALVE_LEDC_TIMER,
       static_cast<gpio_num_t>(CONFIG_WATER_LEVEL_CHECK_OUTPUT_GPIO_NO),
       VALVE_FREQUENCY);
 }
 
 void WaterLevelChecker::Update() {
-  if (m_CheckSec < Util::GetEpoch()) {
-    m_pwm.SetRate(0.5f);
+  if (check_sec_ < Util::GetEpoch()) {
+    pwm_.SetRate(0.5f);
 
     static const int32_t WATER_LEVEL_VOLTAGE_CHECK_PRE_WARMING_MILISEC = 100;
     Util::SleepMillisecond(WATER_LEVEL_VOLTAGE_CHECK_PRE_WARMING_MILISEC);
@@ -42,27 +42,27 @@ void WaterLevelChecker::Update() {
     const uint32_t adcVoltage = GPIO::GetAdcVoltage(
         CONFIG_WATER_LEVEL_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
 
-    m_pwm.SetRate(0.0f);
+    pwm_.SetRate(0.0f);
 
     const int32_t minVoltage = 420;
     const int32_t maxVoltage = 1900;
 
-    m_WaterLevel = std::max(
+    water_level_ = std::max(
         0.0f, std::min(1.0f, ((static_cast<float>(adcVoltage) - minVoltage) /
                               (float)(maxVoltage - minVoltage))));
     ESP_LOGI(TAG, "WaterLevelCheck adcVolt:%dmV min:%dmv max:%dmv rate:%0.2f",
-             adcVoltage, minVoltage, maxVoltage, m_WaterLevel);
+             adcVoltage, minVoltage, maxVoltage, water_level_);
 
-    m_CheckSec = Util::GetEpoch() + CHECK_WATER_LEVEL_INTERVAL_SEC;
+    check_sec_ = Util::GetEpoch() + CHECK_WATER_LEVEL_INTERVAL_SEC;
   }
 
   static const int32_t NEXT_CHECK_MILLISECOND = 1000;
   Util::SleepMillisecond(NEXT_CHECK_MILLISECOND);
 }
 
-void WaterLevelChecker::Check() { m_CheckSec = 0; }
+void WaterLevelChecker::Check() { check_sec_ = 0; }
 
-float WaterLevelChecker::GetWaterLevel() const { return m_WaterLevel; }
+float WaterLevelChecker::GetWaterLevel() const { return water_level_; }
 
 }  // namespace IrrigationSystem
 

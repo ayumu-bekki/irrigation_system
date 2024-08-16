@@ -19,10 +19,10 @@ namespace {
 
 namespace IrrigationSystem {
 
-ValveTask::ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
+ValveTask::ValveTask(const IrrigationInterfaceWeakPtr irrigation_interface)
     : Task(TASK_NAME, PRIORITY, CORE_ID),
-      m_pIrrigationInterface(pIrrigationInterface) {
-  m_pwm.Initialize(
+      irrigation_interface_(irrigation_interface) {
+  pwm_.Initialize(
       static_cast<ledc_channel_t>(LEDC_CHANNEL_0), VALVE_LEDC_TIMER,
       static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO), VALVE_FREQUENCY);
 }
@@ -70,35 +70,35 @@ void ValveTask::Open() {
   }
   current_executor_->Start();
 
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     return;
   }
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  irrigationInterface->StartWaterMeasurement();
+  irrigation_interface->StartWaterMeasurement();
 #endif
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  const float voltage = irrigationInterface->GetMainVoltage();
-  const WateringSetting &wateringSetting =
-      irrigationInterface->GetWateringSetting();
+  const float voltage = irrigation_interface->GetMainVoltage();
+  const WateringSetting &watering_setting =
+      irrigation_interface->GetWateringSetting();
 
   const float rate = std::max(
-        0.0f, std::min(1.0f, wateringSetting.GetValvePowerBaseRate() -
+        0.0f, std::min(1.0f, watering_setting.GetValvePowerBaseRate() -
                                  ((voltage -
-                                   wateringSetting.GetValvePowerBaseVoltage()) *
-                                  wateringSetting.GetValvePowerVoltageRate())));
+                                   watering_setting.GetValvePowerBaseVoltage()) *
+                                  watering_setting.GetValvePowerVoltageRate())));
   ESP_LOGI(TAG, "Valve voltage rate Voltage:%fV Rate:%d", voltage,
            static_cast<int>(rate * 100));
-  m_pwm.SetRate(rate);
+  pwm_.SetRate(rate);
 #else
-  m_pwm.SetRate(1.0f);
+  pwm_.SetRate(1.0f);
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  irrigationInterface->CheckWaterLevel();
+  irrigation_interface->CheckWaterLevel();
 #endif
 
 }
@@ -109,21 +109,21 @@ void ValveTask::Close() {
   }
 
 
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     return;
   }
 
-  m_pwm.SetRate(0);
+  pwm_.SetRate(0);
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  int water_flow_counter = irrigationInterface->FinishWaterMeasurement();
+  int water_flow_counter = irrigation_interface->FinishWaterMeasurement();
   current_executor_->SetWaterAmount(water_flow_counter);
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  irrigationInterface->CheckWaterLevel();
+  irrigation_interface->CheckWaterLevel();
 #endif
 
   current_executor_->Finish();

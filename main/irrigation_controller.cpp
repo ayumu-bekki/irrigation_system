@@ -21,19 +21,19 @@
 namespace IrrigationSystem {
 
 IrrigationController::IrrigationController()
-    : m_WifiManager(),
-      m_ValveTask(),
-      m_ScheduleManager(),
-      m_WeatherForecast(),
-      m_WateringSetting(),
-      m_WateringRecord()
+    : wifi_manager_(),
+      valve_task_(),
+      schedule_manager_(),
+      weather_forecast_(),
+      watering_setting_(),
+      watering_record_()
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
       ,
-      m_VoltageCheckTask()
+      voltage_check_task_()
 #endif
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
       ,
-      m_WaterLevelChecker()
+      water_level_checker_()
 #endif
 {
 }
@@ -70,7 +70,7 @@ void IrrigationController::Start() {
   ESP_ERROR_CHECK(ret);
 
   // WiFi
-  m_WifiManager.Connect();
+  wifi_manager_.Connect();
 
   // Timezone init
   Util::InitTimeZone();
@@ -82,9 +82,9 @@ void IrrigationController::Start() {
   FileSystem::Mount();
 
   // Read Setting Data
-  std::string rawSettingData;
-  if (WateringSetting::Load(rawSettingData)) {
-    if (!m_WateringSetting.SetSettingData(rawSettingData)) {
+  std::string raw_setting_data;
+  if (WateringSetting::Load(raw_setting_data)) {
+    if (!watering_setting_.SetSettingData(raw_setting_data)) {
       ESP_LOGE(TAG, "Invlaid Setting data");
     }
   } else {
@@ -92,33 +92,33 @@ void IrrigationController::Start() {
   }
 
   // Read Last Watering Date
-  m_WateringRecord.Load();
+  watering_record_.Load();
 
   // MainTask
-  ManagementTask managementTask(weak_from_this());
-  HttpdServerTask httpdServerTask(weak_from_this());
-  WateringButtonTask wateringButtonTask(weak_from_this());
-  m_ScheduleManager = std::make_shared<ScheduleManager>(weak_from_this());
-  m_ValveTask = std::make_unique<ValveTask>(weak_from_this());
+  ManagementTask management_task(weak_from_this());
+  HttpdServerTask httpd_server_task(weak_from_this());
+  WateringButtonTask watering_button_task(weak_from_this());
+  schedule_manager_ = std::make_shared<ScheduleManager>(weak_from_this());
+  valve_task_ = std::make_unique<ValveTask>(weak_from_this());
 
-  managementTask.Start();
-  httpdServerTask.Start();
-  wateringButtonTask.Start();
+  management_task.Start();
+  httpd_server_task.Start();
+  watering_button_task.Start();
 
-  if (m_ValveTask) {
-    m_ValveTask->Start();
+  if (valve_task_) {
+    valve_task_->Start();
   }
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  m_VoltageCheckTask.Start();
+  voltage_check_task_.Start();
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  m_WaterLevelChecker.Start();
+  water_level_checker_.Start();
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  m_WaterLevelSensor.Start();
+  water_level_sensor_.Start();
 #endif
 
   // Monitoring LED Off
@@ -134,53 +134,53 @@ void IrrigationController::Start() {
 }
 
 void IrrigationController::AddValveExecutor(ValveExecutorSharedPtr executor) {
-  if (m_ValveTask) {
-    m_ValveTask->AddExecutor(std::move(executor));
+  if (valve_task_) {
+    valve_task_->AddExecutor(std::move(executor));
   }
 }
 
 ValveExecutorSharedPtr IrrigationController::GetCurrentValveExecutor() {
-  if (m_ValveTask) {
-    return m_ValveTask->GetCurrentExecutor();
+  if (valve_task_) {
+    return valve_task_->GetCurrentExecutor();
   }
   return nullptr;
 }
 
 void IrrigationController::ForceStopValve() {
-  if (m_ValveTask) {
-    m_ValveTask->ForceStop();
+  if (valve_task_) {
+    valve_task_->ForceStop();
   }
 }
 
 const ScheduleManagerWeakPtr IrrigationController::GetScheduleManager() {
-  return m_ScheduleManager;
+  return schedule_manager_;
 }
 
 WeatherForecast& IrrigationController::GetWeatherForecast() {
-  return m_WeatherForecast;
+  return weather_forecast_;
 }
 
 WateringSetting& IrrigationController::GetWateringSetting() {
-  return m_WateringSetting;
+  return watering_setting_;
 }
 
 const WateringSetting& IrrigationController::GetWateringSetting() const {
-  return m_WateringSetting;
+  return watering_setting_;
 }
 
 void IrrigationController::SaveLastWateringEpoch(
-    const std::time_t wateringEpoch) {
-  m_WateringRecord.SetLastWateringEpoch(wateringEpoch);
-  m_WateringRecord.Save();
+    const std::time_t watering_epoch) {
+  watering_record_.SetLastWateringEpoch(watering_epoch);
+  watering_record_.Save();
 }
 
 std::time_t IrrigationController::GetLastWateringEpoch() const {
-  return m_WateringRecord.GetLastWateringEpoch();
+  return watering_record_.GetLastWateringEpoch();
 }
 
 float IrrigationController::GetMainVoltage() const {
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  return m_VoltageCheckTask.GetVoltage();
+  return voltage_check_task_.GetVoltage();
 #else
   return 0.0f;
 #endif
@@ -188,42 +188,39 @@ float IrrigationController::GetMainVoltage() const {
 
 void IrrigationController::CheckWaterLevel() {
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  m_WaterLevelChecker.Check();
+  water_level_checker_.Check();
 #endif
 }
 
 float IrrigationController::GetWaterLevel() const {
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  return m_WaterLevelChecker.GetWaterLevel();
+  return water_level_checker_.GetWaterLevel();
 #else
   return 0.0f;
 #endif
 }
 
-void IrrigationController::StartWaterMeasurement()
-{
+void IrrigationController::StartWaterMeasurement() {
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  m_WaterLevelSensor.StartMeasurement();
+  water_level_sensor_.StartMeasurement();
 #endif
 }
 
-int32_t IrrigationController::FinishWaterMeasurement()
-{
+int32_t IrrigationController::FinishWaterMeasurement() {
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  return m_WaterLevelSensor.FinishMeasurement();
+  return water_level_sensor_.FinishMeasurement();
 #else
   return 0;
 #endif
 }
 
 int32_t IrrigationController::GetWaterFlowHz() {
- #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  return m_WaterLevelSensor.GetSensorHz();
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  return water_level_sensor_.GetSensorHz();
 #else
   return 0;
 #endif
 }
-
 
 }  // namespace IrrigationSystem
 

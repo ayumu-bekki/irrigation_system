@@ -48,34 +48,35 @@ void Unmount() {
 }
 
 /// Write
-bool Write(const std::string& filePath, const std::string& body) {
-  std::fstream fileOpenStream;
-  fileOpenStream.open(base_path + std::string("/") + filePath, std::ios::out);
-  if (!fileOpenStream.is_open()) {
+bool Write(const std::string& file_path, const std::string& body) {
+  std::fstream file_open_stream;
+  file_open_stream.open(base_path + std::string("/") + file_path,
+                        std::ios::out);
+  if (!file_open_stream.is_open()) {
     ESP_LOGE(TAG, "Failed to open file for writing");
     return false;
   }
-  fileOpenStream << body << std::flush;
+  file_open_stream << body << std::flush;
   return true;
 }
 
 /// Read
-bool Read(const std::string& filePath, std::string& body) {
-  std::fstream fileReadStream;
-  fileReadStream.open(base_path + std::string("/") + filePath, std::ios::in);
-  if (!fileReadStream.is_open()) {
+bool Read(const std::string& file_path, std::string& body) {
+  std::fstream file_read_stream;
+  file_read_stream.open(base_path + std::string("/") + file_path, std::ios::in);
+  if (!file_read_stream.is_open()) {
     ESP_LOGE(TAG, "Failed to open file for writing");
     return false;
   }
   body = static_cast<std::stringstream const&>(std::stringstream()
-                                               << fileReadStream.rdbuf())
+                                               << file_read_stream.rdbuf())
              .str();
   return true;
 }
 
 /// Delete
-bool Delete(const std::string& filePath) {
-  return std::remove((base_path + std::string("/") + filePath).c_str()) == 0;
+bool Delete(const std::string& file_path) {
+  return std::remove((base_path + std::string("/") + file_path).c_str()) == 0;
 }
 
 }  // namespace FileSystem

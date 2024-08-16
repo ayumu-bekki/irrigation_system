@@ -11,35 +11,35 @@
 namespace IrrigationSystem {
 
 ScheduleWatering::ScheduleWatering()
-    : ScheduleBase(), m_pIrrigationInterface(), m_OpenSecond(0) {}
+    : ScheduleBase(), irrigation_interface_(), open_seconds_(0) {}
 
 ScheduleWatering::ScheduleWatering(
-    const IrrigationInterfaceWeakPtr pIrrigationInterface, const int hour,
-    const int minute, const int openSecond)
+    const IrrigationInterfaceWeakPtr irrigation_interface, const int hour,
+    const int minute, const int open_seconds)
     : ScheduleBase(ScheduleBase::STATUS_WAIT, ScheduleWatering::SCHEDULE_NAME,
                    hour, minute, ScheduleWatering::IS_VISIBLE_TASK),
-      m_pIrrigationInterface(pIrrigationInterface),
-      m_OpenSecond(openSecond) {}
+      irrigation_interface_(irrigation_interface),
+      open_seconds_(open_seconds) {}
 
 void ScheduleWatering::Exec() {
   ESP_LOGI(TAG, "Schedule Exec - Watering Executer. %02d:%02d WS:%d", GetHour(),
-           GetMinute(), m_OpenSecond);
+           GetMinute(), open_seconds_);
   SetStatus(STATUS_EXECUTED);
 
-  const IrrigationInterfaceSharedPtr irrigationInterface =
-      m_pIrrigationInterface.lock();
-  if (!irrigationInterface) {
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return;
   }
   
   valve_executor_ = std::make_shared<ValveExecutor>();
-  valve_executor_->SetOpenSeconds(m_OpenSecond);
+  valve_executor_->SetOpenSeconds(open_seconds_);
   valve_executor_->SetStatus(ValveExecutor::ExecutorStatus::EXECUTOR_SCHEDULE);
-  irrigationInterface->AddValveExecutor(valve_executor_);
+  irrigation_interface->AddValveExecutor(valve_executor_);
 
   // Write History
-  irrigationInterface->SaveLastWateringEpoch(Util::GetEpoch());
+  irrigation_interface->SaveLastWateringEpoch(Util::GetEpoch());
 }
 
 int32_t ScheduleWatering::GetWaterFlow() const 

@@ -27,7 +27,7 @@ class IrrigationInterface {
   virtual WeatherForecast& GetWeatherForecast() = 0;
   virtual WateringSetting& GetWateringSetting() = 0;
   virtual const WateringSetting& GetWateringSetting() const = 0;
-  virtual void SaveLastWateringEpoch(const std::time_t wateringEpoch) = 0;
+  virtual void SaveLastWateringEpoch(const std::time_t watering_epoch) = 0;
   virtual std::time_t GetLastWateringEpoch() const = 0;
   virtual float GetMainVoltage() const = 0;
   virtual void CheckWaterLevel() = 0;

@@ -30,9 +30,9 @@ class WaterLevelChecker final : public Task {
   float GetWaterLevel() const;
 
  private:
-  std::time_t m_CheckSec;
-  float m_WaterLevel;
-  Pwm m_pwm;
+  std::time_t check_sec_;
+  float water_level_;
+  Pwm pwm_;
 };
 
 }  // namespace IrrigationSystem

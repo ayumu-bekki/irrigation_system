@@ -15,34 +15,34 @@
 
 namespace IrrigationSystem {
 
-WateringRecord::WateringRecord() : m_LastWateringEpoch(0) {}
+WateringRecord::WateringRecord() : last_watering_epoch_(0) {}
 
 bool WateringRecord::Save() const {
   // Write History
   std::stringstream historyBody;
   historyBody << "{\"last_watering_date\":\""
-              << Util::TimeToStr(Util::EpochToLocalTime(m_LastWateringEpoch))
+              << Util::TimeToStr(Util::EpochToLocalTime(last_watering_epoch_))
               << "\"}";
   return FileSystem::Write(WateringRecord::RECORD_FILE_NAME, historyBody.str());
 }
 
 bool WateringRecord::Load() noexcept {
-  m_LastWateringEpoch = 0;
+  last_watering_epoch_ = 0;
 
   std::string recordBody;
-  const bool isReadOk =
+  const bool is_read_ok =
       FileSystem::Read(WateringRecord::RECORD_FILE_NAME, recordBody);
-  if (!isReadOk) {
+  if (!is_read_ok) {
     ESP_LOGE(TAG, "Failed Read File.");
     return false;
   }
   ESP_LOGV(TAG, "Log Body:%s", recordBody.c_str());
 
   // Parse
-  cJSON* pJsonRoot = nullptr;
+  cJSON* json_root = nullptr;
   try {
-    pJsonRoot = cJSON_Parse(recordBody.c_str());
-    if (!pJsonRoot) {
+    json_root = cJSON_Parse(recordBody.c_str());
+    if (!json_root) {
       const char* error_ptr = cJSON_GetErrorPtr();
       if (error_ptr) {
         throw std::runtime_error(error_ptr);
@@ -50,16 +50,16 @@ bool WateringRecord::Load() noexcept {
       throw std::runtime_error("Json Parse Error.");
     }
 
-    const cJSON* const pJsonLastWateringDate =
-        cJSON_GetObjectItemCaseSensitive(pJsonRoot, "last_watering_date");
-    if (!cJSON_IsString(pJsonLastWateringDate)) {
+    const cJSON* const json_last_watering_date =
+        cJSON_GetObjectItemCaseSensitive(json_root, "last_watering_date");
+    if (!cJSON_IsString(json_last_watering_date)) {
       throw std::runtime_error("Illegal object type weatherAreaCode.");
     }
-    const std::string lastWateringDateStr = pJsonLastWateringDate->valuestring;
+    const std::string last_watering_date_str = json_last_watering_date->valuestring;
 
     tm timeInfo;
-    strptime(lastWateringDateStr.c_str(), "%Y/%m/%d %H:%M:%S", &timeInfo);
-    m_LastWateringEpoch = mktime(&timeInfo);
+    strptime(last_watering_date_str.c_str(), "%Y/%m/%d %H:%M:%S", &timeInfo);
+    last_watering_epoch_ = mktime(&timeInfo);
 
 #if CONFIG_DEBUG != 0
     // show read date
@@ -100,12 +100,12 @@ bool WateringRecord::Delete() {
 }
 #endif  // CONFIG_DEBUG != 0
 
-void WateringRecord::SetLastWateringEpoch(const std::time_t wateringEpoch) {
-  m_LastWateringEpoch = wateringEpoch;
+void WateringRecord::SetLastWateringEpoch(const std::time_t watering_epoch) {
+  last_watering_epoch_ = watering_epoch;
 }
 
 time_t WateringRecord::GetLastWateringEpoch() const {
-  return m_LastWateringEpoch;
+  return last_watering_epoch_;
 }
 
 }  // namespace IrrigationSystem

@@ -22,9 +22,9 @@ class WeatherForecast final {
 
   void Initialize();
 
-  void SetJMAParamter(const std::int32_t areaPathCode,
-                      const std::int32_t localCode,
-                      const std::int32_t AMeDASPoint);
+  void SetJMAParamter(const std::int32_t area_path_code,
+                      const std::int32_t local_code,
+                      const std::int32_t amedas_point);
 
   /// Obtaining weather forecast information via the JMA API
   void Request();
@@ -35,26 +35,26 @@ class WeatherForecast final {
   bool IsRain() const;
 
  private:
-  void Parse(const std::string& jsonStr);
+  void Parse(const std::string& json_str);
 
  public:
-  static const char* WeatherCodeToStr(const int weatherCode);
+  static const char* WeatherCodeToStr(const int weather_code);
 
  private:
-  RequestStatus m_RequestStatus;
-  int m_CurrentWeatherCode;
-  int m_CurrentMaxTemperature;
+  RequestStatus request_status_;
+  int current_weather_code_;
+  int current_max_temperature_;
 
   /// Area path code for weather forecast determination. Tokyo:130010
   /// http://www.jma.go.jp/bosai/common/const/area.json
-  std::int32_t m_JMAAreaPathCode;
+  std::int32_t jma_area_path_code_;
   /// Area number for weather forecast determination. Tokyo:130010 気象庁
   /// 気象警報・注意報等に用いる府県予報区、一次細分区域等のコード
   /// https://www.data.go.jp/data/dataset/mlit_20140919_0758/resource/a2081b13-5b3d-4ac1-9e4a-0a69aa7af0ef
-  std::int32_t m_JMAAreaForecastLocalCode;
+  std::int32_t jma_area_forecast_local_code_;
   /// AMeDAS observation point number for weather forecast determination.
   /// Tokyo:44132
-  std::int32_t m_JMAAMeDASObservationPointNumber;
+  std::int32_t jma_amedas_observation_point_number_;
 };
 
 }  // namespace IrrigationSystem

@@ -4,8 +4,7 @@
 // Include ----------------------
 #include "logger.h"
 
-namespace IrrigationSystem {
-namespace Logger {
+namespace IrrigationSystem::Logger {
 
 void InitializeLogLevel() {
 #if CONFIG_DEBUG != 0
@@ -18,7 +17,6 @@ void InitializeLogLevel() {
 #endif
 }
 
-}  // namespace Logger
-}  // namespace IrrigationSystem
+}  // namespace IrrigationSystem::Logger
 
 // EOF

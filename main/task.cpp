@@ -10,32 +10,32 @@
 namespace IrrigationSystem {
 
 Task::Task(const std::string& taskName, const int priority, const int coreId)
-    : m_Status(TASK_STATUS_READY),
-      m_TaskName(taskName),
-      m_Priority(priority),
-      m_CoreId(coreId) {}
+    : status_(TASK_STATUS_READY),
+      task_name_(taskName),
+      priority_(priority),
+      core_id_(coreId) {}
 
 Task::~Task() { Stop(); }
 
 void Task::Start() {
-  if (m_Status != TASK_STATUS_READY) {
+  if (status_ != TASK_STATUS_READY) {
     return;
   }
-  m_Status = TASK_STATUS_RUN;
-  xTaskCreatePinnedToCore(this->Listener, m_TaskName.c_str(), TASK_STAC_DEPTH,
-                          this, m_Priority, nullptr, m_CoreId);
+  status_ = TASK_STATUS_RUN;
+  xTaskCreatePinnedToCore(this->Listener, task_name_.c_str(), TASK_STAC_DEPTH,
+                          this, priority_, nullptr, core_id_);
 }
 
 void Task::Stop() {
-  if (m_Status != TASK_STATUS_RUN) {
+  if (status_ != TASK_STATUS_RUN) {
     return;
   }
-  m_Status = TASK_STATUS_END;
+  status_ = TASK_STATUS_END;
 }
 
 void Task::Run() {
   Initialize();
-  while (m_Status == TASK_STATUS_RUN) {
+  while (status_ == TASK_STATUS_RUN) {
     Update();
   }
 }

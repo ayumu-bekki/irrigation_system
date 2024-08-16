@@ -22,9 +22,9 @@ namespace IrrigationSystem {
 namespace Util {
 
 /// Sleep
-void SleepMillisecond(const unsigned int sleepMillisecond) {
+void SleepMillisecond(const unsigned int sleep_miliseconds) {
   TickType_t lastWakeTime = xTaskGetTickCount();
-  vTaskDelayUntil(&lastWakeTime, sleepMillisecond / portTICK_PERIOD_MS);
+  vTaskDelayUntil(&lastWakeTime, sleep_miliseconds / portTICK_PERIOD_MS);
 }
 
 /// Init Sntp
@@ -56,9 +56,9 @@ void SyncSntpObtainTime() {
 }
 
 std::time_t GetEpoch() {
-  std::chrono::system_clock::time_point nowTimePoint =
+  std::chrono::system_clock::time_point now_time_point =
       std::chrono::system_clock::now();
-  return std::chrono::system_clock::to_time_t(nowTimePoint);
+  return std::chrono::system_clock::to_time_t(now_time_point);
 }
 
 std::tm EpochToLocalTime(const std::time_t epoch) {
@@ -112,7 +112,7 @@ std::vector<std::string> SplitString(const std::string& str, const char delim) {
 }
 
 /// Get Original Voltage Divider Resistor
-// input outputVoltage[mv] topResistanceValue[kΩ], bottomRegistanceValue[kΩ]
+// input output_voltage[mv] top_resistance_value[kΩ], bottom_registance_value[kΩ]
 // return voltage[V]
 float GetVoltage() {
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
@@ -122,7 +122,7 @@ float GetVoltage() {
   Util::SleepMillisecond(VOLTAGE_ADC_CHECK_DELAY_MILLISECOND);
 
   static const int32_t VOLTAGE_ADC_CHECK_ROUND = 10;
-  const uint32_t adcVoltage = GPIO::GetAdcVoltage(
+  const uint32_t adc_voltage = GPIO::GetAdcVoltage(
       CONFIG_VAOLTAGE_CHECK_INPUT_ADC_CHANNEL_NO, VOLTAGE_ADC_CHECK_ROUND);
 
   GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 0);
@@ -134,9 +134,9 @@ float GetVoltage() {
   static const float BOTTOM_REGISTER =
       CONFIG_VOLTAGE_CHECK_BOTTOM_REGISTER / OHM_TO_KOHM;  // kΩ
   float voltage = Util::GetOriginalVoltageFromDividerRegister(
-      adcVoltage, TOP_REGISTER, BOTTOM_REGISTER);
+      adc_voltage, TOP_REGISTER, BOTTOM_REGISTER);
 
-  ESP_LOGI(TAG, "Voltage:%.2f[V] ADC Voltage:%d[mV]", voltage, adcVoltage);
+  ESP_LOGI(TAG, "Voltage:%.2f[V] ADC Voltage:%d[mV]", voltage, adc_voltage);
   return voltage;
 #else
   return 0.0f;
@@ -144,14 +144,14 @@ float GetVoltage() {
 }
 
 /// Get Original Voltage Divider Resistor
-// input outputVoltage[mv] topResistanceValue[kΩ], bottomRegistanceValue[kΩ]
+// input output_voltage[mv] top_resistance_value[kΩ], bottom_registance_value[kΩ]
 // return voltage[V]
-float GetOriginalVoltageFromDividerRegister(const uint32_t outputVoltage,
-                                            const float topResistanceValue,
-                                            const float bottomRegistanceValue) {
-  const float voltageDivRate =
-      bottomRegistanceValue / (topResistanceValue + bottomRegistanceValue);
-  return outputVoltage / voltageDivRate / 1000.0f;
+float GetOriginalVoltageFromDividerRegister(const uint32_t output_voltage,
+                                            const float top_resistance_value,
+                                            const float bottom_registance_value) {
+  const float voltage_div_rate =
+      bottom_registance_value / (top_resistance_value + bottom_registance_value);
+  return output_voltage / voltage_div_rate / 1000.0f;
 }
 
 }  // namespace Util

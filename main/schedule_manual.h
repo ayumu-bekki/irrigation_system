@@ -25,7 +25,7 @@ class ScheduleManual final : public ScheduleBase {
   int32_t GetWaterFlow() const override;
 
  private:
-  const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
   int32_t water_amount_;
 };
 

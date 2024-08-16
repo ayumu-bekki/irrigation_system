@@ -24,20 +24,20 @@ class ScheduleBase {
  protected:
   ScheduleBase();
   ScheduleBase(const Status status, const std::string& name, const int hour,
-               const int minute, const bool isVisible);
+               const int minute, const bool is_visible);
 
  public:
   virtual ~ScheduleBase() {}
 
   virtual void Exec() = 0;
 
-  bool CanExecute(const std::tm& timeInfo);
+  bool CanExecute(const std::tm& time_info);
 
   Status GetStatus() const;
   void SetStatus(const Status status);
 
   /// Disable if the time has expired.
-  void DisableExpired(const std::tm& timeInfo);
+  void DisableExpired(const std::tm& time_info);
 
   const std::string& GetName() const;
   int GetHour() const;
@@ -53,11 +53,11 @@ class ScheduleBase {
   static const char* StatusToRecordStyle(const ScheduleBase::Status status);
 
  private:
-  Status m_Status;
-  std::string m_Name;
-  unsigned int m_Hour;
-  unsigned int m_Minute;
-  bool m_IsVisible;
+  Status status_;
+  std::string name_;
+  unsigned int hour_;
+  unsigned int minute_;
+  bool is_visible_;
 };
 
 using ScheduleBaseUniquePtr = std::unique_ptr<ScheduleBase>;

@@ -20,49 +20,50 @@ ledc_timer_bit_t CalcFrequencyToBit(const uint32_t frequency) {
   // 14bit  4.8828kHz
   constexpr double ESP32_CLOCK = 12.5e-9;  // 80MHz = 12.5μs
 
-  ledc_timer_bit_t ledcDutyBit = LEDC_TIMER_BIT_MAX;
-  for (int32_t bit = (ledcDutyBit - 1); bit >= LEDC_TIMER_1_BIT; --bit) {
-    const int32_t targetFreq = (1.0 / (ESP32_CLOCK * std::pow(2, bit)));
-    ledcDutyBit = static_cast<ledc_timer_bit_t>(bit);
-    if (frequency < targetFreq) {
+  ledc_timer_bit_t ledc_duty_bit = LEDC_TIMER_BIT_MAX;
+  for (int32_t bit = (ledc_duty_bit - 1); bit >= LEDC_TIMER_1_BIT; --bit) {
+    const int32_t target_freq = (1.0 / (ESP32_CLOCK * std::pow(2, bit)));
+    ledc_duty_bit = static_cast<ledc_timer_bit_t>(bit);
+    if (frequency < target_freq) {
       break;
     }
   }
-  return ledcDutyBit;
+  return ledc_duty_bit;
 }
 }  // namespace
 
 namespace IrrigationSystem {
 
 Pwm::Pwm()
-    : m_channelNo(LEDC_CHANNEL_0),
-      m_ledcMode(LEDC_LOW_SPEED_MODE),
-      m_ledcDutyBit(LEDC_TIMER_1_BIT) {}
+    : channel_no_(LEDC_CHANNEL_0),
+      ledc_mode_(LEDC_LOW_SPEED_MODE),
+      ledc_duty_bit_(LEDC_TIMER_1_BIT) {}
 
-void Pwm::Initialize(const ledc_channel_t channelNo,
-                     const ledc_timer_t ledcTimer, const gpio_num_t gpioNo,
+void Pwm::Initialize(const ledc_channel_t channel_no,
+                     const ledc_timer_t ledc_timer_num, const gpio_num_t gpio_no,
                      const uint32_t frequency) {
-  m_channelNo = channelNo;
-  m_ledcDutyBit = CalcFrequencyToBit(frequency);
+  channel_no_ = channel_no;
+  ledc_duty_bit_ = CalcFrequencyToBit(frequency);
 
   ESP_LOGI(TAG, "PWD INIT Channel:%d Timer:%d Bit:%d Freq:%d gpio:%d",
-           m_channelNo, ledcTimer, m_ledcDutyBit, frequency, gpioNo);
+           channel_no_, ledc_timer_num, ledc_duty_bit_, frequency, gpio_no);
 
   // Prepare and then apply the LEDC PWM timer configuration
-  const ledc_timer_config_t ledc_timer = {.speed_mode = m_ledcMode,
-                                          .duty_resolution = m_ledcDutyBit,
-                                          .timer_num = ledcTimer,
-                                          .freq_hz = frequency,
-                                          .clk_cfg = LEDC_AUTO_CLK,
-                                          .deconfigure = false};
-  ledc_timer_config(&ledc_timer);
+  const ledc_timer_config_t ledc_timer_cfg = {
+      .speed_mode = ledc_mode_,
+      .duty_resolution = ledc_duty_bit_,
+      .timer_num = ledc_timer_num,
+      .freq_hz = frequency,
+      .clk_cfg = LEDC_AUTO_CLK,
+      .deconfigure = false};
+  ledc_timer_config(&ledc_timer_cfg);
 
   // Prepare and then apply the LEDC PWM channel configuration
-  const ledc_channel_config_t ledc_channel = {.gpio_num = gpioNo,
-                                              .speed_mode = m_ledcMode,
-                                              .channel = m_channelNo,
+  const ledc_channel_config_t ledc_channel = {.gpio_num = gpio_no,
+                                              .speed_mode = ledc_mode_,
+                                              .channel = channel_no_,
                                               .intr_type = LEDC_INTR_DISABLE,
-                                              .timer_sel = ledcTimer,
+                                              .timer_sel = ledc_timer_num,
                                               .duty = 0,  // Set duty to 0%
                                               .hpoint = 0,
                                               .flags{}};
@@ -72,13 +73,13 @@ void Pwm::Initialize(const ledc_channel_t channelNo,
 void Pwm::SetRate(const float rate) {
   // rate to duty
   const int32_t ledc_duty =
-      (std::pow(2, static_cast<int32_t>(m_ledcDutyBit)) - 1) * rate;
+      (std::pow(2, static_cast<int32_t>(ledc_duty_bit_)) - 1) * rate;
 
   ESP_LOGI(TAG, "PWD RATE rate:%0.2f bitrate:%d ledcbit:%d", rate, ledc_duty,
-           m_ledcDutyBit);
+           ledc_duty_bit_);
 
-  ledc_set_duty(m_ledcMode, m_channelNo, ledc_duty);
-  ledc_update_duty(m_ledcMode, m_channelNo);
+  ledc_set_duty(ledc_mode_, channel_no_, ledc_duty);
+  ledc_update_duty(ledc_mode_, channel_no_);
 }
 
 }  // namespace IrrigationSystem
