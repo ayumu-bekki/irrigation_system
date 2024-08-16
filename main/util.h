@@ -49,9 +49,9 @@ std::vector<std::string> SplitString(const std::string& str, const char delim);
 float GetVoltage();
 
 /// Get Original Voltage Divider Resistor
-float GetOriginalVoltageFromDividerRegister(const uint32_t output_volatage,
-                                            const float top_resistance_value,
-                                            const float bottom_registance_value);
+float GetOriginalVoltageFromDividerRegister(
+    const uint32_t output_volatage, const float top_resistance_value,
+    const float bottom_registance_value);
 
 }  // namespace Util
 }  // namespace IrrigationSystem

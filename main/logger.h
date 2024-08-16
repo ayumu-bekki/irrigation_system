@@ -23,4 +23,4 @@ void InitializeLogLevel();
 }  // namespace IrrigationSystem
 
 #endif  // LOGGER_H_
-// EOF
+        // EOF
