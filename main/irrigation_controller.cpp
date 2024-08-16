@@ -54,6 +54,11 @@ void IrrigationController::Start() {
   GPIO::InitOutput(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 0);
 #endif
 
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  // WaterFlow GPIO Init
+  GPIO::InitOutput(CONFIG_WATER_FLOW_OUTPUT_GPIO_NO, 0);
+#endif
+
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -112,6 +117,10 @@ void IrrigationController::Start() {
   m_WaterLevelChecker.Start();
 #endif
 
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  m_WaterLevelSensor.Start();
+#endif
+
   // Monitoring LED Off
   GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
 
@@ -124,29 +133,23 @@ void IrrigationController::Start() {
   }
 }
 
-void IrrigationController::ValveAddOpenSecond(const int second) {
+void IrrigationController::AddValveExecutor(ValveExecutorSharedPtr executor) {
   if (m_ValveTask) {
-    m_ValveTask->AddOpenSecond(second);
+    m_ValveTask->AddExecutor(std::move(executor));
   }
 }
 
-void IrrigationController::ValveResetTimer() {
+ValveExecutorSharedPtr IrrigationController::GetCurrentValveExecutor() {
   if (m_ValveTask) {
-    m_ValveTask->ResetTimer();
+    return m_ValveTask->GetCurrentExecutor();
   }
+  return nullptr;
 }
 
-void IrrigationController::ValveForce(const bool isOpen) {
+void IrrigationController::ForceStopValve() {
   if (m_ValveTask) {
-    m_ValveTask->Force(isOpen);
+    m_ValveTask->ForceStop();
   }
-}
-
-std::time_t IrrigationController::ValveCloseEpoch() const {
-  if (m_ValveTask) {
-    return m_ValveTask->GetCloseEpoch();
-  }
-  return 0;
 }
 
 const ScheduleManagerWeakPtr IrrigationController::GetScheduleManager() {
@@ -196,6 +199,31 @@ float IrrigationController::GetWaterLevel() const {
   return 0.0f;
 #endif
 }
+
+void IrrigationController::StartWaterMeasurement()
+{
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  m_WaterLevelSensor.StartMeasurement();
+#endif
+}
+
+int32_t IrrigationController::FinishWaterMeasurement()
+{
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  return m_WaterLevelSensor.FinishMeasurement();
+#else
+  return 0;
+#endif
+}
+
+int32_t IrrigationController::GetWaterFlowHz() {
+ #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  return m_WaterLevelSensor.GetSensorHz();
+#else
+  return 0;
+#endif
+}
+
 
 }  // namespace IrrigationSystem
 

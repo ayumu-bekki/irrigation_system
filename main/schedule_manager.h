@@ -33,15 +33,15 @@ class ScheduleManager final {
   int GetCurrentMonth() const;
   int GetCurrentDay() const;
 
- private:
   /// Add a schedule to the list
   void AddSchedule(ScheduleBaseUniquePtr&& scheduleItem);
 
-  /// Disable a schedule whose execution time has already expired.
-  void DisableExpiredSchedule(const std::tm& timeInfo);
-
   /// Sort the schedule in ascending order
   void SortScheduleTime();
+
+ private:
+  /// Disable a schedule whose execution time has already expired.
+  void DisableExpiredSchedule(const std::tm& timeInfo);
 
   /// DebugOnly
   void DebugOutputSchedules();

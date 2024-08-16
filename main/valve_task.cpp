@@ -12,99 +12,122 @@
 #include "util.h"
 #include "watering_setting.h"
 
+namespace {
+  constexpr uint32_t VALVE_FREQUENCY = 10000;  // 10kHz
+  constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
+}
+
 namespace IrrigationSystem {
 
 ValveTask::ValveTask(const IrrigationInterfaceWeakPtr pIrrigationInterface)
     : Task(TASK_NAME, PRIORITY, CORE_ID),
-      m_pIrrigationInterface(pIrrigationInterface),
-      m_IsTimerOpen(false),
-      m_IsForceOpen(false),
-      m_CloseEpoch(0) {
-  constexpr uint32_t VALVE_FREQUENCY = 10000;  // 10kHz
-  constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
+      m_pIrrigationInterface(pIrrigationInterface) {
   m_pwm.Initialize(
       static_cast<ledc_channel_t>(LEDC_CHANNEL_0), VALVE_LEDC_TIMER,
       static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO), VALVE_FREQUENCY);
 }
 
 void ValveTask::Update() {
-  const std::time_t now = Util::GetEpoch();
-  if (m_IsTimerOpen && m_CloseEpoch < now) {
-    m_IsTimerOpen = false;
-    SetValve();
+  if (current_executor_) {
+    if (current_executor_->IsClose()) {
+      Close();
+    }
+  } else {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (!executors_.empty()) {
+      ValveExecutorSharedPtr executor = executors_.front();
+      executors_.pop();
+
+      current_executor_ = std::move(executor);
+      Open();
+    }
   }
 
-  Util::SleepMillisecond(500);
+  Util::SleepMillisecond(100);
 }
 
-void ValveTask::AddOpenSecond(const int second) {
-  static constexpr int MAX_OPEN_SECOND = 180;
-  if (second < 0 || MAX_OPEN_SECOND < second) {
-    ESP_LOGW(TAG,
-             "Invalid parameter. Out of range AddOpenSecond input:%d max:%d",
-             second, MAX_OPEN_SECOND);
+ValveExecutorSharedPtr ValveTask::GetCurrentExecutor() {
+  return current_executor_;
+}
+
+void ValveTask::ForceStop() {
+  if (current_executor_) {
+    Close();
+  }
+  // clear queue
+  std::lock_guard<std::mutex> lock(mtx_);
+  std::queue<ValveExecutorSharedPtr>().swap(executors_);
+}
+
+void ValveTask::AddExecutor(ValveExecutorSharedPtr executor) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  executors_.emplace(std::move(executor));
+}
+
+void ValveTask::Open() {
+  if (!current_executor_) {
     return;
   }
+  current_executor_->Start();
 
-  if (!m_IsTimerOpen) {
-    m_CloseEpoch = Util::GetEpoch();
-  }
-  m_CloseEpoch += second;
-  ESP_LOGI(TAG, "Valve: Set Close Date. Close At:%s",
-           Util::TimeToStr(Util::EpochToLocalTime(m_CloseEpoch)).c_str());
-
-  if (!m_IsTimerOpen) {
-    m_IsTimerOpen = true;
-    SetValve();
-  }
-}
-
-void ValveTask::ResetTimer() { m_CloseEpoch = 0; }
-
-void ValveTask::Force(const bool isOpen) {
-  m_IsForceOpen = isOpen;
-  SetValve();
-}
-
-std::time_t ValveTask::GetCloseEpoch() const {
-  if (!m_IsTimerOpen) {
-    // Return 0 if no valve is not open
-    return 0;
-  }
-  return m_CloseEpoch;
-}
-
-void ValveTask::SetValve() {
-  ESP_LOGI(TAG, "Valve: TimerOpen:%d Force:%d", m_IsTimerOpen, m_IsForceOpen);
-#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
   const IrrigationInterfaceSharedPtr irrigationInterface =
       m_pIrrigationInterface.lock();
   if (!irrigationInterface) {
     return;
   }
 
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  irrigationInterface->StartWaterMeasurement();
+#endif
+
+#if CONFIG_IS_ENABLE_VOLTAGE_CHECK
   const float voltage = irrigationInterface->GetMainVoltage();
   const WateringSetting &wateringSetting =
       irrigationInterface->GetWateringSetting();
 
-  float rate = 0.0f;
-  if (m_IsTimerOpen || m_IsForceOpen) {
-    rate = std::max(
+  const float rate = std::max(
         0.0f, std::min(1.0f, wateringSetting.GetValvePowerBaseRate() -
                                  ((voltage -
                                    wateringSetting.GetValvePowerBaseVoltage()) *
                                   wateringSetting.GetValvePowerVoltageRate())));
-  }
   ESP_LOGI(TAG, "Valve voltage rate Voltage:%fV Rate:%d", voltage,
            static_cast<int>(rate * 100));
-#else
-  const float rate = (m_IsTimerOpen || m_IsForceOpen) ? 1.0f : 0.0f;
-#endif
   m_pwm.SetRate(rate);
+#else
+  m_pwm.SetRate(1.0f);
+#endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
   irrigationInterface->CheckWaterLevel();
 #endif
+
+}
+
+void ValveTask::Close() {
+  if (!current_executor_) {
+    return;
+  }
+
+
+  const IrrigationInterfaceSharedPtr irrigationInterface =
+      m_pIrrigationInterface.lock();
+  if (!irrigationInterface) {
+    return;
+  }
+
+  m_pwm.SetRate(0);
+
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  int water_flow_counter = irrigationInterface->FinishWaterMeasurement();
+  current_executor_->SetWaterAmount(water_flow_counter);
+#endif
+
+#if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
+  irrigationInterface->CheckWaterLevel();
+#endif
+
+  current_executor_->Finish();
+  current_executor_.reset();
 }
 
 }  // namespace IrrigationSystem

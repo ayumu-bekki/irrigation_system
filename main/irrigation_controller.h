@@ -5,6 +5,7 @@
 
 // Include ----------------------
 #include <memory>
+#include <cstdint>
 
 #include "irrigation_interface.h"
 #include "schedule_manager.h"
@@ -15,6 +16,8 @@
 #include "watering_setting.h"
 #include "weather_forecast.h"
 #include "wifi_manager.h"
+#include "water_flow_sensor.h"
+#include "valve_executor.h"
 
 namespace IrrigationSystem {
 
@@ -31,16 +34,13 @@ class IrrigationController final
 
  public:
   /// (IrrigationInterface:override)
-  void ValveAddOpenSecond(const int second) override;
+  void AddValveExecutor(ValveExecutorSharedPtr executor) override;
 
   /// (IrrigationInterface:override)
-  void ValveResetTimer() override;
+  ValveExecutorSharedPtr GetCurrentValveExecutor() override;
 
   /// (IrrigationInterface:override)
-  void ValveForce(const bool isOpen) override;
-
-  /// (IrrigationInterface:override)
-  std::time_t ValveCloseEpoch() const override;
+  void ForceStopValve() override;
 
   /// (IrrigationInterface:override)
   const ScheduleManagerWeakPtr GetScheduleManager() override;
@@ -69,6 +69,15 @@ class IrrigationController final
   /// (IrrigationInterface:override)
   float GetWaterLevel() const override;
 
+  /// (IrrigationInterface:override)
+  void StartWaterMeasurement() override;
+
+  /// (IrrigationInterface:override)
+  int32_t FinishWaterMeasurement() override;
+
+  /// (IrrigationInterface:override)
+  int32_t GetWaterFlowHz() override;
+
  private:
   WifiManager m_WifiManager;
   ValveTaskUniquePtr m_ValveTask;
@@ -83,6 +92,10 @@ class IrrigationController final
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
   WaterLevelChecker m_WaterLevelChecker;
+#endif
+
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  WaterFlowSensor m_WaterLevelSensor;
 #endif
 };
 

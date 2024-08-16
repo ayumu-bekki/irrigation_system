@@ -10,7 +10,7 @@
     "watering_type": [
         {
             "type":"NONE", 
-            "day_span":1,
+            "day_span":0,
             "watering_hour":[]
         },
         {
@@ -20,13 +20,13 @@
         },
         {
             "type":"WARM",
-            "day_span":1, 
+            "day_span":0, 
             "watering_hour":[8]
         },
         {
             "type":"HOT",
-            "day_span":1, 
-            "watering_hour":[7, 16]
+            "day_span":0, 
+            "watering_hour":[6, 18]
         },
         {
             "type":"HOT_RAIN",

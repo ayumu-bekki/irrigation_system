@@ -57,6 +57,11 @@ std::chrono::minutes ScheduleBase::GetChronoMinutes() const {
 
 int ScheduleBase::GetDiffTime() const { return GetChronoMinutes().count(); }
 
+int32_t ScheduleBase::GetWaterFlow() const
+{
+  return -1;
+}
+
 const char* ScheduleBase::StatusToStr(const ScheduleBase::Status status) {
   static constexpr char* EmptyStr = (char*)"";
   if (status < ScheduleBase::STATUS_NONE ||
@@ -68,6 +73,7 @@ const char* ScheduleBase::StatusToStr(const ScheduleBase::Status status) {
       (char*)"None",
       (char*)"Wait",
       (char*)"Executed",
+      (char*)"Manual",
       (char*)"Disable",
   };
   return StatusStrTbl[status];
@@ -85,6 +91,7 @@ const char* ScheduleBase::StatusToRecordStyle(
       (char*)"schedule_none",
       (char*)"schedule_wait",
       (char*)"schedule_executable",
+      (char*)"schedule_manual",
       (char*)"schedule_disable",
   };
   return StatusRecordStyleTbl[status];

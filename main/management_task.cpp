@@ -34,7 +34,7 @@ void ManagementTask::Update() {
   }
 
   scheduleManager->Execute();
-  Util::SleepMillisecond(10 * 1000);
+  Util::SleepMillisecond(1000);
 }
 
 }  // namespace IrrigationSystem

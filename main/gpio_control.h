@@ -15,6 +15,11 @@ void InitOutput(const int32_t gpioNumber, const int32_t level = 0);
 /// Set GPIO Level (Output)
 void SetLevel(const int32_t gpioNumber, const int32_t level);
 
+/// Init GPIO (Input)
+void InitInput(const int32_t gpioNumber);
+
+
+
 /// Init ADC (Input)
 void InitAdc(const int32_t adcChannelNo);
 

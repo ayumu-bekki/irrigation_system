@@ -8,10 +8,13 @@
 
 #include <chrono>
 #include <memory>
+#include <queue>
+#include <mutex>
 
 #include "irrigation_interface.h"
 #include "pwm.h"
 #include "task.h"
+#include "valve_executor.h"
 
 namespace IrrigationSystem {
 
@@ -26,21 +29,22 @@ class ValveTask final : public Task {
 
   void Update() override;
 
-  void AddOpenSecond(const int second);
-  void ResetTimer();
-  void Force(const bool isOpen);
-
-  std::time_t GetCloseEpoch() const;
+  void AddExecutor(ValveExecutorSharedPtr executor);
+  ValveExecutorSharedPtr GetCurrentExecutor();
+  void ForceStop();
 
  private:
-  void SetValve();
+  void Open();
+  void Close();
 
  private:
   const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
-  bool m_IsTimerOpen;
-  bool m_IsForceOpen;
-  std::time_t m_CloseEpoch;
+
+  ValveExecutorSharedPtr current_executor_;
+  std::queue<ValveExecutorSharedPtr> executors_;
+
   Pwm m_pwm;
+  std::mutex mtx_;
 };
 
 using ValveTaskUniquePtr = std::unique_ptr<ValveTask>;

@@ -27,6 +27,19 @@ void SetLevel(const int32_t gpioNumber, const int32_t level) {
   gpio_set_level(static_cast<gpio_num_t>(gpioNumber), level);
 }
 
+/// Init GPIO (Input)
+void InitInput(const int32_t gpioNumber) {
+  gpio_reset_pin(static_cast<gpio_num_t>(gpioNumber));
+  gpio_config_t io_conf = {
+    .pin_bit_mask = (1ULL << gpioNumber),
+    .mode = GPIO_MODE_INPUT,
+    .pull_up_en = GPIO_PULLUP_DISABLE,
+    .pull_down_en = GPIO_PULLDOWN_DISABLE,
+    .intr_type = GPIO_INTR_ANYEDGE,
+  };
+  gpio_config(&io_conf);
+}
+
 /// Get ADC Voltage (Input) [mV]
 uint32_t GetAdcVoltage(const int32_t adcChannelNo, const int32_t round) {
   adc_oneshot_unit_handle_t adcHandle;

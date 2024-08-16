@@ -8,12 +8,12 @@
 #include <soc/soc.h>
 
 #include "irrigation_interface.h"
-#include "system_queue.h"
 #include "task.h"
+#include "valve_executor.h"
 
 namespace IrrigationSystem {
 
-class WateringButtonTask : public Task, public SystemQueue {
+class WateringButtonTask : public Task {
  public:
   static constexpr char *const TASK_NAME = (char *)"WateringButtonTask";
   static constexpr int PRIORITY = Task::PRIORITY_NORMAL;
@@ -27,13 +27,11 @@ class WateringButtonTask : public Task, public SystemQueue {
  private:
   void Update() override;
 
-  void Receive() override;
-
- private:
-  static void IRAM_ATTR GpioIsrHandler(void *);
-
  private:
   const IrrigationInterfaceWeakPtr m_pIrrigationInterface;
+  bool button_current_;
+  int button_counter_;
+  ValveExecutorSharedPtr valve_executor_;
 };
 
 }  // namespace IrrigationSystem

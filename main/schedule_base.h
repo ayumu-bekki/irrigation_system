@@ -16,6 +16,7 @@ class ScheduleBase {
     STATUS_NONE,
     STATUS_WAIT,
     STATUS_EXECUTED,
+    STATUS_MANUAL,
     STATUS_DISABLE,
     MAX_STATUS,
   };
@@ -43,6 +44,7 @@ class ScheduleBase {
   int GetMinute() const;
   bool IsVisible() const;
   std::chrono::minutes GetChronoMinutes() const;
+  virtual int32_t GetWaterFlow() const;
 
   int GetDiffTime() const;
 

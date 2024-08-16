@@ -13,16 +13,16 @@ class ScheduleManager;
 using ScheduleManagerWeakPtr = std::weak_ptr<ScheduleManager>;
 class WeatherForecast;
 class WateringSetting;
+class ValveExecutor;
+using ValveExecutorSharedPtr = std::shared_ptr<ValveExecutor>;
 
 class IrrigationInterface {
  public:
   virtual ~IrrigationInterface() {}
 
-  virtual void ValveAddOpenSecond(const int second) = 0;
-  virtual void ValveResetTimer() = 0;
-  virtual void ValveForce(const bool isOpen) = 0;
-  virtual std::time_t ValveCloseEpoch() const = 0;
-
+  virtual void AddValveExecutor(ValveExecutorSharedPtr executor) = 0;
+  virtual void ForceStopValve() = 0;
+  virtual ValveExecutorSharedPtr GetCurrentValveExecutor() = 0;
   virtual const ScheduleManagerWeakPtr GetScheduleManager() = 0;
   virtual WeatherForecast& GetWeatherForecast() = 0;
   virtual WateringSetting& GetWateringSetting() = 0;
@@ -32,6 +32,9 @@ class IrrigationInterface {
   virtual float GetMainVoltage() const = 0;
   virtual void CheckWaterLevel() = 0;
   virtual float GetWaterLevel() const = 0;
+  virtual void StartWaterMeasurement() = 0;
+  virtual int32_t FinishWaterMeasurement() = 0;
+  virtual int32_t GetWaterFlowHz() = 0;
 };
 
 using IrrigationInterfaceSharedPtr = std::shared_ptr<IrrigationInterface>;

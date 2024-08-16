@@ -16,8 +16,13 @@
 #include "schedule_manager.h"
 #include "util.h"
 #include "version.h"
+#include "valve_executor.h"
 #include "watering_setting.h"
 #include "weather_forecast.h"
+#include "water_flow_sensor.h"
+
+#include "schedule_watering.h"
+#include "schedule_manual.h"
 
 namespace {
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
@@ -197,7 +202,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
   }
   const ScheduleManager::ScheduleBaseList &scheduleList =
       scheduleManager->GetScheduleList();
-  const std::time_t valveCloseEpoch = irrigationInterface->ValveCloseEpoch();
+  //const std::time_t valveCloseEpoch = irrigationInterface->ValveCloseEpoch();
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
   const float batteryVoltage = irrigationInterface->GetMainVoltage();
   const int32_t voltageGuage =
@@ -255,6 +260,7 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
       << "table td {padding: 10px; border-bottom: solid 1px steelblue; }"
       << ".schedule_disable { background-color: silver;}"
       << ".schedule_executable { background-color: greenyellow;}"
+      << ".schedule_manual { background-color: greenyellow;}"
       << ".gauge{ position: relative; border:solid 1px steelblue; "
          "background-color:lightgray; width: 300px; margin: 6px 20px; }"
       << "div#inner { height: 20px; }"
@@ -286,8 +292,14 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
                  << wateringTm.tm_mday << "</p>";
 
     // Create Schedule Table
-    responseBody << "<table><thead><tr><th>ScheduleName</th><th>Time</"
-                    "th><th>Status</th></tr></thead><tbody>";
+    responseBody << "<table><thead><tr>"
+                 << "<th>ScheduleName</th>" 
+                 << "<th>Time</th>"
+                 << "<th>Status</th>"
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+                 << "<th>Amount Of Water</th>"
+#endif
+                 << "</tr></thead><tbody>";
 
     if (std::any_of(scheduleList.begin(), scheduleList.end(),
                     [](const ScheduleBaseUniquePtr &item) {
@@ -307,6 +319,15 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
                        << "<td>"
                        << ScheduleBase::StatusToStr(pScheduleItem->GetStatus())
                        << "</td>"
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+                       << "<td>";
+          if (pScheduleItem->GetWaterFlow() < 0) {
+            responseBody << "-";
+          } else {
+            responseBody << WaterFlowSensor::CountToCubicCentimetres(pScheduleItem->GetWaterFlow()) << "cm³";
+          }
+          responseBody << "</td>"
+#endif
                        << "</tr>";
         }
       }
@@ -327,14 +348,32 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *pHttpRequestData) {
 
   // -- Status -----
   responseBody << "<hr><h2>Status</h2>";
-
   responseBody << "<h3>Valve Status</h3>";
-  if (valveCloseEpoch == 0) {
-    responseBody << "<p>Close</p>";
-  } else {
+
+  ValveExecutorSharedPtr executor = irrigationInterface->GetCurrentValveExecutor();
+  if (executor) {
     responseBody
-        << "<p><span style=\"background:coral;\">Open</span> &gt; Close At("
-        << Util::TimeToStr(Util::EpochToLocalTime(valveCloseEpoch)) << ")</p>";
+        << "<p><span style=\"background:coral;\">Open</span>";
+    if (executor->GetStatus() == ValveExecutor::ExecutorStatus::EXECUTOR_SCHEDULE) {
+      responseBody
+          << " &gt; Close At("
+          << Util::TimeToStr(Util::EpochToLocalTime(executor->GetCloseEpoch())) 
+          << ")";
+    } else if (executor->GetStatus() == ValveExecutor::ExecutorStatus::EXECUTOR_MANUAL_START) {
+      responseBody
+          << " &gt; Manual";
+    }
+    responseBody << "</p>";
+
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+    responseBody
+        << "<p>"
+        << "Water Flow : " 
+        << WaterFlowSensor::CountToCubicCentimetres(irrigationInterface->GetWaterFlowHz()) << "cm³"
+        <<"</p>";
+#endif
+  } else {
+    responseBody << "<p>Close</p>";
   }
 
   responseBody << "<h3>Weather Forecast</h3>"
@@ -467,7 +506,17 @@ esp_err_t HttpdServerTask::ManualWateringHandler(
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
-  irrigationInterface->ValveAddOpenSecond(valveOpenSecond);
+
+  ESP_LOGI(TAG, "Add Open");
+  std::tm now = Util::GetLocalTime();
+  const ScheduleManagerSharedPtr scheduleManager =
+      irrigationInterface->GetScheduleManager().lock();
+  if (!scheduleManager) {
+    ESP_LOGE(TAG, "Failed Schedule Manager is null");
+    return ESP_FAIL;
+  }
+  scheduleManager->AddSchedule(std::make_unique<ScheduleWatering>(irrigationInterface, now.tm_hour, now.tm_min, valveOpenSecond));
+  scheduleManager->SortScheduleTime();
 
   // Redirect
   httpd_resp_set_status(pHttpRequestData, "303 See Other");
@@ -497,7 +546,7 @@ esp_err_t HttpdServerTask::EmergencyStopHandler(httpd_req_t *pHttpRequestData) {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return ESP_FAIL;
   }
-  irrigationInterface->ValveResetTimer();
+  irrigationInterface->ForceStopValve();
 
   // Redirect
   httpd_resp_set_status(pHttpRequestData, "303 See Other");
