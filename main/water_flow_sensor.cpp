@@ -17,7 +17,7 @@
 #include "util.h"
 
 namespace {
-constexpr float WATER_FLOW_COUNT_TO_CUBIC_CENTIMETRES = 1000.0f / 11.0f;
+constexpr float WATER_FLOW_COUNT_TO_CUBIC_DECIMETRES = 1.0f / 11.0f;
 }
 
 namespace IrrigationSystem {
@@ -137,8 +137,8 @@ bool IRAM_ATTR WaterFlowSensor::TimerCallback(
   return queue->SendFromISR(0);
 }
 
-float WaterFlowSensor::CountToCubicCentimetres(const int32_t count) {
-  return static_cast<float>(count) * WATER_FLOW_COUNT_TO_CUBIC_CENTIMETRES;
+float WaterFlowSensor::CountToCubicDecimeters(const int32_t count) {
+  return static_cast<float>(count) * WATER_FLOW_COUNT_TO_CUBIC_DECIMETRES;
 }
 
 }  // namespace IrrigationSystem

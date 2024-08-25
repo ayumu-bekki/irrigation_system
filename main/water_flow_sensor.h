@@ -35,7 +35,7 @@ class WaterFlowSensor final : public Task {
                             const gptimer_alarm_event_data_t *edata,
                             void *user_data);
 
-  static float CountToCubicCentimetres(const int32_t count);
+  static float CountToCubicDecimeters(const int32_t count);
 
  private:
   GPTimer gptimer_;

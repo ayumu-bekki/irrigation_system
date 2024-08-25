@@ -67,13 +67,22 @@ std::tm EpochToLocalTime(const std::time_t epoch) {
 
 std::tm GetLocalTime() { return EpochToLocalTime(GetEpoch()); }
 
-std::string TimeToStr(const std::tm& timeInfo) {
+std::string TimeToStr(const std::tm& time_info) {
   std::stringstream ss;
-  ss << std::setfill('0') << std::setw(4) << (timeInfo.tm_year + 1900) << "/"
-     << std::setw(2) << (timeInfo.tm_mon + 1) << "/" << std::setw(2)
-     << timeInfo.tm_mday << " " << std::setw(2) << timeInfo.tm_hour << ":"
-     << std::setw(2) << timeInfo.tm_min << ":" << std::setw(2)
-     << timeInfo.tm_sec;
+  ss << std::setfill('0') << std::setw(4) << (time_info.tm_year + 1900) << "/"
+     << std::setw(2) << (time_info.tm_mon + 1) << "/" << std::setw(2)
+     << time_info.tm_mday << " " << std::setw(2) << time_info.tm_hour << ":"
+     << std::setw(2) << time_info.tm_min << ":" << std::setw(2)
+     << time_info.tm_sec;
+  return ss.str();
+}
+
+std::string TimeToDayStr(const std::tm& time_info) {
+  std::stringstream ss;
+  ss << std::setfill('0') 
+     << std::setw(4) << (time_info.tm_year + 1900) << "/"
+     << std::setw(2) << (time_info.tm_mon + 1) << "/" 
+     << std::setw(2) << time_info.tm_mday;
   return ss.str();
 }
 
@@ -85,18 +94,18 @@ void InitTimeZone() {
 }
 
 /// Gregorian calendar to Modified Julian Date
-int32_t GregToMJD(const std::tm& timeInfo) {
-  const double year = timeInfo.tm_year + 1900;
-  const double month = timeInfo.tm_mon + 1;
+int32_t GregToMJD(const std::tm& time_info) {
+  const double year = time_info.tm_year + 1900;
+  const double month = time_info.tm_mon + 1;
   return std::floor(365.25 * year) + std::floor(year / 400) -
          std::floor(year / 100) + std::floor(30.59 * (month - 2.0)) +
-         timeInfo.tm_mday - 678912;
+         time_info.tm_mday - 678912;
 }
 
 /// Get ChronoMinutes from hours and minutes.
-std::chrono::minutes GetChronoHourMinutes(const std::tm& timeInfo) {
-  return std::chrono::hours(timeInfo.tm_hour) +
-         std::chrono::minutes(timeInfo.tm_min);
+std::chrono::minutes GetChronoHourMinutes(const std::tm& time_info) {
+  return std::chrono::hours(time_info.tm_hour) +
+         std::chrono::minutes(time_info.tm_min);
 }
 
 std::vector<std::string> SplitString(const std::string& str, const char delim) {

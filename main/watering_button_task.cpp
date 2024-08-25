@@ -78,10 +78,8 @@ void WateringButtonTask::Update() {
 
       std::tm now = Util::GetLocalTime();
       schedule_manager->AddSchedule(std::make_unique<ScheduleManual>(
-          now.tm_hour, now.tm_min, valve_executor_->GetWaterAmount()));
+          now.tm_hour, now.tm_min, std::move(valve_executor_)));
       schedule_manager->SortScheduleTime();
-
-      valve_executor_.reset();
     }
   }
 }

@@ -30,6 +30,9 @@ std::tm GetLocalTime();
 /// Get Time To String (yyyy/dd/mm hh:mm:ss)
 std::string TimeToStr(const std::tm& time_info);
 
+/// Get Time To Day String (yyyy/dd/mm)
+std::string TimeToDayStr(const std::tm& time_info);
+
 /// Get Now Date String (yyyy/dd/mm hh:mm:ss)
 std::string GetNowTimeStr();
 

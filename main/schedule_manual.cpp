@@ -12,17 +12,23 @@ namespace IrrigationSystem {
 ScheduleManual::ScheduleManual() : ScheduleBase() {}
 
 ScheduleManual::ScheduleManual(const int hour, const int minute,
-                               const int32_t water_amount)
+                               ValveExecutorSharedPtr&& valve_executor)
     : ScheduleBase(ScheduleBase::STATUS_MANUAL, ScheduleManual::SCHEDULE_NAME,
                    hour, minute, ScheduleManual::IS_VISIBLE_TASK),
-      water_amount_(water_amount) {}
+      valve_executor_(std::move(valve_executor)) {}
 
 void ScheduleManual::Exec() {
   ESP_LOGI(TAG, "Schedule Exec - Manual Executer. %02d:%02d", GetHour(),
            GetMinute());
 }
 
-int32_t ScheduleManual::GetWaterFlow() const { return water_amount_; }
+int32_t ScheduleManual::GetWaterFlow() const 
+{
+  if (!valve_executor_) {
+    return -1;
+  } 
+  return valve_executor_->GetWaterAmount();
+}
 
 }  // namespace IrrigationSystem
 

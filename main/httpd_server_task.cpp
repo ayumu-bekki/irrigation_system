@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 #include "esp_spiffs.h"
 #include "esp_vfs.h"
@@ -274,21 +275,15 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *request_data) {
   response_body.str("");
   response_body.clear(std::stringstream::goodbit);
 
-  response_body << "<body><h1>" << title << "</h1>"
-                << "<hr><h2>Schedule</h2>";
+  response_body << "<body><h1>" << title << "</h1><hr>";
 
   if (weather_setting.IsActive()) {
-    const std::tm watering_date =
-        Util::EpochToLocalTime(irrigation_interface->GetLastWateringEpoch());
-
-    response_body << "<p>System Time : " << Util::GetNowTimeStr()
-                  << " TZ:" << CONFIG_LOCAL_TIME_ZONE << "</p>"
-                  << std::setfill('0') << "<p>Current Date : " << std::setw(2)
-                  << schedule_manager->GetCurrentMonth() << "/" << std::setw(2)
-                  << schedule_manager->GetCurrentDay()
-                  << "&nbsp;&nbsp; Last Watering Date : " << std::setw(2)
-                  << (watering_date.tm_mon + 1) << "/" << std::setw(2)
-                  << watering_date.tm_mday << "</p>";
+    response_body << "<h2>Schedule ("
+                  << std::setfill('0') 
+                  << std::setw(2) << schedule_manager->GetCurrentMonth() 
+                  << "/" 
+                  << std::setw(2) << schedule_manager->GetCurrentDay()
+                  << ")</h2>";
 
     // Create Schedule Table
     response_body << "<table><thead><tr>"
@@ -323,9 +318,10 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *request_data) {
           if (schedule_item->GetWaterFlow() < 0) {
             response_body << "-";
           } else {
-            response_body << WaterFlowSensor::CountToCubicCentimetres(
-                                 schedule_item->GetWaterFlow())
-                          << "cm³";
+            response_body << std::fixed << std::setprecision(2)
+                          << (WaterFlowSensor::CountToCubicDecimeters(
+                                 schedule_item->GetWaterFlow()) / 60.0f)
+                          << "L";
           }
           response_body << "</td>"
 #endif
@@ -370,9 +366,10 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *request_data) {
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
     response_body << "<p>"
                   << "Water Flow : "
-                  << WaterFlowSensor::CountToCubicCentimetres(
+                  << std::fixed << std::setprecision(2)
+                  << WaterFlowSensor::CountToCubicDecimeters(
                          irrigation_interface->GetWaterFlowHz())
-                  << "cm³"
+                  << "L/min"
                   << "</p>";
 #endif
   } else {
@@ -400,6 +397,18 @@ esp_err_t HttpdServerTask::RootHandler(httpd_req_t *request_data) {
                 << std::fixed << std::setprecision(2) << batteryVoltage
                 << "[V]</div></div>";
 #endif
+  response_body << "<h3>Last Watering Date</h3><p>"
+                << Util::TimeToDayStr(Util::EpochToLocalTime(irrigation_interface->GetLastWateringEpoch())) 
+                << "</p>";
+
+  response_body << "<h3>System Time</h3><p>" 
+                << Util::GetNowTimeStr()
+                << " (" << CONFIG_LOCAL_TIME_ZONE << ")</p>";
+  response_body << "<h3>System Boot Time</h3><p>"
+                << Util::TimeToStr(
+                           Util::EpochToLocalTime(irrigation_interface->GetSystemBootTime()))
+                << "</p>";
+
 
   httpd_resp_sendstr_chunk(request_data, response_body.str().c_str());
   response_body.str("");

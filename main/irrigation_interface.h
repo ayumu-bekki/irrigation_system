@@ -35,6 +35,7 @@ class IrrigationInterface {
   virtual void StartWaterMeasurement() = 0;
   virtual int32_t FinishWaterMeasurement() = 0;
   virtual int32_t GetWaterFlowHz() = 0;
+  virtual std::time_t GetSystemBootTime() = 0;
 };
 
 using IrrigationInterfaceSharedPtr = std::shared_ptr<IrrigationInterface>;

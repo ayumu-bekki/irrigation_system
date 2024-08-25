@@ -78,6 +78,9 @@ class IrrigationController final
   /// (IrrigationInterface:override)
   int32_t GetWaterFlowHz() override;
 
+  /// (IrrigationInterface:override)
+  std::time_t GetSystemBootTime() override;
+  
  private:
   WifiManager wifi_manager_;
   ValveTaskUniquePtr valve_task_;
@@ -97,6 +100,8 @@ class IrrigationController final
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
   WaterFlowSensor water_level_sensor_;
 #endif
+
+  std::time_t system_boot_time_;
 };
 
 }  // namespace IrrigationSystem

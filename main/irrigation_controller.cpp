@@ -35,6 +35,12 @@ IrrigationController::IrrigationController()
       ,
       water_level_checker_()
 #endif
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+      ,
+      water_level_sensor_()
+#endif
+      ,
+      system_boot_time_(0) 
 {
 }
 
@@ -80,6 +86,9 @@ void IrrigationController::Start() {
 
   // Mount File System
   FileSystem::Mount();
+
+  // Set System Boot Time
+  system_boot_time_ = Util::GetEpoch();
 
   // Read Setting Data
   std::string raw_setting_data;
@@ -220,6 +229,10 @@ int32_t IrrigationController::GetWaterFlowHz() {
 #else
   return 0;
 #endif
+}
+
+std::time_t IrrigationController::GetSystemBootTime() {
+  return system_boot_time_;
 }
 
 }  // namespace IrrigationSystem

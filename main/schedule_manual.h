@@ -6,6 +6,7 @@
 // Include ----------------------
 #include "irrigation_interface.h"
 #include "schedule_base.h"
+#include "valve_executor.h"
 
 namespace IrrigationSystem {
 
@@ -18,7 +19,7 @@ class ScheduleManual final : public ScheduleBase {
   ScheduleManual();
 
  public:
-  ScheduleManual(const int hour, const int minute, const int32_t water_amount);
+  ScheduleManual(const int hour, const int minute, ValveExecutorSharedPtr&& valve_executor);
 
   void Exec() override;
 
@@ -26,7 +27,7 @@ class ScheduleManual final : public ScheduleBase {
 
  private:
   const IrrigationInterfaceWeakPtr irrigation_interface_;
-  int32_t water_amount_;
+  ValveExecutorSharedPtr valve_executor_;
 };
 
 }  // namespace IrrigationSystem
