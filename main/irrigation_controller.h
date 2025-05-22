@@ -13,11 +13,13 @@
 #include "valve_task.h"
 #include "voltage_check_task.h"
 #include "water_flow_sensor.h"
-#include "water_level_checker.h"
+#include "water_level_check_task.h"
 #include "watering_record.h"
 #include "watering_setting.h"
 #include "weather_forecast.h"
 #include "wifi_manager.h"
+#include "mqtt.h"
+#include "mqtt_publish_status_task.h"
 
 namespace IrrigationSystem {
 
@@ -70,17 +72,26 @@ class IrrigationController final
   float GetWaterLevel() const override;
 
   /// (IrrigationInterface:override)
-  void StartWaterMeasurement() override;
+  void StartWaterFlowMeasurement() override;
 
   /// (IrrigationInterface:override)
-  int32_t FinishWaterMeasurement() override;
+  int32_t FinishWaterFlowMeasurement() override;
 
   /// (IrrigationInterface:override)
   int32_t GetWaterFlowHz() override;
 
   /// (IrrigationInterface:override)
   std::time_t GetSystemBootTime() override;
-  
+ 
+  /// (IrrigationInterface:override)
+  void PublishMQTTMessage(const std::string& topic, const std::string& data) override;
+
+ private:
+#if CONFIG_IS_ENABLE_MQTT_PUBLISH
+  void EventMQTTConnect();
+  void EventMQTTDisconnect();
+#endif
+ 
  private:
   WifiManager wifi_manager_;
   ValveTaskUniquePtr valve_task_;
@@ -90,15 +101,20 @@ class IrrigationController final
   WateringRecord watering_record_;
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
-  VoltageCheckTask voltage_check_task_;
+  VoltageCheckTaskUniquePtr voltage_check_task_;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  WaterLevelChecker water_level_checker_;
+  WaterLevelCheckTaskUniquePtr water_level_check_task_;
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  WaterFlowSensor water_level_sensor_;
+  WaterFlowSensor water_flow_sensor_;
+#endif
+
+#if CONFIG_IS_ENABLE_MQTT_PUBLISH
+  MQTTClient mqtt_client_;
+  MQTTPublishStatusTaskUniquePtr mqtt_publish_status_task_;
 #endif
 
   std::time_t system_boot_time_;

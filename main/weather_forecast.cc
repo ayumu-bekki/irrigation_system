@@ -15,7 +15,7 @@
 
 // Request Server Root Cert (PEM)
 extern const uint8_t CERT_JMA_ROOT_CA_PEM[] asm(
-    "_binary_DigiCertGlobalRootCA_cer_start");
+    "_binary_GlobalSignRSAOVSSLCA_cer_start");
 
 namespace IrrigationSystem {
 

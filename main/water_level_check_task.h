@@ -10,17 +10,18 @@
 
 #include "pwm.h"
 #include "task.h"
+#include "irrigation_interface.h"
 
 namespace IrrigationSystem {
 
-class WaterLevelChecker final : public Task {
+class WaterLevelCheckTask final : public Task {
  public:
   static constexpr char *const TASK_NAME = (char *)"WaterLevelCheckTask";
   static constexpr int PRIORITY = Task::PRIORITY_LOW;
   static constexpr int CORE_ID = APP_CPU_NUM;
 
  public:
-  WaterLevelChecker();
+  WaterLevelCheckTask(const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Initialize() override;
   void Update() override;
@@ -30,10 +31,13 @@ class WaterLevelChecker final : public Task {
   float GetWaterLevel() const;
 
  private:
+  const IrrigationInterfaceWeakPtr irrigation_interface_;
   std::time_t check_sec_;
   float water_level_;
   Pwm pwm_;
 };
+
+using WaterLevelCheckTaskUniquePtr = std::unique_ptr<WaterLevelCheckTask>;
 
 }  // namespace IrrigationSystem
 

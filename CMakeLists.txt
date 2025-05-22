@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ImportRootCA
-target_add_binary_data(irrigation_system.elf "main/DigiCertGlobalRootCA.cer" TEXT)
+target_add_binary_data(irrigation_system.elf "main/GlobalSignRSAOVSSLCA.cer" TEXT)
 
 # Git Version
 execute_process(COMMAND git describe --dirty --always --tags

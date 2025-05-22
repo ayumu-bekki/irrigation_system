@@ -5,7 +5,6 @@
 #include "httpd_server_task.h"
 
 #include <algorithm>
-#include <iomanip>
 #include <sstream>
 #include <string>
 #include <iomanip>

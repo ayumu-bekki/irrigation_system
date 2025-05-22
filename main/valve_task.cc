@@ -11,6 +11,7 @@
 #include "logger.h"
 #include "util.h"
 #include "watering_setting.h"
+#include "water_flow_sensor.h"
 
 namespace {
   constexpr uint32_t VALVE_FREQUENCY = 10000;  // 10kHz
@@ -77,7 +78,7 @@ void ValveTask::Open() {
   }
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  irrigation_interface->StartWaterMeasurement();
+  irrigation_interface->StartWaterFlowMeasurement();
 #endif
 
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
@@ -108,7 +109,6 @@ void ValveTask::Close() {
     return;
   }
 
-
   const IrrigationInterfaceSharedPtr irrigation_interface =
       irrigation_interface_.lock();
   if (!irrigation_interface) {
@@ -118,13 +118,24 @@ void ValveTask::Close() {
   pwm_.SetRate(0);
 
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
-  int water_flow_counter = irrigation_interface->FinishWaterMeasurement();
+  int water_flow_counter = irrigation_interface->FinishWaterFlowMeasurement();
   current_executor_->SetWaterAmount(water_flow_counter);
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
   irrigation_interface->CheckWaterLevel();
 #endif
+
+  // Publish MQTT
+  std::stringstream message;
+  message << "{";
+#if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
+  message << "\"volume\":" << std::setfill('0') << std::fixed
+                << std::setprecision(2) 
+                << (WaterFlowSensor::CountToCubicDecimeters(current_executor_->GetWaterAmount()) / 60.0f);
+#endif
+  message << "}";
+  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/events/watering", message.str().c_str());
 
   current_executor_->Finish();
   current_executor_.reset();

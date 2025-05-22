@@ -75,6 +75,22 @@ This The schematic was created using Scheme-it (https://www.digikey.jp/schemeit/
 ![UseCase](docs/use_case.jpg)
 ![Electrical Equipment](docs/electrical_equipment.jpg)
 
+### MQTT 
+
+format:JSON
+
+* irrigation_system/0001/status
+  * WillMessage 
+    * status (string) "close"
+  * Message
+    * status (string) "ok"
+* irrigation_system/0001/telemetry/water_level
+  * level (number unit:Persentage 0.0-1.0)
+* irrigation_system/0001/telemetry/voltage
+  * voltage (number unit:V)
+* irrigation_system/0001/events/watering
+  * (OPTION) Enable WATER FLOW SENSOR
+  * volume (number unit:L)
 
 ## Authors
 

@@ -2,7 +2,7 @@
 // (C)2023 bekki.jp
 
 // Include ----------------------
-#include "water_level_checker.h"
+#include "water_level_check_task.h"
 
 #include <cmath>
 
@@ -16,13 +16,15 @@ constexpr std::time_t CHECK_WATER_LEVEL_INTERVAL_SEC = 10 * 60;
 
 namespace IrrigationSystem {
 
-WaterLevelChecker::WaterLevelChecker()
+WaterLevelCheckTask::WaterLevelCheckTask(
+    const IrrigationInterfaceWeakPtr irrigation_interface)
     : Task(TASK_NAME, PRIORITY, CORE_ID),
+      irrigation_interface_(irrigation_interface),
       check_sec_(0),
       water_level_(0.0f),
       pwm_() {}
 
-void WaterLevelChecker::Initialize() {
+void WaterLevelCheckTask::Initialize() {
   constexpr uint32_t VALVE_FREQUENCY = 1000000;  // 1MHz
   constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_1;
   pwm_.Initialize(
@@ -31,7 +33,7 @@ void WaterLevelChecker::Initialize() {
       VALVE_FREQUENCY);
 }
 
-void WaterLevelChecker::Update() {
+void WaterLevelCheckTask::Update() {
   if (check_sec_ < Util::GetEpoch()) {
     pwm_.SetRate(0.5f);
 
@@ -53,6 +55,23 @@ void WaterLevelChecker::Update() {
     ESP_LOGI(TAG, "WaterLevelCheck adcVolt:%dmV min:%dmv max:%dmv rate:%0.2f",
              adcVoltage, minVoltage, maxVoltage, water_level_);
 
+#if CONFIG_IS_ENABLE_MQTT_PUBLISH
+  // Publish MQTT
+  const IrrigationInterfaceSharedPtr irrigation_interface =
+      irrigation_interface_.lock();
+  if (!irrigation_interface) {
+    ESP_LOGE(TAG, "Failed IrrigationInterface is null");
+    return;
+  }
+
+
+  // Generate Response
+  std::stringstream message;
+  message << "{\"level\":" << std::setfill('0') << std::fixed
+                << std::setprecision(2) << water_level_ << "}";
+  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/telemetry/water_level", message.str().c_str());
+#endif
+
     check_sec_ = Util::GetEpoch() + CHECK_WATER_LEVEL_INTERVAL_SEC;
   }
 
@@ -60,9 +79,9 @@ void WaterLevelChecker::Update() {
   Util::SleepMillisecond(NEXT_CHECK_MILLISECOND);
 }
 
-void WaterLevelChecker::Check() { check_sec_ = 0; }
+void WaterLevelCheckTask::Check() { check_sec_ = 0; }
 
-float WaterLevelChecker::GetWaterLevel() const { return water_level_; }
+float WaterLevelCheckTask::GetWaterLevel() const { return water_level_; }
 
 }  // namespace IrrigationSystem
 

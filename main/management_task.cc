@@ -4,9 +4,9 @@
 // Include ----------------------
 #include "management_task.h"
 
+#include "logger.h"
 #include "http_request.h"
 #include "irrigation_controller.h"
-#include "logger.h"
 #include "schedule_manager.h"
 #include "util.h"
 
@@ -32,8 +32,8 @@ void ManagementTask::Update() {
     ESP_LOGE(TAG, "Failed ScheduleManager is null");
     return;
   }
-
   schedule_manager->Execute();
+
   Util::SleepMillisecond(1000);
 }
 

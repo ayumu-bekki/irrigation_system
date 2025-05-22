@@ -1,5 +1,5 @@
-#ifndef VOLTAGE_CHECKER_TASK_H_
-#define VOLTAGE_CHECKER_TASK_H_
+#ifndef MQTT_PUBLISH_STATUS_TASK_H_
+#define MQTT_PUBLISH_STATUS_TASK_H_
 // ESP32 Irrigation system
 // (C)2021 bekki.jp
 
@@ -11,29 +11,26 @@
 
 namespace IrrigationSystem {
 
-class VoltageCheckTask final : public Task {
+class MQTTPublishStatusTask final : public Task {
  public:
-  static constexpr char *const TASK_NAME = (char *)"VoltageCheckTask";
+  static constexpr char *const TASK_NAME = (char *)"MQTTPublishStatusTask";
   static constexpr int PRIORITY = Task::PRIORITY_LOW;
   static constexpr int CORE_ID = APP_CPU_NUM;
 
  public:
-  VoltageCheckTask(const IrrigationInterfaceWeakPtr irrigation_interface);
+  MQTTPublishStatusTask(const IrrigationInterfaceWeakPtr irrigation_interface);
 
   void Initialize() override;
 
   void Update() override;
 
-  float GetVoltage() const;
-
  private:
   const IrrigationInterfaceWeakPtr irrigation_interface_;
-  float voltage_;
 };
 
-using VoltageCheckTaskUniquePtr = std::unique_ptr<VoltageCheckTask>;
+using MQTTPublishStatusTaskUniquePtr = std::unique_ptr<MQTTPublishStatusTask>;
 
 }  // namespace IrrigationSystem
 
-#endif  // VOLTAGE_CHECKER_TASK_H_
+#endif  // MQTT_PUBLISH_STATUS_TASK_H_
 // EOF

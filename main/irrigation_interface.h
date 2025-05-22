@@ -32,10 +32,11 @@ class IrrigationInterface {
   virtual float GetMainVoltage() const = 0;
   virtual void CheckWaterLevel() = 0;
   virtual float GetWaterLevel() const = 0;
-  virtual void StartWaterMeasurement() = 0;
-  virtual int32_t FinishWaterMeasurement() = 0;
+  virtual void StartWaterFlowMeasurement() = 0;
+  virtual int32_t FinishWaterFlowMeasurement() = 0;
   virtual int32_t GetWaterFlowHz() = 0;
   virtual std::time_t GetSystemBootTime() = 0;
+  virtual void PublishMQTTMessage(const std::string& topic, const std::string& data) = 0;
 };
 
 using IrrigationInterfaceSharedPtr = std::shared_ptr<IrrigationInterface>;
