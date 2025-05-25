@@ -60,7 +60,7 @@ void MQTTClient::Start() {
   mqtt5_cfg.session.protocol_ver = MQTT_PROTOCOL_V_5;
 
   mqtt5_cfg.broker.address.uri = broker_host_.c_str();
-  mqtt5_cfg.network.disable_auto_reconnect = true;
+  mqtt5_cfg.network.disable_auto_reconnect = false;
 
   mqtt5_cfg.credentials.client_id = CONFIG_MQTT_CLIENT_ID;
   // mqtt5_cfg.credentials.username = "";
