@@ -4,8 +4,8 @@
 // Include ----------------------
 #include "voltage_check_task.h"
 
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 #include "logger.h"
 #include "util.h"
@@ -34,8 +34,10 @@ void VoltageCheckTask::Update() {
 
   std::stringstream message;
   message << "{\"voltage\":" << std::setfill('0') << std::fixed
-                << std::setprecision(2) << voltage_ << "}";
-  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/telemetry/voltage", message.str().c_str());
+          << std::setprecision(2) << voltage_ << "}";
+  irrigation_interface->PublishMQTTMessage(
+      "irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/telemetry/voltage",
+      message.str().c_str());
 #endif
 
   static const int32_t NEXT_CHECK_MILLISECOND = 60 * 60 * 1000;

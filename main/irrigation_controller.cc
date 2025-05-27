@@ -41,13 +41,11 @@ IrrigationController::IrrigationController()
 #endif
 #if CONFIG_IS_ENABLE_MQTT_PUBLISH
       ,
-      mqtt_client_()
-      ,
+      mqtt_client_(),
       mqtt_publish_status_task_()
 #endif
       ,
-      system_boot_time_(0) 
-{
+      system_boot_time_(0) {
 }
 
 IrrigationController::~IrrigationController() = default;
@@ -132,7 +130,8 @@ void IrrigationController::Start() {
 #endif
 
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
-  water_level_check_task_ = std::make_unique<WaterLevelCheckTask>(weak_from_this());
+  water_level_check_task_ =
+      std::make_unique<WaterLevelCheckTask>(weak_from_this());
   if (water_level_check_task_) {
     water_level_check_task_->Start();
   }
@@ -144,14 +143,21 @@ void IrrigationController::Start() {
 
 #if CONFIG_IS_ENABLE_MQTT_PUBLISH
   mqtt_client_.SetBrokerHost(CONFIG_MQTT_BROKER_HOST);
-  mqtt_client_.SetConnectEvent(std::bind(&IrrigationController::EventMQTTConnect, this));
-  mqtt_client_.SetDisconnectEvent(std::bind(&IrrigationController::EventMQTTDisconnect, this));
-  mqtt_client_.SetWillMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/status", "{\"status\":\"close\"}");
+  mqtt_client_.SetConnectEvent(
+      std::bind(&IrrigationController::EventMQTTConnect, this));
+  mqtt_client_.SetDisconnectEvent(
+      std::bind(&IrrigationController::EventMQTTDisconnect, this));
+#if 0
+  mqtt_client_.SetWillMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME
+                              "/status",
+                              "{\"status\":\"close\"}");
+#endif
   mqtt_client_.Start();
 
-  mqtt_publish_status_task_ = std::make_unique<MQTTPublishStatusTask>(weak_from_this());
+  mqtt_publish_status_task_ =
+      std::make_unique<MQTTPublishStatusTask>(weak_from_this());
   mqtt_publish_status_task_->Start();
-#endif 
+#endif
 
   // Monitoring LED Off
   GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 0);
@@ -232,8 +238,9 @@ float IrrigationController::GetWaterLevel() const {
   if (water_level_check_task_) {
     return water_level_check_task_->GetWaterLevel();
   }
-#else
   return 0.0f;
+#else
+  return -1.0f;
 #endif
 }
 
@@ -263,7 +270,16 @@ std::time_t IrrigationController::GetSystemBootTime() {
   return system_boot_time_;
 }
 
-void IrrigationController::PublishMQTTMessage(const std::string& topic, const std::string& data) {
+bool IrrigationController::IsConnectedMQTTBroker() const {
+#if CONFIG_IS_ENABLE_MQTT_PUBLISH
+  return mqtt_client_.IsConnected();
+#else
+  return false;
+#endif
+}
+
+void IrrigationController::PublishMQTTMessage(const std::string& topic,
+                                              const std::string& data) {
 #if CONFIG_IS_ENABLE_MQTT_PUBLISH
   mqtt_client_.Publish(topic, data);
 #endif
@@ -278,7 +294,6 @@ void IrrigationController::EventMQTTDisconnect() {
   GPIO::SetLevel(CONFIG_MONITORING_OUTPUT_GPIO_NO, 1);
 }
 #endif
-
 
 }  // namespace IrrigationSystem
 

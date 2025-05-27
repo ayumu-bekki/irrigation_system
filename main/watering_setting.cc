@@ -16,10 +16,11 @@
 namespace IrrigationSystem {
 
 namespace {
-const std::string JSON_WATERING_MODE_TABLE[WateringSetting::WATERING_MODE_MAX] = {
-    "",         // WATERING_MODE_NONE
-    "simple",   // WATERING_MODE_SIMPLE
-    "advance",  // WATERING_MODE_ADVANCE
+const std::string JSON_WATERING_MODE_TABLE[WateringSetting::WATERING_MODE_MAX] =
+    {
+        "",         // WATERING_MODE_NONE
+        "simple",   // WATERING_MODE_SIMPLE
+        "advance",  // WATERING_MODE_ADVANCE
 };
 }
 
@@ -58,9 +59,13 @@ std::int32_t WateringSetting::GetJMAAreaPathCode() const {
   return jma_area_path_code_;
 }
 
-std::int32_t WateringSetting::GetJMALocalCode() const { return jma_local_code_; }
+std::int32_t WateringSetting::GetJMALocalCode() const {
+  return jma_local_code_;
+}
 
-std::int32_t WateringSetting::GetJMAAMeDAS() const { return jmaamedas_point_num_; }
+std::int32_t WateringSetting::GetJMAAMeDAS() const {
+  return jmaamedas_point_num_;
+}
 
 const WateringSetting::WateringTypeDict &WateringSetting::GetWateringTypeDict()
     const {
@@ -297,7 +302,8 @@ bool WateringSetting::ParseAdvance(cJSON *json_root) noexcept(false) {
     }
 
     const cJSON *json_temperature_watering = nullptr;
-    cJSON_ArrayForEach(json_temperature_watering, json_temperature_watering_list) {
+    cJSON_ArrayForEach(json_temperature_watering,
+                       json_temperature_watering_list) {
       TemperatureWatering temperatureWatering;
 
       // UnderTemp
@@ -350,8 +356,8 @@ bool WateringSetting::ParseAdvance(cJSON *json_root) noexcept(false) {
       if (!json_month_to_type || !json_month_to_type->string) {
         throw std::runtime_error("Illegal object type month_to_type.");
       }
-      month_to_type_dict_.insert(std::make_pair(json_month_to_type->string,
-                                              json_month_to_type->valuestring));
+      month_to_type_dict_.insert(std::make_pair(
+          json_month_to_type->string, json_month_to_type->valuestring));
     }
   }
   {

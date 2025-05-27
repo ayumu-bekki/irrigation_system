@@ -49,6 +49,8 @@ class MQTTClient final {
   void SetWillMessage(const std::string& topic, const std::string& message);
   void Start();
 
+  bool IsConnected() const;
+
   void Publish(const std::string& topic, const std::string& data);
 
  private:
@@ -84,6 +86,7 @@ class MQTTClient final {
 
  private:
   esp_mqtt_client_handle_t client_;
+  bool is_connected;
   std::string broker_host_;
   std::string will_topic_;
   std::string will_message_;
@@ -92,7 +95,7 @@ class MQTTClient final {
   std::unordered_map<uint16_t, SubscribeTopic> subscribe_topics_;
 };
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
 #endif  // IRRIGATION_SYSTEM_WATCHER_H_
 // EOF

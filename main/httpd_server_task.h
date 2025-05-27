@@ -39,6 +39,7 @@ class HttpdServerTask final : public Task {
   static esp_err_t DeleteSettingHandler(httpd_req_t *request_data);
   static esp_err_t GetVoltageHandler(httpd_req_t *request_data);
   static esp_err_t GetWaterLevelHandler(httpd_req_t *request_data);
+  static esp_err_t RestartSystemHandler(httpd_req_t *request_data);
   static esp_err_t ErrorNotFoundHandler(httpd_req_t *request_data,
                                         httpd_err_code_t errCode);
 

@@ -10,22 +10,22 @@
 #include "irrigation_interface.h"
 #include "logger.h"
 #include "util.h"
-#include "watering_setting.h"
 #include "water_flow_sensor.h"
+#include "watering_setting.h"
 
 namespace {
-  constexpr uint32_t VALVE_FREQUENCY = 10000;  // 10kHz
-  constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
-}
+constexpr uint32_t VALVE_FREQUENCY = 10000;  // 10kHz
+constexpr ledc_timer_t VALVE_LEDC_TIMER = LEDC_TIMER_0;
+}  // namespace
 
 namespace IrrigationSystem {
 
 ValveTask::ValveTask(const IrrigationInterfaceWeakPtr irrigation_interface)
     : Task(TASK_NAME, PRIORITY, CORE_ID),
       irrigation_interface_(irrigation_interface) {
-  pwm_.Initialize(
-      static_cast<ledc_channel_t>(LEDC_CHANNEL_0), VALVE_LEDC_TIMER,
-      static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO), VALVE_FREQUENCY);
+  pwm_.Initialize(static_cast<ledc_channel_t>(LEDC_CHANNEL_0), VALVE_LEDC_TIMER,
+                  static_cast<gpio_num_t>(CONFIG_WATERING_OUTPUT_GPIO_NO),
+                  VALVE_FREQUENCY);
 }
 
 void ValveTask::Update() {
@@ -87,10 +87,10 @@ void ValveTask::Open() {
       irrigation_interface->GetWateringSetting();
 
   const float rate = std::max(
-        0.0f, std::min(1.0f, watering_setting.GetValvePowerBaseRate() -
-                                 ((voltage -
-                                   watering_setting.GetValvePowerBaseVoltage()) *
-                                  watering_setting.GetValvePowerVoltageRate())));
+      0.0f, std::min(1.0f, watering_setting.GetValvePowerBaseRate() -
+                               ((voltage -
+                                 watering_setting.GetValvePowerBaseVoltage()) *
+                                watering_setting.GetValvePowerVoltageRate())));
   ESP_LOGI(TAG, "Valve voltage rate Voltage:%fV Rate:%d", voltage,
            static_cast<int>(rate * 100));
   pwm_.SetRate(rate);
@@ -101,7 +101,6 @@ void ValveTask::Open() {
 #if CONFIG_IS_ENABLE_WATER_LEVEL_CHECK
   irrigation_interface->CheckWaterLevel();
 #endif
-
 }
 
 void ValveTask::Close() {
@@ -131,11 +130,15 @@ void ValveTask::Close() {
   message << "{";
 #if CONFIG_IS_ENABLE_WATER_FLOW_SENSOR
   message << "\"volume\":" << std::setfill('0') << std::fixed
-                << std::setprecision(2) 
-                << (WaterFlowSensor::CountToCubicDecimeters(current_executor_->GetWaterAmount()) / 60.0f);
+          << std::setprecision(2)
+          << (WaterFlowSensor::CountToCubicDecimeters(
+                  current_executor_->GetWaterAmount()) /
+              60.0f);
 #endif
   message << "}";
-  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/events/watering", message.str().c_str());
+  irrigation_interface->PublishMQTTMessage(
+      "irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/events/watering",
+      message.str().c_str());
 
   current_executor_->Finish();
   current_executor_.reset();

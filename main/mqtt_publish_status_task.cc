@@ -25,7 +25,9 @@ void MQTTPublishStatusTask::Update() {
     return;
   }
 
-  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/status", "{\"status\":\"ok\"}");
+  irrigation_interface->PublishMQTTMessage(
+      "irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/status",
+      "{\"status\":\"ok\"}");
 
   static const int32_t NEXT_PUBLISH_MILLISECOND = 1000 * 60 * 10;
   Util::SleepMillisecond(NEXT_PUBLISH_MILLISECOND);

@@ -26,6 +26,7 @@ const std::function<void(MQTTClient&, esp_mqtt_client_handle_t client,
 
 MQTTClient::MQTTClient()
     : client_(nullptr),
+      is_connected(false),
       broker_host_(),
       will_topic_(),
       will_message_(),
@@ -49,11 +50,11 @@ void MQTTClient::AddSubscribeTopic(SubscribeTopic subscribe) {
   subscribe_topics_.emplace(subscribe.subscribe_id_, subscribe);
 }
 
-void MQTTClient::SetWillMessage(const std::string& topic, const std::string& message) {
+void MQTTClient::SetWillMessage(const std::string& topic,
+                                const std::string& message) {
   will_topic_ = topic;
   will_message_ = message;
 }
-
 
 void MQTTClient::Start() {
   esp_mqtt_client_config_t mqtt5_cfg = {};
@@ -81,13 +82,16 @@ void MQTTClient::Start() {
   esp_mqtt_client_start(client_);
 }
 
+bool MQTTClient::IsConnected() const { return is_connected; }
+
 void MQTTClient::Publish(const std::string& topic, const std::string& data) {
   if (!client_) {
     ESP_LOGW(TAG, "MQTT Client is null");
     return;
   }
 
-  int32_t msg_id = esp_mqtt_client_publish(client_, topic.c_str(), data.c_str(), 0, 0, 0);
+  int32_t msg_id =
+      esp_mqtt_client_publish(client_, topic.c_str(), data.c_str(), 0, 0, 0);
   ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 }
 
@@ -105,6 +109,7 @@ void MQTTClient::EventError(esp_mqtt_client_handle_t client,
 void MQTTClient::EventConnected(esp_mqtt_client_handle_t client,
                                 const esp_mqtt_event_handle_t event) {
   ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+  is_connected = true;
 
   for (const auto& pair : subscribe_topics_) {
     esp_mqtt5_client_set_subscribe_property(client, &pair.second.property_);
@@ -122,6 +127,7 @@ void MQTTClient::EventConnected(esp_mqtt_client_handle_t client,
 void MQTTClient::EventDisconnected(esp_mqtt_client_handle_t client,
                                    const esp_mqtt_event_handle_t event) {
   ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+  is_connected = false;
 
   if (connect_function_) {
     disconnect_function_();
@@ -207,6 +213,6 @@ void MQTTClient::Mqtt5EventHandler(void* handler_args, esp_event_base_t base,
   }
 }
 
-} // IrrigationSystem
+}  // namespace IrrigationSystem
 
 // EOF

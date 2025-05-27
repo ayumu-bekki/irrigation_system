@@ -40,8 +40,8 @@ Pwm::Pwm()
       ledc_duty_bit_(LEDC_TIMER_1_BIT) {}
 
 void Pwm::Initialize(const ledc_channel_t channel_no,
-                     const ledc_timer_t ledc_timer_num, const gpio_num_t gpio_no,
-                     const uint32_t frequency) {
+                     const ledc_timer_t ledc_timer_num,
+                     const gpio_num_t gpio_no, const uint32_t frequency) {
   channel_no_ = channel_no;
   ledc_duty_bit_ = CalcFrequencyToBit(frequency);
 
@@ -49,13 +49,12 @@ void Pwm::Initialize(const ledc_channel_t channel_no,
            channel_no_, ledc_timer_num, ledc_duty_bit_, frequency, gpio_no);
 
   // Prepare and then apply the LEDC PWM timer configuration
-  const ledc_timer_config_t ledc_timer_cfg = {
-      .speed_mode = ledc_mode_,
-      .duty_resolution = ledc_duty_bit_,
-      .timer_num = ledc_timer_num,
-      .freq_hz = frequency,
-      .clk_cfg = LEDC_AUTO_CLK,
-      .deconfigure = false};
+  const ledc_timer_config_t ledc_timer_cfg = {.speed_mode = ledc_mode_,
+                                              .duty_resolution = ledc_duty_bit_,
+                                              .timer_num = ledc_timer_num,
+                                              .freq_hz = frequency,
+                                              .clk_cfg = LEDC_AUTO_CLK,
+                                              .deconfigure = false};
   ledc_timer_config(&ledc_timer_cfg);
 
   // Prepare and then apply the LEDC PWM channel configuration

@@ -19,7 +19,8 @@ class ScheduleManual final : public ScheduleBase {
   ScheduleManual();
 
  public:
-  ScheduleManual(const int hour, const int minute, ValveExecutorSharedPtr&& valve_executor);
+  ScheduleManual(const int hour, const int minute,
+                 ValveExecutorSharedPtr&& valve_executor);
 
   void Exec() override;
 

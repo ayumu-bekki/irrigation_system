@@ -14,8 +14,9 @@ class Pwm final {
  public:
   Pwm();
 
-  void Initialize(const ledc_channel_t channel_no, const ledc_timer_t ledc_timer_num,
-                  const gpio_num_t gpio_no, const uint32_t frequency);
+  void Initialize(const ledc_channel_t channel_no,
+                  const ledc_timer_t ledc_timer_num, const gpio_num_t gpio_no,
+                  const uint32_t frequency);
 
   void SetRate(const float rate);
 

@@ -8,6 +8,8 @@
 #include <memory>
 
 #include "irrigation_interface.h"
+#include "mqtt.h"
+#include "mqtt_publish_status_task.h"
 #include "schedule_manager.h"
 #include "valve_executor.h"
 #include "valve_task.h"
@@ -18,8 +20,6 @@
 #include "watering_setting.h"
 #include "weather_forecast.h"
 #include "wifi_manager.h"
-#include "mqtt.h"
-#include "mqtt_publish_status_task.h"
 
 namespace IrrigationSystem {
 
@@ -82,16 +82,20 @@ class IrrigationController final
 
   /// (IrrigationInterface:override)
   std::time_t GetSystemBootTime() override;
- 
+
   /// (IrrigationInterface:override)
-  void PublishMQTTMessage(const std::string& topic, const std::string& data) override;
+  bool IsConnectedMQTTBroker() const override;
+
+  /// (IrrigationInterface:override)
+  void PublishMQTTMessage(const std::string& topic,
+                          const std::string& data) override;
 
  private:
 #if CONFIG_IS_ENABLE_MQTT_PUBLISH
   void EventMQTTConnect();
   void EventMQTTDisconnect();
 #endif
- 
+
  private:
   WifiManager wifi_manager_;
   ValveTaskUniquePtr valve_task_;

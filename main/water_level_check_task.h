@@ -8,9 +8,9 @@
 
 #include <chrono>
 
+#include "irrigation_interface.h"
 #include "pwm.h"
 #include "task.h"
-#include "irrigation_interface.h"
 
 namespace IrrigationSystem {
 

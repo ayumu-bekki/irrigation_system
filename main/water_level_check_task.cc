@@ -56,20 +56,22 @@ void WaterLevelCheckTask::Update() {
              adcVoltage, minVoltage, maxVoltage, water_level_);
 
 #if CONFIG_IS_ENABLE_MQTT_PUBLISH
-  // Publish MQTT
-  const IrrigationInterfaceSharedPtr irrigation_interface =
-      irrigation_interface_.lock();
-  if (!irrigation_interface) {
-    ESP_LOGE(TAG, "Failed IrrigationInterface is null");
-    return;
-  }
+    // Publish MQTT
+    const IrrigationInterfaceSharedPtr irrigation_interface =
+        irrigation_interface_.lock();
+    if (!irrigation_interface) {
+      ESP_LOGE(TAG, "Failed IrrigationInterface is null");
+      return;
+    }
 
-
-  // Generate Response
-  std::stringstream message;
-  message << "{\"level\":" << std::setfill('0') << std::fixed
-                << std::setprecision(2) << water_level_ << "}";
-  irrigation_interface->PublishMQTTMessage("irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME "/telemetry/water_level", message.str().c_str());
+    // Generate Response
+    std::stringstream message;
+    message << "{\"level\":" << std::setfill('0') << std::fixed
+            << std::setprecision(2) << water_level_ << "}";
+    irrigation_interface->PublishMQTTMessage(
+        "irrigation_system/" CONFIG_MQTT_DEVICE_TOPIC_NAME
+        "/telemetry/water_level",
+        message.str().c_str());
 #endif
 
     check_sec_ = Util::GetEpoch() + CHECK_WATER_LEVEL_INTERVAL_SEC;

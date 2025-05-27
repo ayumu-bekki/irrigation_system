@@ -32,7 +32,7 @@ void ScheduleWatering::Exec() {
     ESP_LOGE(TAG, "Failed IrrigationInterface is null");
     return;
   }
-  
+
   valve_executor_ = std::make_shared<ValveExecutor>();
   valve_executor_->SetOpenSeconds(open_seconds_);
   valve_executor_->SetStatus(ValveExecutor::ExecutorStatus::EXECUTOR_SCHEDULE);
@@ -42,11 +42,10 @@ void ScheduleWatering::Exec() {
   irrigation_interface->SaveLastWateringEpoch(Util::GetEpoch());
 }
 
-int32_t ScheduleWatering::GetWaterFlow() const 
-{
+int32_t ScheduleWatering::GetWaterFlow() const {
   if (!valve_executor_) {
     return -1;
-  } 
+  }
   return valve_executor_->GetWaterAmount();
 }
 

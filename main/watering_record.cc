@@ -55,7 +55,8 @@ bool WateringRecord::Load() noexcept {
     if (!cJSON_IsString(json_last_watering_date)) {
       throw std::runtime_error("Illegal object type weatherAreaCode.");
     }
-    const std::string last_watering_date_str = json_last_watering_date->valuestring;
+    const std::string last_watering_date_str =
+        json_last_watering_date->valuestring;
 
     tm timeInfo;
     strptime(last_watering_date_str.c_str(), "%Y/%m/%d %H:%M:%S", &timeInfo);

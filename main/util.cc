@@ -79,10 +79,9 @@ std::string TimeToStr(const std::tm& time_info) {
 
 std::string TimeToDayStr(const std::tm& time_info) {
   std::stringstream ss;
-  ss << std::setfill('0') 
-     << std::setw(4) << (time_info.tm_year + 1900) << "/"
-     << std::setw(2) << (time_info.tm_mon + 1) << "/" 
-     << std::setw(2) << time_info.tm_mday;
+  ss << std::setfill('0') << std::setw(4) << (time_info.tm_year + 1900) << "/"
+     << std::setw(2) << (time_info.tm_mon + 1) << "/" << std::setw(2)
+     << time_info.tm_mday;
   return ss.str();
 }
 
@@ -121,8 +120,8 @@ std::vector<std::string> SplitString(const std::string& str, const char delim) {
 }
 
 /// Get Original Voltage Divider Resistor
-// input output_voltage[mv] top_resistance_value[kΩ], bottom_registance_value[kΩ]
-// return voltage[V]
+// input output_voltage[mv] top_resistance_value[kΩ],
+// bottom_registance_value[kΩ] return voltage[V]
 float GetVoltage() {
 #if CONFIG_IS_ENABLE_VOLTAGE_CHECK
   GPIO::SetLevel(CONFIG_VAOLTAGE_CHECK_OUTPUT_GPIO_NO, 1);
@@ -153,13 +152,14 @@ float GetVoltage() {
 }
 
 /// Get Original Voltage Divider Resistor
-// input output_voltage[mv] top_resistance_value[kΩ], bottom_registance_value[kΩ]
-// return voltage[V]
-float GetOriginalVoltageFromDividerRegister(const uint32_t output_voltage,
-                                            const float top_resistance_value,
-                                            const float bottom_registance_value) {
+// input output_voltage[mv] top_resistance_value[kΩ],
+// bottom_registance_value[kΩ] return voltage[V]
+float GetOriginalVoltageFromDividerRegister(
+    const uint32_t output_voltage, const float top_resistance_value,
+    const float bottom_registance_value) {
   const float voltage_div_rate =
-      bottom_registance_value / (top_resistance_value + bottom_registance_value);
+      bottom_registance_value /
+      (top_resistance_value + bottom_registance_value);
   return output_voltage / voltage_div_rate / 1000.0f;
 }
 

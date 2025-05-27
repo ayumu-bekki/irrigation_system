@@ -8,8 +8,8 @@
 
 #include <chrono>
 #include <memory>
-#include <queue>
 #include <mutex>
+#include <queue>
 
 #include "irrigation_interface.h"
 #include "pwm.h"

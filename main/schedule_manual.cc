@@ -22,11 +22,10 @@ void ScheduleManual::Exec() {
            GetMinute());
 }
 
-int32_t ScheduleManual::GetWaterFlow() const 
-{
+int32_t ScheduleManual::GetWaterFlow() const {
   if (!valve_executor_) {
     return -1;
-  } 
+  }
   return valve_executor_->GetWaterAmount();
 }
 

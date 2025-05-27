@@ -4,9 +4,9 @@
 // Include ----------------------
 #include "management_task.h"
 
-#include "logger.h"
 #include "http_request.h"
 #include "irrigation_controller.h"
+#include "logger.h"
 #include "schedule_manager.h"
 #include "util.h"
 
