@@ -20,7 +20,11 @@ class GPTimer {
                                      .direction = GPTIMER_COUNT_UP,
                                      .resolution_hz = resolution,
                                      .intr_priority = 0,
-                                     .flags{.intr_shared = 1u}};
+                                     .flags{
+                                         .intr_shared = 1u,
+                                         .allow_pd = 1u,
+                                         .backup_before_sleep = 1u,
+                                     }};
     gptimer_new_timer(&timer_config, &gptimer_);
 
     // SetCallback

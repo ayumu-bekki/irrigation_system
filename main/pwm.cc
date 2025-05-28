@@ -58,14 +58,18 @@ void Pwm::Initialize(const ledc_channel_t channel_no,
   ledc_timer_config(&ledc_timer_cfg);
 
   // Prepare and then apply the LEDC PWM channel configuration
-  const ledc_channel_config_t ledc_channel = {.gpio_num = gpio_no,
-                                              .speed_mode = ledc_mode_,
-                                              .channel = channel_no_,
-                                              .intr_type = LEDC_INTR_DISABLE,
-                                              .timer_sel = ledc_timer_num,
-                                              .duty = 0,  // Set duty to 0%
-                                              .hpoint = 0,
-                                              .flags{}};
+  const ledc_channel_config_t ledc_channel = {
+      .gpio_num = gpio_no,
+      .speed_mode = ledc_mode_,
+      .channel = channel_no_,
+      .intr_type = LEDC_INTR_DISABLE,
+      .timer_sel = ledc_timer_num,
+      .duty = 0,  // Set duty to 0%
+      .hpoint = 0,
+      .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
+      .flags{
+          .output_invert = 1u,
+      }};
   ledc_channel_config(&ledc_channel);
 }
 
