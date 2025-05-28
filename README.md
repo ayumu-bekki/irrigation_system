@@ -6,7 +6,7 @@ Automatic Irrigation System for ESP32-WROOM-32E
 
 ### Dependencies
 
-* ESP-IDF v5.1 (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
+* ESP-IDF v5.2 (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
 
 ### Executing program
 
@@ -66,6 +66,7 @@ This The schematic was created using Scheme-it (https://www.digikey.jp/schemeit/
 
 ### Use Cases
 
+#### Pattern1
 * 12V Diaphragm Pump (32W)
 * Lead storage battery 12V 8.5Ah
 * Solar cell 12V 8W
@@ -75,22 +76,26 @@ This The schematic was created using Scheme-it (https://www.digikey.jp/schemeit/
 ![UseCase](docs/use_case.jpg)
 ![Electrical Equipment](docs/electrical_equipment.jpg)
 
-### MQTT 
+ If the environment allows for direct water supply connection, it is possible to operate by replacing the water pump with a solenoid valve.
 
+### MQTT Publish
+
+Option: MQTT Broker needs to be enabled and set up.
 format:JSON
 
 * irrigation_system/0001/status
-  * WillMessage 
-    * status (string) "close"
   * Message
     * status (string) "ok"
+      * 10 minute intervals.
 * irrigation_system/0001/telemetry/water_level
+  * (OPTION) Water level sensor needs to be enabled.
   * level (number unit:Persentage 0.0-1.0)
 * irrigation_system/0001/telemetry/voltage
+  * (OPTION) Voltage sensor needs to be enabled.
   * voltage (number unit:V)
 * irrigation_system/0001/events/watering
-  * (OPTION) Enable WATER FLOW SENSOR
   * volume (number unit:L)
+    * (OPTION) Water flow sensor needs to be enabled.
 
 ## Authors
 
